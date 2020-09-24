@@ -4,7 +4,8 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../source/App_encoder.c \
+../source/App_display.c \
+../source/Display_7.c \
 ../source/SysTick.c \
 ../source/button.c \
 ../source/encoder.c \
@@ -12,7 +13,8 @@ C_SRCS += \
 ../source/timer.c 
 
 OBJS += \
-./source/App_encoder.o \
+./source/App_display.o \
+./source/Display_7.o \
 ./source/SysTick.o \
 ./source/button.o \
 ./source/encoder.o \
@@ -20,7 +22,8 @@ OBJS += \
 ./source/timer.o 
 
 C_DEPS += \
-./source/App_encoder.d \
+./source/App_display.d \
+./source/Display_7.d \
 ./source/SysTick.d \
 ./source/button.d \
 ./source/encoder.d \
