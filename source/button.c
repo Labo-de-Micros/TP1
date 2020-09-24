@@ -22,10 +22,19 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#define BUTTON_TIMER_TICK	10
-#define BUTTON_LONG_TICKS	100
-#define BUTTON_SINGLE_TICKS	10
-#define BUTTON_DOUBLE_TICK	10
+#define BUTTON_TIMER_TICK	TIMER_MS2TICKS(10)	//Checkeo los botonse cada 10 milisegundos
+#define BUTTON_LONG_MS		500					//Time for take the pressed button as long press
+#define BUTTON_SINGLE_MS	100					//Time to distinguish for double click and single click
+
+#define BUTTON_LONG_CNT		(BUTTON_LONG_MS/BUTTON_TIMER_TICK)				
+#define BUTTON_SINGLE_CNT	(BUTTON_SINGLE_MS/BUTTON_TIMER_TICK)
+
+#if (BUTTON_LONG_MS%BUTTON_TIMER_TICK) != 0	
+#warning Button cannot implement this BUTTON_LONG_MS counter. Using floor(BUTTON_LONG_MS/BUTTON_TIMER_TICK) instead.
+#endif // (BUTTON_LONG_MS%BUTTON_TIMER_TICK) != 0	
+#if (BUTTON_SINGLE_MS/BUTTON_TIMER_TICK) != 0	
+#warning Button cannot implement this BUTTON_SINGLE_MS counter. Using floor(BUTTON_SINGLE_MS/BUTTON_TIMER_TICK) instead.
+#endif // (BUTTON_LONG_MS%BUTTON_TIMER_TICK) != 0	
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -192,31 +201,31 @@ void run_state_machine(button_id_t i){
 				buttons[i].sm_state = BUT_ERROR;
 				buttons[i].cnt = 0;
 			}
-			else if ((ev == BUT_NO_EV) && (buttons[i].cnt <= BUTTON_LONG_TICKS)){
+			else if ((ev == BUT_NO_EV) && (buttons[i].cnt <= BUTTON_LONG_CNT)){
 				buttons[i].cnt++;
 			}
-			else if((ev == BUT_REL) && (buttons[i].cnt > BUTTON_LONG_TICKS)){
+			else if((ev == BUT_REL) && (buttons[i].cnt > BUTTON_LONG_CNT)){
 				buttons[i].cnt = 0;
 				buttons[i].sm_state = BUT_IDLE;
 				if(buttons[i].callback_long != NULL)
 					buttons[i].callback_long();
 			}
-			else if((ev == BUT_REL) && (buttons[i].cnt <= BUTTON_LONG_TICKS)){
+			else if((ev == BUT_REL) && (buttons[i].cnt <= BUTTON_LONG_CNT)){
 				buttons[i].cnt = 0;
 				buttons[i].sm_state = BUT_PRESSED_OFF;
 			}
 			break;
 		case BUT_PRESSED_OFF:				//Button released First time
-			if((ev == BUT_NO_EV) && (buttons[i].cnt <= BUTTON_SINGLE_TICKS)){
+			if((ev == BUT_NO_EV) && (buttons[i].cnt <= BUTTON_SINGLE_CNT)){
 				buttons[i].cnt++;
 			}
-			else if((ev == BUT_NO_EV) && (buttons[i].cnt > BUTTON_SINGLE_TICKS)){
+			else if((ev == BUT_NO_EV) && (buttons[i].cnt > BUTTON_SINGLE_CNT)){
 				buttons[i].cnt = 0;
 				buttons[i].sm_state = BUT_IDLE;
 				if(buttons[i].callback_single != NULL)
 					buttons[i].callback_single();
 			}
-			else if((ev == BUT_PRESS) && (buttons[i].cnt <= BUTTON_SINGLE_TICKS)){
+			else if((ev == BUT_PRESS) && (buttons[i].cnt <= BUTTON_SINGLE_CNT)){
 				buttons[i].sm_state = BUT_PRESSED_DOUBLE;
 				buttons[i].cnt = 0;
 			}
