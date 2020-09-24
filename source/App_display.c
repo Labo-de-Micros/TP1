@@ -35,9 +35,6 @@ static void cw_call(void);
 void App_Init (void) {
 	encoder_init();
 	encoder_set_callback(ccw_call,cw_call,click_call);
-	gpioMode(PIN_LED_RED,OUTPUT);
-	gpioMode(PIN_LED_BLUE,OUTPUT);
-	gpioMode(PIN_LED_GREEN,OUTPUT);
     initDisplay();
     set_display(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
     clear_display();
@@ -55,20 +52,22 @@ void App_Run (void){
  *******************************************************************************
  ******************************************************************************/
 
+static uint8_t number;
+
 static void click_call(void){
-	gpioToggle(PIN_LED_GREEN);
-    set_number(0);
+	number = 0;
+    set_number(number);
 	return;
 }
 
 static void ccw_call(void){
-	gpioToggle(PIN_LED_BLUE);
-    set_number(1);
+	number--;
+    set_number(number);
 	return;
 }
 
 static void cw_call(void){
-	gpioToggle(PIN_LED_RED);
-    set_number(2);
+	number++;
+    set_number(number);
 	return;
 }
