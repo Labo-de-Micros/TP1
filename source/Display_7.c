@@ -172,7 +172,7 @@ static void set_pins(uint8_t pins){
 	for(uint8_t i = 0; i<7; i++){	// Get the pins and starts shifting the mask
 									// 00000001 i spaces left to OR and set the pin 
 									// HIGH or LOW.
-		if(((DISP_MASK << i) & pins) == 0x01)
+		if(((DISP_MASK << i) & pins) != 0x00)
 			gpioWrite(display.pins[i],HIGH);
 		else
 			gpioWrite(display.pins[i],LOW);
