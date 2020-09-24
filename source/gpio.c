@@ -1,21 +1,42 @@
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//	@file		gpio.c					.					    //
+//	@brief		Simple GPIO Pin services, similar to Arduino	//
+//	@author		Grupo	4										//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//							Headers								//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
 #include "gpio.h"
 #include "MK64F12.h"
 
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-//											Definitions														//
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 			//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 #define PIN_IRQ_ENABLED		true
 #define PIN_IRQ_DISABLED	false
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
 typedef void (*IRQ_callback_t)(void);
 
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-//										Local variables													//
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//						STATIC VARIABLES						//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 static GPIO_Type* gpioPtrs[] = GPIO_BASE_PTRS;
 static PORT_Type* portPtrs[] = PORT_BASE_PTRS;
@@ -27,23 +48,24 @@ static IRQ_callback_t callbacks[5][32];
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
-//								Local Functions definitions									//
+//FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS W FILE LEVEL SCOPE//
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
 static	void PORT_ClearInterruptFlag(uint32_t port_num, uint32_t pin_num);
 
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-//									Public services														//
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//					FUNCTION DEFINITIONS						//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 void gpioMode (pin_t pin, uint8_t mode){
-	/* * @brief Configures the specified pin to behave either as an input or an output
-	 * @param pin the pin whose mode you wish to set (according PORTNUM2PIN)
-	 * @param mode INPUT, OUTPUT, INPUT_PULLUP or INPUT_PULLDOWN.
-	 */
+/*****************************************************************
+ * @brief Configures the specified pin to behave either as an input or an output
+ * @param pin the pin whose mode you wish to set (according PORTNUM2PIN)
+ * @param mode INPUT, OUTPUT, INPUT_PULLUP or INPUT_PULLDOWN.
+ *****************************************************************/
 	sim_ptr->SCGC5 |= simMasks[PIN2PORT(pin)]; // activo clock gating
 	PORT_Type *port = portPtrs[PIN2PORT(pin)];
 	GPIO_Type *gpio = gpioPtrs[PIN2PORT(pin)];
@@ -75,11 +97,11 @@ void gpioMode (pin_t pin, uint8_t mode){
 }
 
 void gpioWrite (pin_t pin, bool value){
-	/**
-	 * @brief Write a HIGH or a LOW value to a digital pin
-	 * @param pin the pin to write (according PORTNUM2PIN)
-	 * @param val Desired value (HIGH or LOW)
-	 */
+/*****************************************************************
+ * @brief Write a HIGH or a LOW value to a digital pin
+ * @param pin the pin to write (according PORTNUM2PIN)
+ * @param val Desired value (HIGH or LOW)
+ *****************************************************************/
 	uint32_t port_name = PIN2PORT(pin);
 	uint32_t num = PIN2NUM(pin);
 	GPIO_Type *gpio = gpioPtrs[port_name];
@@ -90,20 +112,20 @@ void gpioWrite (pin_t pin, bool value){
 }
 
 void gpioToggle (pin_t pin){
-	/**
-	 * @brief Toggle the value of a digital pin (HIGH<->LOW)
-	 * @param pin the pin to toggle (according PORTNUM2PIN)
-	 */
+/*****************************************************************
+ * @brief Toggle the value of a digital pin (HIGH<->LOW)
+ * @param pin the pin to toggle (according PORTNUM2PIN)
+ *****************************************************************/
 	GPIO_Type *gpio = gpioPtrs[PIN2PORT(pin)];
 	gpio->PTOR |= (1<<PIN2NUM(pin));
 }
 
 bool gpioRead (pin_t pin){
-	/**
-	 * @brief Reads the value from a specified digital pin, either HIGH or LOW.
-	 * @param pin the pin to read (according PORTNUM2PIN)
-	 * @return HIGH or LOW
-	 */
+/*****************************************************************
+ * @brief Reads the value from a specified digital pin, either HIGH or LOW.
+ * @param pin the pin to read (according PORTNUM2PIN)
+ * @return HIGH or LOW
+ *****************************************************************/
 	uint32_t port_name = PIN2PORT(pin);
 	uint32_t num = PIN2NUM(pin);
 	GPIO_Type *gpio = gpioPtrs[port_name];
@@ -111,13 +133,13 @@ bool gpioRead (pin_t pin){
 }
 
 bool gpioIRQ (pin_t pin, uint8_t irqMode, pinIrqFun_t irqFun){
-	/**
-	 * @brief Configures how the pin reacts when an IRQ event ocurrs
-	 * @param pin the pin whose IRQ mode you wish to set (according PORTNUM2PIN)
-	 * @param irqMode disable, risingEdge, fallingEdge or bothEdges
-	 * @param irqFun function to call on pin event
-	 * @return Registration succeed
-	 */
+/*****************************************************************
+ * @brief Configures how the pin reacts when an IRQ event ocurrs
+ * @param pin the pin whose IRQ mode you wish to set (according PORTNUM2PIN)
+ * @param irqMode disable, risingEdge, fallingEdge or bothEdges
+ * @param irqFun function to call on pin event
+ * @return Registration succeed
+ *****************************************************************/
 	uint32_t port_num = PIN2PORT(pin);
 	uint32_t pin_num = PIN2NUM(pin);
 	pin_ports_activated[port_num][pin_num] = PIN_IRQ_ENABLED;
@@ -128,7 +150,7 @@ bool gpioIRQ (pin_t pin, uint8_t irqMode, pinIrqFun_t irqFun){
 	__NVIC_EnableIRQ(IRQn_ports[port_num]);
 	__NVIC_ClearPendingIRQ(IRQn_ports[port_num]);
 	__NVIC_SetPriority(IRQn_ports[port_num], 3);
-
+	//Set the corresponding IRQC
 	switch(irqMode){
 			case GPIO_IRQ_MODE_DISABLE:
 				port->PCR[pin_num] &= ~(0b1111 << PORT_PCR_IRQC_SHIFT);
@@ -152,11 +174,11 @@ bool gpioIRQ (pin_t pin, uint8_t irqMode, pinIrqFun_t irqFun){
 	return true;
 }
 
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
-//												Handlers														//
-////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//							HANDLERS							//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 void PORTA_IRQHandler(void){
 	for(int i=0; i<32; i++) {
@@ -207,6 +229,12 @@ void PORTE_IRQHandler(void){
 	}
 	return;
 }
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//					LOCAL FUNCTION DEFINITIONS					//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 void PORT_ClearInterruptFlag(uint32_t port_num, uint32_t pin_num) {
 	PORT_Type * addr_arrays[] = PORT_BASE_PTRS;
