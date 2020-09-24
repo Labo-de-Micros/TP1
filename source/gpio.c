@@ -23,7 +23,7 @@
 
 #define PIN_IRQ_ENABLED		true
 #define PIN_IRQ_DISABLED	false
-
+#define PIN_IRQ_MASK		0x00000001
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
@@ -42,7 +42,8 @@ static GPIO_Type* gpioPtrs[] = GPIO_BASE_PTRS;
 static PORT_Type* portPtrs[] = PORT_BASE_PTRS;
 static uint32_t simMasks[] = {SIM_SCGC5_PORTA_MASK, SIM_SCGC5_PORTB_MASK, SIM_SCGC5_PORTC_MASK, SIM_SCGC5_PORTD_MASK, SIM_SCGC5_PORTE_MASK };
 static uint32_t IRQn_ports[] = {PORTA_IRQn, PORTB_IRQn, PORTC_IRQn, PORTD_IRQn, PORTE_IRQn};
-static bool pin_ports_activated[5][32];
+//static bool pin_ports_activated[5][32];
+static uint32_t pin_ports_activated[5];
 static SIM_Type* sim_ptr = SIM;
 static IRQ_callback_t callbacks[5][32];
 
@@ -142,7 +143,8 @@ bool gpioIRQ (pin_t pin, uint8_t irqMode, pinIrqFun_t irqFun){
  *****************************************************************/
 	uint32_t port_num = PIN2PORT(pin);
 	uint32_t pin_num = PIN2NUM(pin);
-	pin_ports_activated[port_num][pin_num] = PIN_IRQ_ENABLED;
+	//pin_ports_activated[port_num][pin_num] = PIN_IRQ_ENABLED;
+	pin_ports_activated[port_num] |= PIN_IRQ_MASK<<pin_num;
 	callbacks[port_num][pin_num] = irqFun;
 	PORT_Type * addr_arrays[] = PORT_BASE_PTRS;
 	PORT_Type * port = addr_arrays[port_num];
@@ -182,7 +184,12 @@ bool gpioIRQ (pin_t pin, uint8_t irqMode, pinIrqFun_t irqFun){
 
 void PORTA_IRQHandler(void){
 	for(int i=0; i<32; i++) {
-		if(pin_ports_activated[PA][i]==PIN_IRQ_ENABLED){
+		//if(pin_ports_activated[PA][i]==PIN_IRQ_ENABLED){
+		if(((PIN_IRQ_MASK<<i) & pin_ports_activated[PA]) != 0x00){
+		// Agarro La pascara 0x00000001 y la shifteo i lugares hacia la iquierda, 
+		//	aplico una and con el registro de 32 bits del puerto en cuestion, y me fijo 
+		// si el resultado es distinto de cero, es decir, me fijo si el pin 'i' esta activado como 
+		// interrupcion.
 			PORT_ClearInterruptFlag(PA,i);
 			callbacks[PA][i]();
 		}
@@ -192,7 +199,12 @@ void PORTA_IRQHandler(void){
 
 void PORTB_IRQHandler(void){
 	for(int i=0; i<32; i++) {
-		if(pin_ports_activated[PB][i]==PIN_IRQ_ENABLED){
+		//if(pin_ports_activated[PB][i]==PIN_IRQ_ENABLED){
+		if(((PIN_IRQ_MASK<<i) & pin_ports_activated[PB]) != 0x00){
+		// Agarro La pascara 0x00000001 y la shifteo i lugares hacia la iquierda, 
+		//	aplico una and con el registro de 32 bits del puerto en cuestion, y me fijo 
+		// si el resultado es distinto de cero, es decir, me fijo si el pin 'i' esta activado como 
+		// interrupcion.
 			PORT_ClearInterruptFlag(PB,i);
 			callbacks[PB][i]();
 		}
@@ -202,7 +214,12 @@ void PORTB_IRQHandler(void){
 
 void PORTC_IRQHandler(void){
 	for(int i=0; i<32; i++) {
-		if(pin_ports_activated[PC][i]==PIN_IRQ_ENABLED){
+		//if(pin_ports_activated[PC][i]==PIN_IRQ_ENABLED){
+		if(((PIN_IRQ_MASK<<i) & pin_ports_activated[PC]) != 0x00){
+		// Agarro La pascara 0x00000001 y la shifteo i lugares hacia la iquierda, 
+		//	aplico una and con el registro de 32 bits del puerto en cuestion, y me fijo 
+		// si el resultado es distinto de cero, es decir, me fijo si el pin 'i' esta activado como 
+		// interrupcion.
 			PORT_ClearInterruptFlag(PC,i);
 			callbacks[PC][i]();
 		}
@@ -212,7 +229,12 @@ void PORTC_IRQHandler(void){
 
 void PORTD_IRQHandler(void){
 	for(int i=0; i<32; i++) {
-		if(pin_ports_activated[PD][i]==PIN_IRQ_ENABLED){
+		//if(pin_ports_activated[PD][i]==PIN_IRQ_ENABLED){
+		if(((PIN_IRQ_MASK<<i) & pin_ports_activated[PD]) != 0x00){
+		// Agarro La pascara 0x00000001 y la shifteo i lugares hacia la iquierda, 
+		//	aplico una and con el registro de 32 bits del puerto en cuestion, y me fijo 
+		// si el resultado es distinto de cero, es decir, me fijo si el pin 'i' esta activado como 
+		// interrupcion.
 			PORT_ClearInterruptFlag(PD,i);
 			callbacks[PD][i]();
 		}
@@ -222,7 +244,12 @@ void PORTD_IRQHandler(void){
 
 void PORTE_IRQHandler(void){
 	for(int i=0; i<32; i++) {
-		if(pin_ports_activated[PE][i]==PIN_IRQ_ENABLED){
+		//if(pin_ports_activated[PE][i]==PIN_IRQ_ENABLED){
+		if(((PIN_IRQ_MASK<<i) & pin_ports_activated[PE]) != 0x00){
+		// Agarro La pascara 0x00000001 y la shifteo i lugares hacia la iquierda, 
+		//	aplico una and con el registro de 32 bits del puerto en cuestion, y me fijo 
+		// si el resultado es distinto de cero, es decir, me fijo si el pin 'i' esta activado como 
+		// interrupcion.
 			PORT_ClearInterruptFlag(PE,i);
 			callbacks[PE][i]();
 		}

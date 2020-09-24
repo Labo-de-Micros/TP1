@@ -12,7 +12,7 @@ void split_number(uint16_t num){
 	}
 }
 
-void select_display()
+void select_display();
 
 
 void display_number(uint16_t num){
