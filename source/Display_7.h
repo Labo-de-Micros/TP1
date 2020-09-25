@@ -27,7 +27,9 @@
 //////////////////////////////////////////////////////////////////
 
 #define DISPLAY_MAX_AMOUNT  10
-
+#define REFRESH_FREQUENCY_HZ 60
+#define DIGITS 4
+#define MUX_PINS 2
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS			//
@@ -35,6 +37,7 @@
 //////////////////////////////////////////////////////////////////
 
 typedef uint8_t display_id_t;
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -46,6 +49,8 @@ void initDisplay(void);
 /*****************************************************************
  * @brief: Initialize the Seven segment display driver
  * **************************************************************/
+
+void display_set_mode(display_mode_t mode);
 
 void set_display(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_t g);
 /*****************************************************************
@@ -61,21 +66,30 @@ void set_display(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_t g);
  * @brief: gpioMode() will be called with those pins numbers.
  * **************************************************************/
 
-void set_number(uint8_t num);
+void display_configure_mux(pin_t pin0, pin_t pin1);
 /*****************************************************************
- * @brief: Set a specified number on the screen of the seven segment display
- * @param num: A number from 0-9 to be displayed on the screen.
+ * @brief: Initialize mux pins for digit select.
  * **************************************************************/
 
-void set_char(char character);
+void display_set_char(char character);
 /*****************************************************************
  * @brief: Set a specified number on the screen of the seven segment display
  * @param character: A character from a-z to be displayed on the screen.
  * **************************************************************/
 
-void clear_display(void);
+void display_set_number(uint16_t number);
 /*****************************************************************
- * @brief: Clears the screen of the display (nothing will be displayed).
+ * @brief: Sets a four digit number into display buffers.
+ * **************************************************************/
+
+void display_on();
+/*****************************************************************
+ * @brief: Starts updating display.
+ * **************************************************************/
+
+void display_off();
+/*****************************************************************
+ * @brief: Stops updating display.
  * **************************************************************/
 
 #endif
