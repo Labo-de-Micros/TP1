@@ -24,7 +24,15 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#define CARD_DATA_LENGTH	100
+#define CARD_DATA_LENGTH	256	//bits en la targeta, midiendolo llegue a que eran 256
+#define CARD_DATA_LENGTH_32	(CARD_DATA_LENGTH/32)
+#define CARD_CHARACTERS_LENGTH	40 //Segun la consigna.
+#define CARD_PAN_LENGHT			19
+#define	CARD_EXP_LENGHT			4
+#define CARD_SERVICE_LENGHT		3
+#define CARD_PVKI_LENGHT		1
+#define CARD_PVV_LENGHT			4
+#define CARD_CVV_LENGHT			3
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////

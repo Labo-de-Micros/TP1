@@ -23,11 +23,11 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#define CARD_SS				0b1011
-#define	CARD_FS				0b1101
-#define	CARD_ES				0b1111
-#define	CARD_LRC			0
+#define CARD_SS				11
+#define	CARD_FS				13
+#define	CARD_ES				15
 
+#define CARD_32_MASK		0x00000001
 #define _CARD_DEBUG_
 
 //////////////////////////////////////////////////////////////////
@@ -38,15 +38,8 @@
 
 typedef enum{CARD_IDLE, 
 			CARD_WAIT_DATA, 
-			CARD_0_ARRIVED,
-			CARD_1_ARRIVED,
-			CARD_2_ARRIVED,
-			CARD_3_ARRIVED,
-			CARD_P_ARRIVED, 
-			CARD_WAIT_LRC, 
 			CARD_ERROR,
 			CARD_WAIT_FOR_START,
-			CARD_ENABLE_ACTIVATED
 }card_states_t;
 
 typedef enum{
@@ -63,6 +56,21 @@ typedef struct{
 	uint8_t	data_p : 1;
 }card_char_t;
 
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//						GLOBAL VARIABLES						//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+uint8_t card_data_decompressed[CARD_CHARACTERS_LENGTH];
+uint8_t pan[CARD_PAN_LENGHT];
+uint8_t exp_year;
+uint8_t exp_month;
+uint8_t service_code[CARD_SERVICE_LENGHT];
+uint8_t PVKI;
+uint8_t PVV[CARD_PVV_LENGHT];
+uint8_t CVV[CARD_CVV_LENGHT];
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -70,16 +78,10 @@ typedef struct{
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-int16_t card_data[CARD_DATA_LENGTH];
-uint8_t index = 0;
+static uint32_t card_data_compressed[CARD_DATA_LENGTH_32];
+static uint8_t index;
 static card_callback_t	call;
 static card_states_t current_state;
-static card_char_t current_char;
-static uint8_t enable_prev_state;
-#ifdef	_CARD_DEBUG_
-static uint32_t current_step = 0;
-#endif
-
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -87,14 +89,14 @@ static uint32_t current_step = 0;
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-static void card_callback(void);
-static void clean_current_char(void);
-static uint8_t get_binary_from_current_char(void);
-static bool check_data_arrived(void);
+static void card_machine(card_events_t);
 static void clear_buffer(void);
-static void save_data(void);
-static bool check_entire_card(uint8_t lrc);
-static card_events_t get_new_event(void);
+static void enable_callback(void);
+static void clock_callback(void);
+static card_char_t get_current_char(uint8_t ind);
+static uint8_t get_char_num(card_char_t character);
+static bool is_char_valid(card_char_t character);
+static uint8_t search_for_start(void);
 
 
 //////////////////////////////////////////////////////////////////
@@ -111,11 +113,12 @@ void card_init(card_callback_t callback){
 	gpioMode(CARD_DATA, INPUT);
 	gpioMode(CARD_CLOCK, INPUT);
 	gpioMode(CARD_ENABLE, INPUT);
-	gpioIRQ (CARD_CLOCK, GPIO_IRQ_MODE_FALLING_EDGE , card_callback);	//Asumo que el clock no tirara nada cuando no haya leido nada.
-	gpioIRQ (CARD_ENABLE, GPIO_IRQ_MODE_BOTH_EDGES , card_callback);
+	gpioIRQ (CARD_CLOCK, GPIO_IRQ_MODE_FALLING_EDGE , clock_callback);	//Asumo que el clock no tirara nada cuando no haya leido nada.
+	gpioIRQ (CARD_ENABLE, GPIO_IRQ_MODE_BOTH_EDGES , enable_callback);
 	call = callback;
 	current_state = CARD_WAIT_FOR_START;
-	enable_prev_state = gpioRead(CARD_ENABLE);
+	index = 0;
+	clear_buffer();
 	return;
 }
 
@@ -124,11 +127,47 @@ uint8_t * get_data(void){
  * @brief: When the callback is called, one must obtain the data readed
  * 			by the driver, so this function returns the data.
  * 			(It must be called in the callback specified above).
- * @return: An array of lenght CARD_DATA_LENGTH containing the data
- * 			readed.
+ * @return: An array of lenght CARD_CHARACTERS_LENGTH containing the data
+ * 			readed in the form of uint8_t.
  ****************************************************************/
-	return card_data;
+//Por ahora asumo que siempre la targeta se lee en la direccion correcta.
+	uint8_t start_index = search_for_start() + 5;
+	uint8_t i = 0;
+	uint8_t num = 0;
+	for(i = 0; i < CARD_CHARACTERS_LENGTH && num != CARD_FS ; i++){
+		num = get_char_num(get_current_char(start_index+i*5));
+		if(num != CARD_SS && num != CARD_FS && num != CARD_ES)
+			pan[i] = num;
+	}
+	num = get_char_num(get_current_char(start_index+i*5));
+	i++;
+	exp_year = num*10 + get_char_num(get_current_char(start_index+i*5));
+	i++;
+	num = get_char_num(get_current_char(start_index+i*5));
+	i++;
+	exp_month = num*10 + get_char_num(get_current_char(start_index+i*5));
+	
+	for(uint8_t u = 0; u < CARD_SERVICE_LENGHT; u++){
+		i++;
+		uint8_t num = get_char_num(get_current_char(start_index+i*5));
+		service_code[i] = num;
+	}
+	i++;
+	PVKI = get_char_num(get_current_char(start_index+i*5));
+	for(uint8_t u = 0; u < CARD_PVV_LENGHT; u++){
+		i++;
+		uint8_t num = get_char_num(get_current_char(start_index+i*5));
+		PVV[i] = num;
+	}
+	for(uint8_t u = 0; u < CARD_CVV_LENGHT; u++){
+		i++;
+		uint8_t num = get_char_num(get_current_char(start_index+i*5));
+		CVV[i] = num;
+	}
+	i++;
+	return card_data_decompressed;
 }
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -136,193 +175,135 @@ uint8_t * get_data(void){
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-static void card_callback(void){
+static void card_machine(card_events_t ev){
 /*****************************************************************
  * @brief: Runs the state machine for the card reader protocol
  * 			(ISO/IEC 7811-2)
  ****************************************************************/
-	card_events_t ev = get_new_event();		//gets the event
 	uint8_t data = gpioRead(CARD_DATA);	//reads the data pin from the card reader.
-	if(ev == ENABLE_RISING_EV){
-		call();
-		current_state = CARD_WAIT_FOR_START;
-	}
-
 	switch(current_state){
 		case CARD_WAIT_FOR_START:	// Estado inicial, si me llega un Falling de enable, esta leyendo targeta.
 			if(ev == ENABLE_FALLING_EV){
-				//current_state = CARD_ENABLE_ACTIVATED;
 				current_state = CARD_WAIT_DATA;
-				clean_current_char();	//Limpio todo
+				index = 0;
 				clear_buffer();
 			}
 			break;
-		case CARD_ENABLE_ACTIVATED:	//Estado de lectura de targeta, si llega un rising en enable, termino de leer y esta listo
-									//para enviarme los datos.
-			if(ev == ENABLE_RISING_EV)
-				current_state = CARD_WAIT_DATA;
-			break;
-		case CARD_WAIT_DATA:	//El sistema esta listo para empezar a recibir los datos.
+		case CARD_WAIT_DATA:
 			if(ev == CLK_EV){
-				if(get_binary_from_current_char() == CARD_SS)	// me fijo si previamente llego un LS o un ES.
-					current_state = CARD_WAIT_DATA;
-				//else if(get_binary_from_current_char() == CARD_ES)
-				//	current_state = CARD_WAIT_LRC;
-				else{
-					current_char.data_0 = data;//Guardo el primer dato que me llega en el primer bit del caracter.
-					current_state = CARD_0_ARRIVED;
-				}
+				if(data == 0)
+					card_data_compressed[index/32] |= CARD_32_MASK << (31-(index % 32));
+				index++;
 			}
-			//else	//No deberia llegar un cambio en enable
-			//	current_state = CARD_ERROR;
-			break;
-		case CARD_0_ARRIVED://Estado de espera del segundo bit del caracter actual.
-			if(ev == CLK_EV){
-				current_char.data_0 = data;//Guardo el segundo dato que me llega en el segundo bit del caracter.
-				current_state = CARD_1_ARRIVED;
-			}
-			//else
-			//	current_state = CARD_ERROR;
-			break;
-		case CARD_1_ARRIVED://Estado de espera del tercer bit del caracter actual.
-			if(ev == CLK_EV){
-				current_char.data_1 = data;
-				current_state = CARD_2_ARRIVED;
-			}
-			//else
-			//	current_state = CARD_ERROR;
-			break;
-		case CARD_2_ARRIVED://Estado de espera del cuarto bit del caracter actual.
-			if(ev == CLK_EV){
-				current_char.data_2 = data;
-				current_state = CARD_3_ARRIVED;
-			}
-			//else
-			//	current_state = CARD_ERROR;
-			break;
-		case CARD_3_ARRIVED://Estado de espera del quinto bit del caracter actual.
-			if(ev == CLK_EV){
-				current_char.data_3 = data;
-				current_state = CARD_P_ARRIVED;
-			}
-			//else
-			//	current_state = CARD_ERROR;
-			break;
-		case CARD_P_ARRIVED://LLegaron todos los bits del caracter acutal, se procede a confirmar que la lectura
-							//se haya hecho correctamente, y en caso de que asi sea, se la procede a guardar.
-			if(ev == CLK_EV){
-				current_char.data_p = data;
-				if(check_data_arrived()){
-					current_state = CARD_WAIT_DATA;//Se vuelve al estado de espera de nuevo cartacter.
-					save_data();
-				}
-				//else
-				//	current_state = CARD_ERROR;
-			}
-			//else
-			//	current_state = CARD_ERROR;
-			break;
-		case CARD_WAIT_LRC://Estado de espera del ultimo caracter de la secuencia.
-			if(ev == CLK_EV){
-				if(check_entire_card(data))//Se guarda el ultimo caracter y se chequea que toda la targeta
-											//se haya guardado correctamente, en caso de ser asi, se llama al callback.
-					call();
+			else if(ev == ENABLE_RISING_EV){
+				call();
+				get_current_char(15);
 				current_state = CARD_WAIT_FOR_START;
 			}
-			//else
-			//	current_state = CARD_ERROR;
 			break;
 		default:
 			current_state = CARD_ERROR;
 			break;
 	}
-#ifdef	_CARD_DEBUG_
-	current_step++;
-#endif
 	return;
 }
 
-static card_events_t get_new_event(void){
+static void enable_callback(void){
 /*****************************************************************
- * @brief: Given that the callback has been called, this function
- * 			returns the event that produced that callback.
- * 			There are 3 events possible:
- * 				- CLK RISING EDGE EVENT
- * 				- ENABLE RISING EDGE EVENT
- * 				- ENABLE FALLING EDGE EVENT
+ * @brief: Generates the events of the enable pin for the state machine 
  ****************************************************************/
-	uint8_t enable = gpioRead(CARD_ENABLE);
-	if(enable != enable_prev_state){
-		enable_prev_state = enable;
-		if(enable == HIGH)
-			return ENABLE_RISING_EV;
-		return ENABLE_FALLING_EV;
-	}
-	return CLK_EV;
-}
-
-static void clean_current_char(void){
-/*****************************************************************
- * @brief: Set current_char in 0.
- ****************************************************************/	
-	current_char.data_0 = 0;
-	current_char.data_1 = 0;
-	current_char.data_2 = 0;
-	current_char.data_3 = 0;
-	current_char.data_p = 0;
+	if(gpioRead(CARD_ENABLE) == HIGH)
+		card_machine(ENABLE_RISING_EV);
+	else
+		card_machine(ENABLE_FALLING_EV);
 	return;
 }
 
-static bool check_data_arrived(void){
+static void clock_callback(void){
 /*****************************************************************
- * @brief: Checks if the data arrived is a valid array or not.
- * @return: Returns 'true' if the data arrived is valid and 'false' otherwise.
+ * @brief: Generates the events of the clock pin for the state machine 
  ****************************************************************/
-	uint8_t data = get_binary_from_current_char();
-	if(data % 2 != 1 && current_char.data_p != 0)
-		return false;
-	else if(data % 2 == 1 && current_char.data_p != 1)
-		return false;
-	return true;
+	card_machine(CLK_EV);
+	return;
 }
 
 static void clear_buffer(void){
 /*****************************************************************
- * @brief: Clears the 'card_data' buffer
+ * @brief: Clears the 'card_data_compressed' buffer
  ****************************************************************/
-	for(uint8_t i = 0; i < CARD_DATA_LENGTH; i++)
-		card_data[i] = -1;
+	for(uint16_t i = 0; i < CARD_DATA_LENGTH_32; i++)
+		card_data_compressed[i] = 0;
 	index = 0;
 	return;
 }
 
-static void save_data(void){
+static card_char_t get_current_char(uint8_t ind){
 /*****************************************************************
- * @brief: Saves the 'current_char' to the 'card_data'.
+ * @brief: Generates the char associated with the index given.
+ * @param ind: index for the character start.
+ * @return card_char_t containing the information of the character in the
+ * 			selected position.
+ * @example: Given the sequence 01100101111000101 and ind = 2, the returned char
+ * 				will be composed of:
+ * 					data_0 = 1
+ * 					data_1 = 0
+ * 					data_2 = 0
+ * 					data_3 = 1
+ * 					data_p = 0
  ****************************************************************/
-	card_data[index] = get_binary_from_current_char();
-	index++;
-	return;
+	card_char_t curr_char;
+	uint8_t i = ind %32;
+	uint8_t index_2 = ind/32;
+	curr_char.data_0 = (card_data_compressed[index_2] & (CARD_32_MASK<<(31-i))) != 0;
+	i++;
+	curr_char.data_1 = (card_data_compressed[index_2] & (CARD_32_MASK<<(31-i))) != 0;
+	i++;
+	curr_char.data_2 = (card_data_compressed[index_2] & (CARD_32_MASK<<(31-i))) != 0;
+	i++;
+	curr_char.data_3 = (card_data_compressed[index_2] & (CARD_32_MASK<<(31-i))) != 0;
+	i++;
+	curr_char.data_p = (card_data_compressed[index_2] & (CARD_32_MASK<<(31-i))) != 0;
+	return curr_char;
 }
 
-static bool check_entire_card(uint8_t lrc){// Hay que cambiarla
+static uint8_t get_char_num(card_char_t character){
 /*****************************************************************
- * @brief: Checks if the entire card was readed correctly.
+ * @brief: Gets the hexadecimal number corresponding to the character given
+ * @param character: caharacter to get its hexadecimal value.
+ * @returns: hexadecimal value.
  ****************************************************************/
-	for(uint8_t i = 0 ;i < index; i++){
-		if(card_data[i] == -1)
-			return false;
+	uint8_t temp = character.data_3 << 3;
+	temp |= character.data_2 << 2;
+	temp |= character.data_1 << 1;
+	temp |= character.data_0 << 0;
+	return temp;
+}
+
+static bool is_char_valid(card_char_t character){
+/*****************************************************************
+ * @brief: Checks if a given character is valid (parity code)
+ * @param character: caharacter to check.
+ * @returns: true if the character is a valid one, false otherwise.
+ ****************************************************************/
+	if(get_char_num(character) % 2 == 0 && character.data_p != 1)
+		return false;
+	else if(get_char_num(character) % 2 != 0 && character.data_p != 0)
+		return false;
+	else
+		return true;
+}
+
+static uint8_t search_for_start(void){
+/*****************************************************************
+ * @brief: Search for the start of the Card Sequence.
+ * @returns: uint8_t index of the start of the card sequence.
+ ****************************************************************/
+	uint8_t i = 0;
+	for(uint8_t ind = 0 ; ind < CARD_DATA_LENGTH ; ind++){
+		if(get_char_num(get_current_char(ind)) == CARD_SS && is_char_valid(get_current_char(ind))){
+			i=ind;
+			break;
+		}
 	}
-	return true;
-}
-
-static uint8_t get_binary_from_current_char(void){
-/*****************************************************************
- * @brief: Gets the binary number ob the obtained char.
- ****************************************************************/
-	uint8_t data = current_char.data_3<<3;
-	data |= current_char.data_2<<2;
-	data |= current_char.data_1<<1;
-	data |= current_char.data_0<<0;
-	return data;
+	return i;
 }
