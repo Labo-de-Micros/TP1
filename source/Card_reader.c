@@ -56,21 +56,6 @@ typedef struct{
 	uint8_t	data_p : 1;
 }card_char_t;
 
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-//						GLOBAL VARIABLES						//
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-
-uint8_t card_data_decompressed[CARD_CHARACTERS_LENGTH];
-uint8_t pan[CARD_PAN_LENGHT];
-uint8_t exp_year;
-uint8_t exp_month;
-uint8_t service_code[CARD_SERVICE_LENGHT];
-uint8_t PVKI;
-uint8_t PVV[CARD_PVV_LENGHT];
-uint8_t CVV[CARD_CVV_LENGHT];
-
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -82,6 +67,7 @@ static uint32_t card_data_compressed[CARD_DATA_LENGTH_32];
 static uint8_t index;
 static card_callback_t	call;
 static card_states_t current_state;
+static card_t card;
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -97,6 +83,7 @@ static card_char_t get_current_char(uint8_t ind);
 static uint8_t get_char_num(card_char_t character);
 static bool is_char_valid(card_char_t character);
 static uint8_t search_for_start(void);
+static void clear_card(void);
 
 
 //////////////////////////////////////////////////////////////////
@@ -122,7 +109,7 @@ void card_init(card_callback_t callback){
 	return;
 }
 
-uint8_t * get_data(void){
+card_t get_data(void){
 /*****************************************************************
  * @brief: When the callback is called, one must obtain the data readed
  * 			by the driver, so this function returns the data.
@@ -131,41 +118,44 @@ uint8_t * get_data(void){
  * 			readed in the form of uint8_t.
  ****************************************************************/
 //Por ahora asumo que siempre la targeta se lee en la direccion correcta.
-	uint8_t start_index = search_for_start() + 5;
+	clear_card();
+	uint8_t start_index = search_for_start();
 	uint8_t i = 0;
 	uint8_t num = 0;
 	for(i = 0; i < CARD_CHARACTERS_LENGTH && num != CARD_FS ; i++){
-		num = get_char_num(get_current_char(start_index+i*5));
-		if(num != CARD_SS && num != CARD_FS && num != CARD_ES)
-			pan[i] = num;
+		card_char_t chara = get_current_char(start_index+i*5);
+		num = get_char_num(chara);
+		if(num != CARD_SS && num != CARD_FS && num != CARD_ES){
+			card.pan = card.pan * 10 + num;
+		}
 	}
 	num = get_char_num(get_current_char(start_index+i*5));
 	i++;
-	exp_year = num*10 + get_char_num(get_current_char(start_index+i*5));
+	card.exp_year = num*10 + get_char_num(get_current_char(start_index+i*5));
 	i++;
 	num = get_char_num(get_current_char(start_index+i*5));
 	i++;
-	exp_month = num*10 + get_char_num(get_current_char(start_index+i*5));
+	card.exp_month = num*10 + get_char_num(get_current_char(start_index+i*5));
 	
 	for(uint8_t u = 0; u < CARD_SERVICE_LENGHT; u++){
 		i++;
 		uint8_t num = get_char_num(get_current_char(start_index+i*5));
-		service_code[i] = num;
+		card.service_code = card.service_code * 10 + num;
 	}
 	i++;
-	PVKI = get_char_num(get_current_char(start_index+i*5));
+	card.PVKI = get_char_num(get_current_char(start_index+i*5));
 	for(uint8_t u = 0; u < CARD_PVV_LENGHT; u++){
 		i++;
 		uint8_t num = get_char_num(get_current_char(start_index+i*5));
-		PVV[i] = num;
+		card.PVV = card.PVV * 10 + num;
 	}
 	for(uint8_t u = 0; u < CARD_CVV_LENGHT; u++){
 		i++;
 		uint8_t num = get_char_num(get_current_char(start_index+i*5));
-		CVV[i] = num;
+		card.CVV = card.CVV*10 +  num;
 	}
 	i++;
-	return card_data_decompressed;
+	return card;
 }
 
 
@@ -305,5 +295,16 @@ static uint8_t search_for_start(void){
 			break;
 		}
 	}
-	return i;
+	return i+5;
+}
+
+static void clear_card(void){
+	card.pan = 0;
+	card.CVV = 0;
+	card.exp_month = 0;
+	card.exp_year = 0;
+	card.PVKI = 0;
+	card.PVV = 0;
+	card.service_code = 0;
+	return;
 }

@@ -42,6 +42,16 @@
 
 typedef void (*card_callback_t)(void);
 
+typedef struct{
+	uint64_t pan;
+	uint16_t service_code;
+	uint16_t PVV;
+	uint16_t CVV;
+    uint8_t exp_year;
+	uint8_t exp_month;
+    uint8_t PVKI;
+}card_t;
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			FUNCTION PROTOTYPES WITH GLOBAL SCOPE				//
@@ -54,7 +64,7 @@ void card_init(card_callback_t callback);
  * @param callback: callback to be called when a new card is readed.
  ****************************************************************/
 
-uint8_t * get_data(void);
+card_t get_data(void);
 /*****************************************************************
  * @brief: When the callback is called, one must obtain the data readed
  * 			by the driver, so this function returns the data.

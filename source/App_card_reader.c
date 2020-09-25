@@ -46,7 +46,7 @@ void App_Run (void){
  ******************************************************************************/
 
 static void card_reader_callback(void){
-    uint8_t * data;
+    card_t data;
     data = get_data();
     return;
 }
