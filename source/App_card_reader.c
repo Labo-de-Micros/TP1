@@ -4,8 +4,7 @@
 #include "board.h"
 #include "timer.h"
 #include "SysTick.h"
-#include "encoder.h"
-#include "Display_7.h"
+#include "Card_reader.h"
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
@@ -23,9 +22,7 @@
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 
-static void click_call(void);
-static void ccw_call(void);
-static void cw_call(void);
+static void card_reader_callback(void);
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -33,11 +30,7 @@ static void cw_call(void);
  ******************************************************************************/
 
 void App_Init (void) {
-	encoder_init();
-	encoder_set_callback(ccw_call,cw_call,click_call);
-    initDisplay();
-    set_display(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
-    clear_display();
+	card_init(card_reader_callback);
 	return;
 }
 
@@ -52,22 +45,8 @@ void App_Run (void){
  *******************************************************************************
  ******************************************************************************/
 
-static uint8_t number;
-
-static void click_call(void){
-	number = 0;
-    set_number(number);
-	return;
-}
-
-static void ccw_call(void){
-	number--;
-    set_number(number);
-	return;
-}
-
-static void cw_call(void){
-	number++;
-    set_number(number);
-	return;
+static void card_reader_callback(void){
+    card_t data;
+    data = get_data();
+    return;
 }
