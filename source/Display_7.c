@@ -132,6 +132,7 @@ void display_clear_buffer(void);
 void digit_select(uint8_t digit);
 void display_refresh_callback();
 void split_number(uint16_t num, uint8_t * buffers);
+void set_blank();
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -147,6 +148,7 @@ void display_init(void){
 	display.timer=timerGetId();
 	display.temp_timer=timerGetId();
 	display.pwm_timer=timerGetId();
+	display.pwm_level= BRIGHTNESS_LEVELS;
 	return;
 }
 
@@ -548,11 +550,14 @@ void display_refresh_callback(){
 	static uint8_t digit = 0;
 	if (digit>=DIGITS) digit=0;
 	digit_select(digit);
-	uint16_t pwm_ticks=(uint16_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(1+BRIGHTNESS_LEVELS-display.pwm_level)));
-	timerStart(display.pwm_timer, pwm_ticks, TIM_MODE_SINGLESHOT, NULL);
-	if(timerRunning(display.pwm_timer)) set_pins(display.buf[digit++]);
-	else set_pins(DISP_CLEAR);
+	uint8_t pwm_ticks=(uint8_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(1+BRIGHTNESS_LEVELS-display.pwm_level)));
+	timerStart(display.pwm_timer, pwm_ticks, TIM_MODE_SINGLESHOT, set_blank);
+	set_pins(display.buf[digit++]);
 	return;
+}
+
+void set_blank(){
+	set_pins(DISP_CLEAR);
 }
 
 void split_number(uint16_t num, uint8_t * buffers){

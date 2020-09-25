@@ -99,4 +99,6 @@ void display_off();
 
 void display_temp_message(char * message, uint8_t seconds);
 
+void display_set_pwm_level(uint8_t level);
+
 #endif
