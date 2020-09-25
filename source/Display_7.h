@@ -59,7 +59,7 @@ void display_set_mode(display_mode_t mode);
 
 void display_configure_pins(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_t g);
 /*****************************************************************
- * @brief: Intialize de Pins of the seven segment display.
+ * @brief: Intialize the Pins of the seven segment display.
  * @param a: Is the pin number of the 'a' pin of the display
  * @param b: Is the pin number of the 'b' pin of the display
  * @param c: Is the pin number of the 'c' pin of the display

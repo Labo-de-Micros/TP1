@@ -87,7 +87,7 @@
 
 
 #define DISP_MASK 0x01
-
+#define BRIGHTNESS_LEVELS 10
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS			//
@@ -101,9 +101,11 @@ typedef struct{
 	pin_t mux_control_pins[2];
 	tim_id_t timer;
 	tim_id_t temp_timer;
+	tim_id_t pwm_timer;
 	uint8_t buf[4];
 	uint8_t aux_buf[4];
 	display_mode_t mode;
+	uint8_t pwm_level;
 }display_t;
 
 //////////////////////////////////////////////////////////////////
@@ -144,6 +146,7 @@ void display_init(void){
 	timerInit();
 	display.timer=timerGetId();
 	display.temp_timer=timerGetId();
+	display.pwm_timer=timerGetId();
 	return;
 }
 
@@ -208,6 +211,12 @@ void display_set_number(uint16_t number){
 	return;
 }
 
+void display_set_pwm_level(uint8_t level){
+	if (level>BRIGHTNESS_LEVELS) display.pwm_level=BRIGHTNESS_LEVELS;
+	else if (level<1) display.pwm_level=1;
+	else display.pwm_level=level;
+}
+
 void display_on(){
 	uint16_t ticks=(uint16_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS));
 	timerStart(display.timer, ticks, TIM_MODE_PERIODIC, display_refresh_callback);
@@ -223,7 +232,6 @@ void display_temp_message(char * message, uint8_t seconds){
 	uint8_t i;
 	for(i = 0; i < DIGITS; i++)
 		display.aux_buf[i]=display.buf[i];
-	display.mode=DISPLAY_MODE_TEMPORARY;
 	display_set_string(message);
 	timerStart(display.temp_timer, 1000*seconds, TIM_MODE_SINGLESHOT, return_from_temp);
 }
@@ -238,7 +246,6 @@ void display_temp_message(char * message, uint8_t seconds){
 
 
 void return_from_temp(void){
-	display.mode=DISPLAY_MODE_PERSISTANT;
 	uint8_t i;
 	for(i = 0; i < DIGITS;i++)
 		display.buf[i]=display.aux_buf[i];
@@ -541,7 +548,10 @@ void display_refresh_callback(){
 	static uint8_t digit = 0;
 	if (digit>=DIGITS) digit=0;
 	digit_select(digit);
-	set_pins(display.buf[digit++]);
+	uint16_t pwm_ticks=(uint16_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(1+BRIGHTNESS_LEVELS-display.pwm_level)));
+	timerStart(display.pwm_timer, pwm_ticks, TIM_MODE_SINGLESHOT, NULL);
+	if(timerRunning(display.pwm_timer)) set_pins(display.buf[digit++]);
+	else set_pins(DISP_CLEAR);
 	return;
 }
 
