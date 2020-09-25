@@ -37,6 +37,11 @@
 //////////////////////////////////////////////////////////////////
 
 typedef uint8_t display_id_t;
+typedef enum {
+	DISPLAY_MODE_TEMPORARY,
+	DISPLAY_MODE_PERSISTANT,
+	DISPLAY_MODE_BLINK
+} display_mode_t;
 
 
 //////////////////////////////////////////////////////////////////
@@ -71,7 +76,7 @@ void display_configure_mux(pin_t pin0, pin_t pin1);
  * @brief: Initialize mux pins for digit select.
  * **************************************************************/
 
-void display_set_string(char character);
+void display_set_string(char * string);
 /*****************************************************************
  * @brief: Set a specified number on the screen of the seven segment display
  * @param character: A character from a-z to be displayed on the screen.
@@ -92,6 +97,6 @@ void display_off();
  * @brief: Stops updating display.
  * **************************************************************/
 
-void display_temp_message();
+void display_temp_message(char * message, uint8_t seconds);
 
 #endif

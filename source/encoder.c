@@ -93,7 +93,7 @@ void encoder_set_callback(enc_callback_t  ccw, enc_callback_t  cw, enc_callback_
 	callback_ccw=ccw;
 	callback_cw=cw;
 	callback_click=click;
-	configure_button(encoder_button, callback_cw,callback_click,callback_ccw);
+	configure_button(encoder_button, callback_click,callback_click,callback_click);
 	return;
 }
 

@@ -4,7 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../source/App_card_reader.c \
+../source/App_display.c \
 ../source/Card_reader.c \
 ../source/Display_7.c \
 ../source/SysTick.c \
@@ -14,7 +14,7 @@ C_SRCS += \
 ../source/timer.c 
 
 OBJS += \
-./source/App_card_reader.o \
+./source/App_display.o \
 ./source/Card_reader.o \
 ./source/Display_7.o \
 ./source/SysTick.o \
@@ -24,7 +24,7 @@ OBJS += \
 ./source/timer.o 
 
 C_DEPS += \
-./source/App_card_reader.d \
+./source/App_display.d \
 ./source/Card_reader.d \
 ./source/Display_7.d \
 ./source/SysTick.d \

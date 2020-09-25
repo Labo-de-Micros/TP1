@@ -35,9 +35,11 @@ static void cw_call(void);
 void App_Init (void) {
 	encoder_init();
 	encoder_set_callback(ccw_call,cw_call,click_call);
-    initDisplay();
-    set_display(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
-    clear_display();
+    display_init();
+    display_configure_pins(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
+    display_configure_mux(DISPLAY_MUX_PIN_0, DISPLAY_MUX_PIN_1);
+
+	display_on();
 	return;
 }
 
@@ -52,22 +54,26 @@ void App_Run (void){
  *******************************************************************************
  ******************************************************************************/
 
-static uint8_t number;
+static uint8_t number=0;
 
 static void click_call(void){
-	number = 0;
-    set_number(number);
+	char text[4];
+	text[0] = 'h';
+	text[1] = 'o';
+	text[2] = 'l';
+	text[3] = 'a';
+	display_temp_message(text, 2);
 	return;
 }
 
 static void ccw_call(void){
 	number--;
-    set_number(number);
+    display_set_number(number);
 	return;
 }
 
 static void cw_call(void){
 	number++;
-    set_number(number);
+    display_set_number(number);
 	return;
 }

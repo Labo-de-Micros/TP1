@@ -33,57 +33,58 @@
 #define DISP_9		0x6F
 #define DISP_CLEAR	0x00
 #define DISP_A		0x77
-#define DISP_a		0x7D
-#define DISP_B		0x7F
-#define DISP_b		0x1F
-#define DISP_C		0x4E
-#define DISP_c		0x0D
-#define DISP_D		0x7E
-#define DISP_d		0x3D
-#define DISP_E		0x4F
-#define DISP_e		0x6f
-#define DISP_F		0x47
-#define DISP_f		0x47
-#define DISP_G		0x5E
-#define DISP_g		0x7B
-#define DISP_H		0x37
-#define DISP_h		0x17
+#define DISP_B		0x7C
+#define DISP_C		0x39
+#define DISP_D		0x5E
+#define DISP_E		0x79
+#define DISP_F		0x71
+#define DISP_G		0x3D
+#define DISP_H		0x76
 #define DISP_I		0x30
-#define DISP_i		0x10
-#define DISP_J		0x3C
-#define DISP_j		0x38
-#define DISP_K		0x37
-#define DISP_k		0x17
-#define DISP_L		0x0E
-#define DISP_l		0x06
-#define DISP_M		0x55
-#define DISP_m		0x55
-#define DISP_N		0x15
-#define DISP_n		0x15
-#define DISP_O		0x7E
-#define DISP_o		0x1D
-#define DISP_P		0x67
-#define DISP_p		0x67
-#define DISP_Q		0x73
-#define DISP_q		0x73
-#define DISP_R		0x77
-#define DISP_r		0x05
-#define DISP_S		0x5B
-#define DISP_s		0x5B
-#define DISP_T		0x46
-#define DISP_t		0x0F
+#define DISP_J		0x1E
+#define DISP_K		0x75
+#define DISP_L		0x38
+#define DISP_M		0x15
+#define DISP_N		0x37
+#define DISP_O		0x3F
+#define DISP_P		0x73
+#define DISP_Q		0x6B
+#define DISP_R		0x33
+#define DISP_S		0x6D
+#define DISP_T		0x78
 #define DISP_U		0x3E
+#define DISP_V		0x3E
+#define DISP_W		0x2A
+#define DISP_X		0x76
+#define DISP_Y		0x6E
+#define DISP_Z		0x5B
+#define DISP_a		0x5F
+#define DISP_b		0x7C
+#define DISP_c		0x58
+#define DISP_d		0x5E
+#define DISP_e		0x7B
+#define DISP_f		0x71
+#define DISP_g		0x6F
+#define DISP_h		0x74
+#define DISP_i		0x10
+#define DISP_j		0x0C
+#define DISP_k		0x75
+#define DISP_l		0x30
+#define DISP_m		0x14
+#define DISP_n		0x54
+#define DISP_o		0x5C
+#define DISP_p		0x73
+#define DISP_q		0x67
+#define DISP_r		0x50
+#define DISP_s		0x6D
+#define DISP_t		0x78
 #define DISP_u		0x1C
-#define DISP_V		0x27
-#define DISP_v		0x23
-#define DISP_W		0x3F
-#define DISP_w		0x2B
-#define DISP_X		0x25
-#define DISP_x		0x25
-#define DISP_Y		0x3B
-#define DISP_y		0x33
-#define DISP_Z		0x6D
-#define DISP_z		0x6D
+#define DISP_v		0x1C
+#define DISP_w		0x14
+#define DISP_x		0x76
+#define DISP_y		0x6E
+#define DISP_z		0x5B
+
 
 #define DISP_MASK 0x01
 
@@ -93,11 +94,6 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-typedef enum {
-	DISPLAY_MODE_TEMPORARY,
-	DISPLAY_MODE_PERSISTANT,
-	DISPLAY_MODE_BLINK
-} display_mode_t;
 
 typedef struct{
 	uint8_t digits;
@@ -133,7 +129,7 @@ uint8_t get_7_segments_number(uint8_t num);
 void display_clear_buffer(void);
 void digit_select(uint8_t digit);
 void display_refresh_callback();
-void split_number(uint16_t num, uint16_t * buffers);
+void split_number(uint16_t num, uint8_t * buffers);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -145,6 +141,9 @@ void display_init(void){
 /*****************************************************************
  * @brief: Initialize the Seven segment display driver
  * **************************************************************/
+	timerInit();
+	display.timer=timerGetId();
+	display.temp_timer=timerGetId();
 	return;
 }
 
@@ -180,8 +179,8 @@ void display_configure_pins(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_
 void display_configure_mux(pin_t pin0, pin_t pin1){
 	uint8_t index;
 	
-	display.mux_control_pins[0] = pin0;
-	display.mux_control_pins[1] = pin1;
+	display.mux_control_pins[1] = pin0;
+	display.mux_control_pins[0] = pin1;
 	
 	for(index=0; index<MUX_PINS; index++){
 		gpioMode(display.mux_control_pins[index], OUTPUT);
@@ -241,7 +240,7 @@ void display_temp_message(char * message, uint8_t seconds){
 void return_from_temp(void){
 	display.mode=DISPLAY_MODE_PERSISTANT;
 	uint8_t i;
-	for(i = 0; i < 29;i++)
+	for(i = 0; i < DIGITS;i++)
 		display.buf[i]=display.aux_buf[i];
 }
 
@@ -457,7 +456,9 @@ uint8_t get_7_segments_char(char character){
 			return_val = DISP_z;
 			break;
 		default:
+			break;
 	}	
+	return return_val;
 }
 
 uint8_t get_7_segments_number(uint8_t num){
@@ -498,6 +499,7 @@ uint8_t get_7_segments_number(uint8_t num){
 			return_val = DISP_9;
 			break;
 		default:
+			break;
 	}
 	return return_val;
 }
@@ -507,7 +509,7 @@ void display_clear_buffer(void){
  * @brief: Clears the screen of the display (nothing will be displayed).
  * **************************************************************/
 	uint8_t index;
-	for(index=0;index,DIGITS;index++)
+	for(index=0;index<DIGITS;index++)
 		load_buffer(DISP_CLEAR, index);
 }
 
@@ -530,6 +532,7 @@ void digit_select(uint8_t digit){
 			gpioWrite(display.mux_control_pins[1],1);
 			break;
 		default:
+			break;
 	}
 	return;
 }
@@ -542,8 +545,8 @@ void display_refresh_callback(){
 	return;
 }
 
-void split_number(uint16_t num, uint16_t * buffers){
-	uint8_t index=3;
+void split_number(uint16_t num, uint8_t * buffers){
+	int8_t index=3;
 	while(index >= 0) //do till num greater than  0
 	{
 		buffers[index--] = num % 10;  //split last digit from number
