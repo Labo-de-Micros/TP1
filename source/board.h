@@ -43,6 +43,10 @@
 #define DISPLAY_PIN_F   PORTNUM2PIN(PC,12)
 #define DISPLAY_PIN_G   PORTNUM2PIN(PC,4)
 
+#define CARD_DATA   0
+#define CARD_CLOCK  0
+#define CARD_ENABLE 0
+
 
 
 #define LED_ACTIVE			LOW
