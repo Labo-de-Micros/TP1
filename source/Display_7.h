@@ -45,14 +45,14 @@ typedef uint8_t display_id_t;
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void initDisplay(void);
+void display_init(void);
 /*****************************************************************
  * @brief: Initialize the Seven segment display driver
  * **************************************************************/
 
 void display_set_mode(display_mode_t mode);
 
-void set_display(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_t g);
+void display_configure_pins(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_t g);
 /*****************************************************************
  * @brief: Intialize de Pins of the seven segment display.
  * @param a: Is the pin number of the 'a' pin of the display
@@ -71,7 +71,7 @@ void display_configure_mux(pin_t pin0, pin_t pin1);
  * @brief: Initialize mux pins for digit select.
  * **************************************************************/
 
-void display_set_char(char character);
+void display_set_string(char character);
 /*****************************************************************
  * @brief: Set a specified number on the screen of the seven segment display
  * @param character: A character from a-z to be displayed on the screen.
@@ -91,5 +91,7 @@ void display_off();
 /*****************************************************************
  * @brief: Stops updating display.
  * **************************************************************/
+
+void display_temp_message();
 
 #endif

@@ -126,7 +126,15 @@ static display_t display;
 ////////////////////////////////////////////////////////////////
 
 static void set_pins(uint8_t pins);
+static void load_buffer(uint8_t pins, uint8_t digit);
 void return_from_temp(void);
+uint8_t get_7_segments_char(char character);
+uint8_t get_7_segments_number(uint8_t num);
+void display_clear_buffer(void);
+void digit_select(uint8_t digit);
+void display_refresh_callback();
+void split_number(uint16_t num, uint16_t * buffers);
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
