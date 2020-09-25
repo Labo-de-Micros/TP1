@@ -76,6 +76,9 @@ static card_callback_t	call;
 static card_states_t current_state;
 static card_char_t current_char;
 static uint8_t enable_prev_state;
+#ifdef	_CARD_DEBUG_
+static uint32_t current_step = 0;
+#endif
 
 
 ////////////////////////////////////////////////////////////////
@@ -108,7 +111,7 @@ void card_init(card_callback_t callback){
 	gpioMode(CARD_DATA, INPUT);
 	gpioMode(CARD_CLOCK, INPUT);
 	gpioMode(CARD_ENABLE, INPUT);
-	gpioIRQ (CARD_CLOCK, GPIO_IRQ_MODE_RISING_EDGE , card_callback);	//Asumo que el clock no tirara nada cuando no haya leido nada.
+	gpioIRQ (CARD_CLOCK, GPIO_IRQ_MODE_FALLING_EDGE , card_callback);	//Asumo que el clock no tirara nada cuando no haya leido nada.
 	gpioIRQ (CARD_ENABLE, GPIO_IRQ_MODE_BOTH_EDGES , card_callback);
 	call = callback;
 	current_state = CARD_WAIT_FOR_START;
@@ -138,13 +141,18 @@ static void card_callback(void){
  * @brief: Runs the state machine for the card reader protocol
  * 			(ISO/IEC 7811-2)
  ****************************************************************/
-	uint8_t ev = get_new_event();		//gets the event
+	card_events_t ev = get_new_event();		//gets the event
 	uint8_t data = gpioRead(CARD_DATA);	//reads the data pin from the card reader.
+	if(ev == ENABLE_RISING_EV){
+		call();
+		current_state = CARD_WAIT_FOR_START;
+	}
 
 	switch(current_state){
 		case CARD_WAIT_FOR_START:	// Estado inicial, si me llega un Falling de enable, esta leyendo targeta.
 			if(ev == ENABLE_FALLING_EV){
-				current_state = CARD_ENABLE_ACTIVATED;
+				//current_state = CARD_ENABLE_ACTIVATED;
+				current_state = CARD_WAIT_DATA;
 				clean_current_char();	//Limpio todo
 				clear_buffer();
 			}
@@ -158,47 +166,47 @@ static void card_callback(void){
 			if(ev == CLK_EV){
 				if(get_binary_from_current_char() == CARD_SS)	// me fijo si previamente llego un LS o un ES.
 					current_state = CARD_WAIT_DATA;
-				else if(get_binary_from_current_char() == CARD_ES)
-					current_state = CARD_WAIT_LRC;
+				//else if(get_binary_from_current_char() == CARD_ES)
+				//	current_state = CARD_WAIT_LRC;
 				else{
 					current_char.data_0 = data;//Guardo el primer dato que me llega en el primer bit del caracter.
 					current_state = CARD_0_ARRIVED;
 				}
 			}
-			else	//No deberia llegar un cambio en enable
-				current_state = CARD_ERROR;
+			//else	//No deberia llegar un cambio en enable
+			//	current_state = CARD_ERROR;
 			break;
 		case CARD_0_ARRIVED://Estado de espera del segundo bit del caracter actual.
 			if(ev == CLK_EV){
 				current_char.data_0 = data;//Guardo el segundo dato que me llega en el segundo bit del caracter.
 				current_state = CARD_1_ARRIVED;
 			}
-			else
-				current_state = CARD_ERROR;
+			//else
+			//	current_state = CARD_ERROR;
 			break;
 		case CARD_1_ARRIVED://Estado de espera del tercer bit del caracter actual.
 			if(ev == CLK_EV){
 				current_char.data_1 = data;
 				current_state = CARD_2_ARRIVED;
 			}
-			else
-				current_state = CARD_ERROR;
+			//else
+			//	current_state = CARD_ERROR;
 			break;
 		case CARD_2_ARRIVED://Estado de espera del cuarto bit del caracter actual.
 			if(ev == CLK_EV){
 				current_char.data_2 = data;
 				current_state = CARD_3_ARRIVED;
 			}
-			else
-				current_state = CARD_ERROR;
+			//else
+			//	current_state = CARD_ERROR;
 			break;
 		case CARD_3_ARRIVED://Estado de espera del quinto bit del caracter actual.
 			if(ev == CLK_EV){
 				current_char.data_3 = data;
 				current_state = CARD_P_ARRIVED;
 			}
-			else
-				current_state = CARD_ERROR;
+			//else
+			//	current_state = CARD_ERROR;
 			break;
 		case CARD_P_ARRIVED://LLegaron todos los bits del caracter acutal, se procede a confirmar que la lectura
 							//se haya hecho correctamente, y en caso de que asi sea, se la procede a guardar.
@@ -208,11 +216,11 @@ static void card_callback(void){
 					current_state = CARD_WAIT_DATA;//Se vuelve al estado de espera de nuevo cartacter.
 					save_data();
 				}
-				else
-					current_state = CARD_ERROR;
+				//else
+				//	current_state = CARD_ERROR;
 			}
-			else
-				current_state = CARD_ERROR;
+			//else
+			//	current_state = CARD_ERROR;
 			break;
 		case CARD_WAIT_LRC://Estado de espera del ultimo caracter de la secuencia.
 			if(ev == CLK_EV){
@@ -221,13 +229,16 @@ static void card_callback(void){
 					call();
 				current_state = CARD_WAIT_FOR_START;
 			}
-			else
-				current_state = CARD_ERROR;
+			//else
+			//	current_state = CARD_ERROR;
 			break;
 		default:
 			current_state = CARD_ERROR;
 			break;
 	}
+#ifdef	_CARD_DEBUG_
+	current_step++;
+#endif
 	return;
 }
 
@@ -268,9 +279,9 @@ static bool check_data_arrived(void){
  * @return: Returns 'true' if the data arrived is valid and 'false' otherwise.
  ****************************************************************/
 	uint8_t data = get_binary_from_current_char();
-	if(data % 2 != 0 && current_char.data_p != 0)
+	if(data % 2 != 1 && current_char.data_p != 0)
 		return false;
-	else if(data % 2 == 0 && current_char.data_p != 1)
+	else if(data % 2 == 1 && current_char.data_p != 1)
 		return false;
 	return true;
 }
