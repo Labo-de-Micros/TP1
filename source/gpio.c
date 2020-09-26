@@ -176,6 +176,21 @@ bool gpioIRQ (pin_t pin, uint8_t irqMode, pinIrqFun_t irqFun){
 	return true;
 }
 
+
+void gpioDisableIRQ(pin_t pin){
+	uint32_t port_num = PIN2PORT(pin);
+	uint32_t pin_num = PIN2NUM(pin);
+	//pin_ports_activated[port_num][pin_num] = PIN_IRQ_ENABLED;
+	pin_ports_activated[port_num] &= ~(PIN_IRQ_MASK<<pin_num);
+	callbacks[port_num][pin_num] = 0;
+	//PORT_Type * addr_arrays[] = PORT_BASE_PTRS;
+	//PORT_Type * port = addr_arrays[port_num];
+	__NVIC_DisableIRQ(IRQn_ports[port_num]);
+	__NVIC_ClearPendingIRQ(IRQn_ports[port_num]);
+	return;
+}
+
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //							HANDLERS							//

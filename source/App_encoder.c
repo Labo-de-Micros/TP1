@@ -23,6 +23,8 @@
  ******************************************************************************/
 
 static void click_call(void);
+static void click_double_call(void);
+static void click_long_call(void);
 static void ccw_call(void);
 static void cw_call(void);
 /*******************************************************************************
@@ -33,7 +35,7 @@ static void cw_call(void);
 
 void App_Init (void) {
 	encoder_init();
-	encoder_set_callback(ccw_call,cw_call,click_call);
+	encoder_set_callback(ccw_call,cw_call,click_call,click_double_call,click_long_call);
 	gpioMode(PIN_LED_RED,OUTPUT);
 	gpioMode(PIN_LED_BLUE,OUTPUT);
 	gpioMode(PIN_LED_GREEN,OUTPUT);
@@ -52,6 +54,16 @@ void App_Run (void){
  ******************************************************************************/
 
 static void click_call(void){
+	gpioToggle(PIN_LED_GREEN);
+	return;
+}
+
+static void click_double_call(void){
+	gpioToggle(PIN_LED_GREEN);
+	return;
+}
+
+static void click_long_call(void){
 	gpioToggle(PIN_LED_GREEN);
 	return;
 }

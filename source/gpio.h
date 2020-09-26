@@ -111,4 +111,6 @@ bool gpioIRQ (pin_t pin, uint8_t irqMode, pinIrqFun_t irqFun);
  * @return Registration succeed
  *****************************************************************/
 
+void gpioDisableIRQ(pin_t pin);
+
 #endif // _GPIO_H_
