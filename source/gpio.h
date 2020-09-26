@@ -112,5 +112,9 @@ bool gpioIRQ (pin_t pin, uint8_t irqMode, pinIrqFun_t irqFun);
  *****************************************************************/
 
 void gpioDisableIRQ(pin_t pin);
+/*****************************************************************
+ * @brief Disables a previosuly activated interrupt pin
+ * @param pin the pin whose IRQ mode you wish to dishable (according PORTNUM2PIN)
+ *****************************************************************/
 
 #endif // _GPIO_H_

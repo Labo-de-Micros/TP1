@@ -33,8 +33,6 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-typedef uint8_t enc_status_t;
-enum {INIT, CW, CCW};
 typedef enum{
 	ENCODER_IDLE_ST,
 
@@ -66,10 +64,8 @@ typedef enum{
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-static enc_status_t status;
 static tim_id_t encoder_timer;
 static button_id_t encoder_button;
-static uint8_t A_measured;
 static enc_callback_t  callback_ccw;
 static enc_callback_t  callback_cw;
 static enc_callback_t  callback_click;
@@ -83,13 +79,9 @@ static encoder_states_t current_state;
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-static void callback_B2(void);
-static void callback_B1(void);
 void callback_B(void);
 void callback_A(void);
 void encoder_state_machine(encoder_events_t ev);
-
-
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -108,7 +100,6 @@ void encoder_init(void){
 	encoder_timer = timerGetId();
 	gpioMode(ENCODER_PIN_A, INPUT);
 	gpioMode(ENCODER_PIN_B, INPUT);
-	//gpioIRQ (ENCODER_PIN_B, GPIO_IRQ_MODE_FALLING_EDGE, callback_B1);
 	gpioIRQ (ENCODER_PIN_B, GPIO_IRQ_MODE_BOTH_EDGES, callback_B);
 	gpioIRQ (ENCODER_PIN_A, GPIO_IRQ_MODE_BOTH_EDGES, callback_A);
 	buttonInit();
@@ -125,8 +116,8 @@ void encoder_set_callback(enc_callback_t  ccw, enc_callback_t  cw, enc_callback_
  * @param ccw: Callback for Counter-Clockwise turn.
  * @param cw: Callback for Clockwise turn.
  * @param click: Callback for button pressed single time.
- * @param click: Callback for button pressed double time.
- * @param click: Callback for button long press.
+ * @param double_click: Callback for button pressed double time.
+ * @param long_click: Callback for button long press.
  * **************************************************************/
 	callback_ccw=ccw;
 	callback_cw=cw;
@@ -143,39 +134,11 @@ void encoder_set_callback(enc_callback_t  ccw, enc_callback_t  cw, enc_callback_
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void callback_B1(void){
+static void callback_B(void){
 /*****************************************************************
- * @brief: Funcion que se llama en cada flanco descendente del pin
- * 			B del encoder
- ****************************************************************/
-	// Lo siguiente es una logíca para que los rebotes de las señales
-	// no se tengan en cuenta.
-	if (!timerRunning(encoder_timer)){
-	// Si es la primera vez que entra al callback, se inicializa el timer
-	// si vuelve a entrar al callback antes de que finalize el timer, no hace nada
-	// por lo tanto, cuando termina el timer se llama a callback B2.
-		timerStart(encoder_timer, ENCODER_TIME_TIMER, TIM_MODE_SINGLESHOT, callback_B2);
-		A_measured = gpioRead(ENCODER_PIN_A);	//Se guarda el valor de la medicion del
-												//pin A la primera vez que se llama a 
-												//Callback_B1.
-	}
-	return;
-}
-
-void callback_B2(void){
-/*****************************************************************
- * @brief: Funcion  que realiza la logica para determinar para
- * 			que lado se giró el encoder y se procede a llamar a
- * 			su respectivo callback.
- ****************************************************************/
-	if(A_measured == HIGH)		//Dado que esto entra con un flanco negativo de B
-		callback_cw();	//se puede determinar el sentido de giro solo con el
-	else				//valor de A medido.
-		callback_ccw();
-	return;
-}
-
-void callback_B(void){
+ * @brief: Callback called by both edges of B encoder pin. It calls
+ * 			the state machine handler with the corresponding event.
+ * **************************************************************/
 	if(gpioRead(ENCODER_PIN_B))
 		encoder_state_machine(ENCODER_B_POSITIVE_EDGE_EV);
 	else
@@ -183,7 +146,11 @@ void callback_B(void){
 	return;
 }
 
-void callback_A(void){
+static void callback_A(void){
+/*****************************************************************
+ * @brief: Callback called by both edges of A encoder pin. It calls
+ * 			the state machine handler with the corresponding event.
+ * **************************************************************/
 	if(gpioRead(ENCODER_PIN_A))
 		encoder_state_machine(ENCODER_A_POSITIVE_EDGE_EV);
 	else
@@ -191,12 +158,22 @@ void callback_A(void){
 	return;
 }
 
-void callback_timer(void){
+static void callback_timer(void){
+/*****************************************************************
+ * @brief: Callback called when the singleshot timer of the state
+ * 			machine finishes. It calls the stame machine with the 
+ * 			timer finished event.
+ * **************************************************************/
 	encoder_state_machine(ENCODER_TIMER_FINISHED_EV);
 	return;
 }
 
-void encoder_state_machine(encoder_events_t ev){
+static void encoder_state_machine(encoder_events_t ev){
+/*****************************************************************
+ * @brief: Encoder state machines, it determines which state to go
+ * 			whenever an event arrives. When the correct moment arrives
+ * 			it calls the clockwise or conter-clockwise callbacks.
+ * **************************************************************/
 	switch(current_state){
 		case ENCODER_IDLE_ST:
 			if(ev == ENCODER_A_NEGATIVE_EDGE_EV){

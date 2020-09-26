@@ -56,8 +56,8 @@ void encoder_set_callback(enc_callback_t  ccw, enc_callback_t  cw,
  * @param ccw: Callback for Counter-Clockwise turn.
  * @param cw: Callback for Clockwise turn.
  * @param click: Callback for button pressed single time.
- * @param click: Callback for button pressed double time.
- * @param click: Callback for button long press.
+ * @param double_click: Callback for button pressed double time.
+ * @param long_click: Callback for button long press.
  * **************************************************************/
 
 #endif	// _ENCODER_H_
