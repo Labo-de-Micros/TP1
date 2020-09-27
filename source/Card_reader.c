@@ -32,8 +32,8 @@
 #define CARD_PVKI_LENGHT		1		//Maxima cantidad de caracteres de PVKI
 #define CARD_PVV_LENGHT			4		//Maxima cantidad de caracteres de PVV
 #define CARD_CVV_LENGHT			3		//Maxima cantidad de caracteres de CVV
-#define CARD_DATA_REGISTERS_LENGTH	(CARD_DATA_LENGTH/CARD_DATA_REGISTER)	//Cantidad de registros de 32 bits necesarios para guardar la CARD_DATA_LENGTH
-													//IMPORTANTE: es necesario que CARD_DATA_LENGTH sea multiplo de 32. (No sirve otra cosa).
+#define CARD_DATA_REGISTERS_LENGTH	(CARD_DATA_LENGTH/CARD_DATA_REGISTER)	//Cantidad de registros de CARD_DATA_REGISTER bits necesarios para guardar la CARD_DATA_LENGTH
+													//IMPORTANTE: es necesario que CARD_DATA_LENGTH sea multiplo de CARD_DATA_REGISTER. (No sirve otra cosa).
 #if ((CARD_DATA_LENGTH%CARD_DATA_REGISTER) != 0)
 #error CARD_DATA_LENGTH must be multiple of CARD_DATA_REGISTER! Cannot be otherwise! Please change CARD_DATA_LENGTH or CARD_DATA_REGISTER.
 #endif
@@ -115,6 +115,9 @@ void card_init(card_callback_t callback){
  * @brief: Initializer the card reader driver and its components
  * @param callback: callback to be called when a new card is readed.
  ****************************************************************/
+	static bool yaInit = false;
+	if(yaInit)
+		return;
 	gpioMode(CARD_DATA, INPUT);	// Inicializo los pines correspondientemente
 	gpioMode(CARD_CLOCK, INPUT);
 	gpioMode(CARD_ENABLE, INPUT);
@@ -124,6 +127,7 @@ void card_init(card_callback_t callback){
 	current_state = CARD_WAIT_FOR_START;	//Seteo el estado de la maquina de estados como 'esperando targeta'.
 	index = 0;
 	clear_buffer();	// Limpio el buffer para que todo quede seteado en 0.
+	yaInit = true;
 	return;
 }
 
@@ -134,6 +138,8 @@ card_t get_data(void){
  * @return: A struct card_t containing the information readed in the card.
  ****************************************************************/
 //Por ahora asumo que siempre la targeta se lee en la direccion correcta.
+//FALTA MEJORAR ESTA FUNCION PARA QUE QUEDE MAS LINDA. CVV, PCC Y PVKI 
+//PARECEN NO ANDAR.
 	clear_card();
 	uint8_t start_index = search_for_start();
 	uint8_t i = 0;
@@ -172,7 +178,6 @@ card_t get_data(void){
 		card.CVV = card.CVV*10 +  num;
 	}
 	i++;
-
 	return card;
 }
 
@@ -259,6 +264,7 @@ static card_char_t get_current_char(uint8_t ind){
  * 					data_2 = 0
  * 					data_3 = 1
  * 					data_p = 0
+ * The sequence of data checked must be stored in card_data_compressed.
  ****************************************************************/
 	card_char_t curr_char;
 	uint8_t i = ind % CARD_DATA_REGISTER;      // indice de que bit tengo que agarrar.

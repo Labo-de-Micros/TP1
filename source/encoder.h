@@ -16,7 +16,6 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -25,8 +24,6 @@
 //		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 		 	//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-
-#define ENCODERS_MAX_CANT     1
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -48,8 +45,12 @@ void encoder_init(void);
  * @brief: Initialize the encoder Driver
  * **************************************************************/
 
-void encoder_set_callback(enc_callback_t  ccw, enc_callback_t  cw,
-    enc_callback_t  click, enc_callback_t double_click, enc_callback_t long_click);
+void encoder_set_callback(
+    enc_callback_t ccw, 
+    enc_callback_t cw,
+    enc_callback_t click, 
+    enc_callback_t double_click, 
+    enc_callback_t long_click);
 /*****************************************************************
  * @brief: Set the callbacks corresponding to the different types
  *			of modes

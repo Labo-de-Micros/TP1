@@ -27,6 +27,10 @@
 
 #define ENCODER_TIME_TIMER	1
 
+#if ENCODER_TIME_TIMER >= 5
+#warning ENCODER_TIME_TIMER too High! Check if that´s ok, maybe when you turn the encoder too fast it wont work!.
+#endif
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
@@ -66,11 +70,11 @@ typedef enum{
 
 static tim_id_t encoder_timer;
 static button_id_t encoder_button;
-enc_callback_t  callback_ccw;
-enc_callback_t  callback_cw;
-enc_callback_t  callback_click;
-enc_callback_t  callback_double;
-enc_callback_t  callback_long;
+static enc_callback_t  callback_ccw;
+static enc_callback_t  callback_cw;
+static enc_callback_t  callback_click;
+static enc_callback_t  callback_double;
+static enc_callback_t  callback_long;
 static encoder_states_t current_state;
 
 ////////////////////////////////////////////////////////////////
@@ -79,10 +83,31 @@ static encoder_states_t current_state;
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-static void callback_B(void);
 static void callback_A(void);
+/*****************************************************************
+ * @brief: Callback called by both edges of A encoder pin. It calls
+ * 			the state machine handler with the corresponding event.
+ * **************************************************************/
+
+static void callback_B(void);
+/*****************************************************************
+ * @brief: Callback called by both edges of B encoder pin. It calls
+ * 			the state machine handler with the corresponding event.
+ * **************************************************************/
+
 static void callback_timer(void);
+/*****************************************************************
+ * @brief: Callback called when the singleshot timer of the state
+ * 			machine finishes. It calls the stame machine with the 
+ * 			timer finished event.
+ * **************************************************************/
+
 static void encoder_state_machine(encoder_events_t ev);
+/*****************************************************************
+ * @brief: Encoder state machines, it determines which state to go
+ * 			whenever an event arrives. When the correct moment arrives
+ * 			it calls the clockwise or conter-clockwise callbacks.
+ * **************************************************************/
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
