@@ -46,7 +46,7 @@
 #define	CARD_FS				13
 #define	CARD_ES				15
 
-#define CARD_32_MASK		0x00000001
+#define CARD_32_MASK		0x1
 #define _CARD_DEBUG_
 
 //////////////////////////////////////////////////////////////////
@@ -75,6 +75,11 @@ typedef struct{
 	uint8_t	data_p : 1;
 }card_char_t;
 
+typedef uint32_t UINT_REGISTER;
+
+#if CARD_DATA_REGISTER != 32
+#error Please correct the typedef for the data register UINT_REGISTER for the selected in CARD_DATA_REGISTER!
+#endif
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -82,7 +87,7 @@ typedef struct{
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-static uint32_t card_data_compressed[CARD_DATA_REGISTERS_LENGTH];
+static UINT_REGISTER card_data_compressed[CARD_DATA_REGISTERS_LENGTH];
 static uint8_t index;
 static card_callback_t	call;
 static card_states_t current_state;
@@ -103,6 +108,13 @@ static uint8_t get_char_num(card_char_t character);
 static bool is_char_valid(card_char_t character);
 static uint8_t search_for_start(void);
 static void clear_card(void);
+static uint8_t get_pan_number(void);
+static uint8_t get_exp_date(uint8_t ind);
+static uint8_t get_service_code(uint8_t ind);
+static uint8_t get_pvki(uint8_t ind);
+static uint8_t get_pvv(uint8_t ind);
+static uint8_t get_cvv(uint8_t ind);
+static UINT_REGISTER reverseBits(UINT_REGISTER n);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -137,47 +149,13 @@ card_t get_data(void){
  * 			by the driver, so this function returns the card data.
  * @return: A struct card_t containing the information readed in the card.
  ****************************************************************/
-//Por ahora asumo que siempre la targeta se lee en la direccion correcta.
-//FALTA MEJORAR ESTA FUNCION PARA QUE QUEDE MAS LINDA. CVV, PCC Y PVKI 
-//PARECEN NO ANDAR.
 	clear_card();
-	uint8_t start_index = search_for_start();
-	uint8_t i = 0;
-	uint8_t num = 0;
-	for(i = 0; i < CARD_CHARACTERS_LENGTH && num != CARD_FS ; i++){
-		card_char_t chara = get_current_char(start_index+i*5);
-		num = get_char_num(chara);
-		if(num != CARD_SS && num != CARD_FS && num != CARD_ES){
-			card.pan = card.pan * 10 + num;
-		}
-	}
-
-	num = get_char_num(get_current_char(start_index+i*5));
-	i++;
-	card.exp_year = num*10 + get_char_num(get_current_char(start_index+i*5));
-	i++;
-	num = get_char_num(get_current_char(start_index+i*5));
-	i++;
-	card.exp_month = num*10 + get_char_num(get_current_char(start_index+i*5));
-	
-	for(uint8_t u = 0; u < CARD_SERVICE_LENGHT; u++){
-		i++;
-		uint8_t num = get_char_num(get_current_char(start_index+i*5));
-		card.service_code = card.service_code * 10 + num;
-	}
-	i++;
-	card.PVKI = get_char_num(get_current_char(start_index+i*5));
-	for(uint8_t u = 0; u < CARD_PVV_LENGHT; u++){
-		i++;
-		uint8_t num = get_char_num(get_current_char(start_index+i*5));
-		card.PVV = card.PVV * 10 + num;
-	}
-	for(uint8_t u = 0; u < CARD_CVV_LENGHT; u++){
-		i++;
-		uint8_t num = get_char_num(get_current_char(start_index+i*5));
-		card.CVV = card.CVV*10 +  num;
-	}
-	i++;
+	uint8_t ind = get_pan_number();
+	ind = get_exp_date(ind);
+	ind = get_service_code(ind);
+	ind = get_pvki(ind);
+	ind = get_pvv(ind);
+	ind = get_cvv(ind);
 	return card;
 }
 
@@ -305,12 +283,17 @@ static bool is_char_valid(card_char_t character){
  * @param character: caharacter to check.
  * @returns: true if the character is a valid one, false otherwise.
  ****************************************************************/
-	if(get_char_num(character) % 2 == 0 && character.data_p != 1)
-		return false;
-	else if(get_char_num(character) % 2 != 0 && character.data_p != 0)
-		return false;
-	else
+	uint8_t count = 0;
+	count += character.data_0;
+	count += character.data_1;
+	count += character.data_2;
+	count += character.data_3;
+	if(count % 2 == 0 && character.data_p == 1 )
 		return true;
+	else if(count % 2 != 0 && character.data_p == 0)
+		return true;
+	else
+		return false;
 }
 
 static uint8_t search_for_start(void){
@@ -326,6 +309,22 @@ static uint8_t search_for_start(void){
 			break;
 		}
 	}
+	/*if(i+5 >= 30){//Significa que la tarjeta fue pasada en sentido contrario, debo swapear el array.
+		UINT_REGISTER _temp_[CARD_DATA_REGISTERS_LENGTH];
+		for(uint8_t i = 0; i<CARD_DATA_REGISTERS_LENGTH; i++){
+			_temp_[i] = card_data_compressed[CARD_DATA_REGISTERS_LENGTH-i-1];
+			_temp_[i] = reverseBits(_temp_[i]);
+		}
+		for(uint8_t i = 0; i<CARD_DATA_REGISTERS_LENGTH; i++){
+			card_data_compressed[i] = _temp_[i];
+		}
+		for(uint8_t ind = 0 ; ind < CARD_DATA_LENGTH ; ind++){
+			if(get_char_num(get_current_char(ind)) == CARD_SS && is_char_valid(get_current_char(ind))){
+				i=ind;
+				break;
+			}
+		}
+	}*/
 	// Una vez que lo encuentro, devuelvo la posicion del siguiente caracter.
 	return i+5;
 }
@@ -341,5 +340,114 @@ static void clear_card(void){
 	card.PVKI = 0;
 	card.PVV = 0;
 	card.service_code = 0;
+	card.everything_ok = false;
 	return;
+}
+
+static uint8_t get_pan_number(void){
+/*****************************************************************
+ * @brief: Reads the pan number, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+	uint8_t start_index = search_for_start();
+	uint8_t i = 0;
+	uint8_t num = 0;
+	bool error = false;
+	for(i = 0; i < CARD_CHARACTERS_LENGTH && num != CARD_FS ; i++){
+		card_char_t chara = get_current_char(start_index+i*5);
+		num = get_char_num(chara);
+		if(num != CARD_SS && num != CARD_FS && num != CARD_ES){
+			card.pan = card.pan * 10 + num;
+		}
+		if(!is_char_valid(chara)){
+			error = true;
+		}
+	}
+	if(!error)
+		card.everything_ok = true;
+	return start_index+i*5;
+}
+
+static uint8_t get_exp_date(uint8_t ind){
+/*****************************************************************
+ * @brief: Reads the expiration date, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+	uint8_t num = 0;
+	uint8_t i = 0;
+	num = get_char_num(get_current_char(ind+i*5));
+	i++;
+	card.exp_year = num*10 + get_char_num(get_current_char(ind+i*5));
+	i++;
+	num = get_char_num(get_current_char(ind+i*5));
+	i++;
+	card.exp_month = num*10 + get_char_num(get_current_char(ind+i*5));
+	i++;
+	return ind+i*5;
+}
+
+static uint8_t get_service_code(uint8_t ind){
+/*****************************************************************
+ * @brief: Reads the service code, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+	uint8_t i = 0;
+	for(i = 0; i < CARD_SERVICE_LENGHT; i++){
+		uint8_t num = get_char_num(get_current_char(ind+i*5));
+		card.service_code = card.service_code * 10 + num;
+	}
+	return ind+i*5;
+}
+
+static uint8_t get_pvki(uint8_t ind){
+/*****************************************************************
+ * @brief: Reads the PVKI, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+	card.PVKI = get_char_num(get_current_char(ind));
+	return ind+5;
+}
+
+static uint8_t get_pvv(uint8_t ind){
+/*****************************************************************
+ * @brief: Reads the PVV, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+	uint8_t i = 0;
+	for(i = 0; i < CARD_PVV_LENGHT; i++){
+		uint8_t num = get_char_num(get_current_char(ind+i*5));
+		card.PVV = card.PVV * 10 + num;
+	}
+	return ind+i*5;
+}
+
+static uint8_t get_cvv(uint8_t ind){
+/*****************************************************************
+ * @brief: Reads the CVV, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+	uint8_t i = 0;
+	for(i = 0; i < CARD_CVV_LENGHT; i++){
+		uint8_t num = get_char_num(get_current_char(ind+i*5));
+		card.CVV = card.CVV*10 +  num;
+	}
+	return ind+i*5;
+}
+
+static UINT_REGISTER reverseBits(UINT_REGISTER n) {
+/*****************************************************************
+ * @brief: Given a sequence of bits it reverse it.
+ * 			Ex:
+ * 				Input: 011101
+ * 				Output 101110
+ ****************************************************************/
+    for(int i = 0, j = CARD_DATA_REGISTER-1; i < j; i++, j--) {
+        bool iSet = (bool)(n & (1 << i));
+        bool jSet = (bool)(n & (1 << j));
+        n &= ~(1 << j);
+        n &= ~(1 << i);
+        if(iSet) n |= (1 << j);
+        if(jSet) n |= (1 << i);
+    }
+    return n;
 }

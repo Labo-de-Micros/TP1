@@ -40,6 +40,7 @@ typedef struct{
     uint8_t exp_year;
 	uint8_t exp_month;
     uint8_t PVKI;
+	bool everything_ok;
 }card_t;
 
 //////////////////////////////////////////////////////////////////
