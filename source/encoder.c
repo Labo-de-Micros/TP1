@@ -66,11 +66,11 @@ typedef enum{
 
 static tim_id_t encoder_timer;
 static button_id_t encoder_button;
-static enc_callback_t  callback_ccw;
-static enc_callback_t  callback_cw;
-static enc_callback_t  callback_click;
-static enc_callback_t  callback_double;
-static enc_callback_t  callback_long;
+enc_callback_t  callback_ccw;
+enc_callback_t  callback_cw;
+enc_callback_t  callback_click;
+enc_callback_t  callback_double;
+enc_callback_t  callback_long;
 static encoder_states_t current_state;
 
 ////////////////////////////////////////////////////////////////
@@ -79,9 +79,10 @@ static encoder_states_t current_state;
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-void callback_B(void);
-void callback_A(void);
-void encoder_state_machine(encoder_events_t ev);
+static void callback_B(void);
+static void callback_A(void);
+static void callback_timer(void);
+static void encoder_state_machine(encoder_events_t ev);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -98,12 +99,12 @@ void encoder_init(void){
 		return;
 	timerInit();
 	encoder_timer = timerGetId();
-	gpioMode(ENCODER_PIN_A, INPUT);
-	gpioMode(ENCODER_PIN_B, INPUT);
-	gpioIRQ (ENCODER_PIN_B, GPIO_IRQ_MODE_BOTH_EDGES, callback_B);
+	gpioMode(ENCODER_PIN_A, INPUT_PULLUP);
+	gpioMode(ENCODER_PIN_B, INPUT_PULLUP);
 	gpioIRQ (ENCODER_PIN_A, GPIO_IRQ_MODE_BOTH_EDGES, callback_A);
+	gpioIRQ (ENCODER_PIN_B, GPIO_IRQ_MODE_BOTH_EDGES, callback_B);
 	buttonInit();
-	encoder_button = get_new_button(ENCODER_PIN_SW, INPUT);
+	encoder_button = get_new_button(ENCODER_PIN_SW, INPUT_PULLUP);
 	current_state = ENCODER_IDLE_ST;
 	yaInit = true;
 	return;
