@@ -1,6 +1,19 @@
-#include "State_machine.h"
+#ifndef _ACCESSCONTROL_H
+#define _ACCESSCONTROL_H
+
+
+
+#include "StateMachine/DataTypes.h"
+#include "StateMachine/State_machine.h"
 #include <stdint.h>
 #include <stdbool.h>
+
+
+
+#define MAX_NUM_ATTEMPTS 3
+
+#define MAX_DIGIT_DISPLAY 9
+#define MIN_DIGIT_DISPLAY 0
 
 
 typedef enum{
@@ -20,7 +33,7 @@ typedef struct
     int current_brightness; //Nivel de brillo actual
 
     //Manejo de introduccion de palabra
-    uint8_t word_introduced; //Palabra de 4,5 o 8 digitos
+    int word_introduced[8]; //Palabra de 4,5 o 8 digitos
     int current_num; //Numero que se esta mostrando en el display
     int digits_introduced; //Cantidad de numeros introducidos 
     word_option current_option;
@@ -46,7 +59,8 @@ typedef struct
 typedef struct
 {
     uint8_t id;
-    
+    word_option option;
+
 } AccessControlData;
 
 
@@ -61,5 +75,12 @@ typedef struct
 
 
 // State machine event functions
-EVENT_DECLARE(MTR_SetSpeed, MotorData)
-EVENT_DECLARE(MTR_Halt, NoEventData)
+
+EVENT_DECLARE(Encoder_Click, NoEventData);
+EVENT_DECLARE(Encoder_Double_Click, NoEventData);
+EVENT_DECLARE(Encoder_CW, NoEventData);
+EVENT_DECLARE(Encoder_CCW, NoEventData);
+EVENT_DECLARE(Encoder_Long_Click, NoEventData);
+EVENT_DECLARE(Card_Reader, CardReaderData);
+
+#endif // _ACCESSCONTROL_H

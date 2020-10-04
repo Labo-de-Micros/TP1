@@ -1,4 +1,6 @@
 #include "Access_control.h"
+#include "StateMachine/State_machine.h"
+#include <stdio.h>
 
 enum States
 {
@@ -55,78 +57,127 @@ enum States
     ST_ID_ELIMINATION
 };
 
-// State machine state functions
-STATE_DECLARE(Welcome, NoEventData);
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			     STATE MACHINE FUNCTION PROTOTYPES    	        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
+STATE_DECLARE(Welcome, NoEventData)
 //AZUL
-STATE_DECLARE(AccessRequest, NoEventData);
-STATE_DECLARE(IdEnteringByCard, NoEventData);
-STATE_DECLARE(CheckIdEnteringByCard, NoEventData);
-STATE_DECLARE(IdEnteringByEncoder, NoEventData);
-STATE_DECLARE(ReadError, NoEventData);
-STATE_DECLARE(IdNonExistent, NoEventData);
-STATE_DECLARE(PinRequest, NoEventData);
-STATE_DECLARE(CheckPin, NoEventData);
-STATE_DECLARE(AccessGranted, NoEventData);
-STATE_DECLARE(InvalidPin, NoEventData);
-STATE_DECLARE(BlockId, NoEventData);
-STATE_DECLARE(CheckIdEnteringByEncoder, NoEventData);
+STATE_DECLARE(AccessRequest, NoEventData)
+STATE_DECLARE(IdEnteringByCard, NoEventData)
+STATE_DECLARE(CheckIdEnteringByCard, NoEventData)
+STATE_DECLARE(IdEnteringByEncoder, NoEventData)
+STATE_DECLARE(ReadError, NoEventData)
+STATE_DECLARE(IdNonExistent, NoEventData)
+STATE_DECLARE(PinRequest, NoEventData)
+STATE_DECLARE(CheckPin, NoEventData)
+STATE_DECLARE(AccessGranted, NoEventData)
+STATE_DECLARE(InvalidPin, NoEventData)
+STATE_DECLARE(BlockId, NoEventData)
+STATE_DECLARE(CheckIdEnteringByEncoder, NoEventData)
+//INGRESO DE PALABRA
+STATE_DECLARE(EnterDigitsRequest, NoEventData)
+STATE_DECLARE(EnterDigitDisplay1, NoEventData)
+STATE_DECLARE(ChangeDigitDisplay1A, NoEventData)
+STATE_DECLARE(ChangeDigitDisplay1B, NoEventData)
+STATE_DECLARE(DigitsRecount1, NoEventData)
+STATE_DECLARE(EnterDigitDisplay2, NoEventData)
+STATE_DECLARE(ChangeDigitDisplay2A, NoEventData)
+STATE_DECLARE(ChangeDigitDisplay2B, NoEventData)
+STATE_DECLARE(DigitsRecount2, NoEventData)
+STATE_DECLARE(EnterDigitDisplay3, NoEventData)
+STATE_DECLARE(ChangeDigitDisplay3A, NoEventData)
+STATE_DECLARE(ChangeDigitDisplay3B, NoEventData)
+STATE_DECLARE(DigitsRecount3, NoEventData)
+STATE_DECLARE(EnterDigitDisplay4, NoEventData)
+STATE_DECLARE(ChangeDigitDisplay4A, NoEventData)
+STATE_DECLARE(ChangeDigitDisplay4B, NoEventData)
+STATE_DECLARE(DigitsRecount4, NoEventData)
+//VERDE
+STATE_DECLARE(ChangeBrightness, NoEventData)
+STATE_DECLARE(SetBrightness, NoEventData)
+STATE_DECLARE(LowerBrightness, NoEventData)
+STATE_DECLARE(HigherBrightness, NoEventData)
+//VIOLETA
+STATE_DECLARE(AddID, NoEventData)
+STATE_DECLARE(SetNewID, NoEventData)
+STATE_DECLARE(CheckNewID, NoEventData)
+//NARANJA
+STATE_DECLARE(EliminateID, NoEventData)
+STATE_DECLARE(ShowID, NoEventData)
+STATE_DECLARE(PreviousID, NoEventData)
+STATE_DECLARE(NextID, NoEventData)
+STATE_DECLARE(IDElimination, NoEventData)
 
 
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			                STATE MAP                   	    //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
-// State map to define state function order
 BEGIN_STATE_MAP(AccessControl)
-    STATE_MAP_ENTRY(ST_WELCOME)
+    STATE_MAP_ENTRY(ST_Welcome)
     //AZUL
-    STATE_MAP_ENTRY(ST_ACCESS_REQUEST)
-    STATE_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)
-    STATE_MAP_ENTRY(ST_CHECK_ID_ENTERING_BY_CARD)
-    STATE_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)
-    STATE_MAP_ENTRY(ST_READ_ERROR)
-    STATE_MAP_ENTRY(ST_ID_NON_EXISTENT)
-    STATE_MAP_ENTRY(ST_PIN_REQUEST)
-    STATE_MAP_ENTRY(ST_CHECK_PIN)
-    STATE_MAP_ENTRY(ST_ACCESS_GRANTED)
-    STATE_MAP_ENTRY(ST_INVALID_PIN)
-    STATE_MAP_ENTRY(ST_BLOCK_ID)
-    STATE_MAP_ENTRY(ST_CHECK_ID_ENTERING_BY_ENCODER)
+    STATE_MAP_ENTRY(ST_AccessRequest)
+    STATE_MAP_ENTRY(ST_IdEnteringByCard)
+    STATE_MAP_ENTRY(ST_CheckIdEnteringByCard)
+    STATE_MAP_ENTRY(ST_IdEnteringByEncoder)
+    STATE_MAP_ENTRY(ST_ReadError)
+    STATE_MAP_ENTRY(ST_IdNonExistent)
+    STATE_MAP_ENTRY(ST_PinRequest)
+    STATE_MAP_ENTRY(ST_CheckPin)
+    STATE_MAP_ENTRY(ST_AccessGranted)
+    STATE_MAP_ENTRY(ST_InvalidPin)
+    STATE_MAP_ENTRY(ST_BlockId)
+    STATE_MAP_ENTRY(ST_CheckIdEnteringByEncoder)
 
     //INGRESO DE PALABRA
-    STATE_MAP_ENTRY(ST_ENTER_DIGITS_REQUEST)
-    STATE_MAP_ENTRY(ST_ENTER_DIGIT_DISPLAY_1)
-    STATE_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_1A)
-    STATE_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_1B)
-    STATE_MAP_ENTRY(ST_DIGITS_RECOUNT_1)
-    STATE_MAP_ENTRY(ST_ENTER_DIGIT_DISPLAY_2)
-    STATE_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_2A)
-    STATE_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_2B)
-    STATE_MAP_ENTRY(ST_DIGITS_RECOUNT_2)
-    STATE_MAP_ENTRY(ST_ENTER_DIGIT_DISPLAY_3)
-    STATE_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_3A)
-    STATE_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_3B)
-    STATE_MAP_ENTRY(ST_DIGITS_RECOUNT_3)
-    STATE_MAP_ENTRY(ST_ENTER_DIGIT_DISPLAY_4)
-    STATE_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_4A)
-    STATE_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_4B)
-    STATE_MAP_ENTRY(ST_DIGITS_RECOUNT_4)
+    STATE_MAP_ENTRY(ST_EnterDigitsRequest)
+    STATE_MAP_ENTRY(ST_EnterDigitDisplay1)
+    STATE_MAP_ENTRY(ST_ChangeDigitDisplay1A)
+    STATE_MAP_ENTRY(ST_ChangeDigitDisplay1B)
+    STATE_MAP_ENTRY(ST_DigitsRecount1)
+    STATE_MAP_ENTRY(ST_EnterDigitDisplay2)
+    STATE_MAP_ENTRY(ST_ChangeDigitDisplay2A)
+    STATE_MAP_ENTRY(ST_ChangeDigitDisplay2B)
+    STATE_MAP_ENTRY(ST_DigitsRecount2)
+    STATE_MAP_ENTRY(ST_EnterDigitDisplay3)
+    STATE_MAP_ENTRY(ST_ChangeDigitDisplay3A)
+    STATE_MAP_ENTRY(ST_ChangeDigitDisplay3B)
+    STATE_MAP_ENTRY(ST_DigitsRecount3)
+    STATE_MAP_ENTRY(ST_EnterDigitDisplay4)
+    STATE_MAP_ENTRY(ST_ChangeDigitDisplay4A)
+    STATE_MAP_ENTRY(ST_ChangeDigitDisplay4B)
+    STATE_MAP_ENTRY(ST_DigitsRecount4)
+   
     //VERDE
-    STATE_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)
-    STATE_MAP_ENTRY(ST_SET_BRIGHTNESS)
-    STATE_MAP_ENTRY(ST_LOWER_BRIGHTNESS)
-    STATE_MAP_ENTRY(ST_HIGHER_BRIGHTNESS)
+    STATE_MAP_ENTRY(ST_ChangeBrightness)
+    STATE_MAP_ENTRY(ST_SetBrightness)
+    STATE_MAP_ENTRY(ST_LowerBrightness)
+    STATE_MAP_ENTRY(ST_HigherBrightness)
     
     //VIOLETA
-    STATE_MAP_ENTRY(ST_ADD_ID)
-    STATE_MAP_ENTRY(ST_SET_NEW_ID)
-    STATE_MAP_ENTRY(ST_CHECK_NEW_ID)
+    STATE_MAP_ENTRY(ST_AddID)
+    STATE_MAP_ENTRY(ST_SetNewID)
+    STATE_MAP_ENTRY(ST_CheckNewID)
     //NARANJA
-    STATE_MAP_ENTRY(ST_ELIMINATE_ID)
-    STATE_MAP_ENTRY(ST_SHOW_ID)
-    STATE_MAP_ENTRY(ST_PREVIOUS_ID)
-    STATE_MAP_ENTRY(ST_NEXT_ID)
-    STATE_MAP_ENTRY(ST_ID_ELIMINATION)
+    STATE_MAP_ENTRY(ST_EliminateID)
+    STATE_MAP_ENTRY(ST_ShowID)
+    STATE_MAP_ENTRY(ST_PreviousID)
+    STATE_MAP_ENTRY(ST_NextID)
+    STATE_MAP_ENTRY(ST_IDElimination)
 
 END_STATE_MAP(AccessControl)
+
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			        EXTERNAL EVENTS DEFINITIONS				    //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 // Encoder click external event
 EVENT_DEFINE(Encoder_Click, NoEventData)
@@ -413,7 +464,6 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
 
-
 //Lector de tarjetas external event
 EVENT_DEFINE(Card_Reader, CardReaderData)
 {
@@ -472,8 +522,11 @@ EVENT_DEFINE(Card_Reader, CardReaderData)
 
 
 
-
-
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			     STATE MACHINE FUNCTION DEFINITIONS    	        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 STATE_DEFINE(Welcome, NoEventData)
 {
@@ -482,7 +535,7 @@ STATE_DEFINE(Welcome, NoEventData)
 
 STATE_DEFINE(IdEnteringByCard, NoEventData)
 {
-    //No hago nada 
+    SM_InternalEvent(ST_ID_ENTERING_BY_CARD, NULL);
 }
 
 STATE_DEFINE(CheckIdEnteringByCard, AccessControlData)
@@ -499,69 +552,267 @@ STATE_DEFINE(CheckIdEnteringByCard, AccessControlData)
 
 }
 
-
-
-
-STATE_DECLARE(IdEnteringByEncoder, NoEventData);
-STATE_DECLARE(ReadError, NoEventData);
-STATE_DECLARE(IdNonExistent, NoEventData);
-STATE_DECLARE(PinRequest, NoEventData);
-STATE_DECLARE(CheckPin, NoEventData);
-STATE_DECLARE(AccessGranted, NoEventData);
-STATE_DECLARE(InvalidPin, NoEventData);
-STATE_DECLARE(BlockId, NoEventData);
-STATE_DECLARE(CheckIdEnteringByEncoder, NoEventData);
-
-
-
-
-
-
-
-
-
-
-
-
-
-STATE_DEFINE(Stop, NoEventData)
+STATE_DEFINE(IdEnteringByEncoder, NoEventData)
 {
-    // Get pointer to the instance data and update currentSpeed
-    Motor* pInstance = SM_GetInstance(Motor);
-    pInstance->currentSpeed = 0;
+    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    pInstance->current_option = ID;
 
-    // Perform the stop motor processing here
-    printf("%s ST_Stop: %d\n", self->name, pInstance->currentSpeed);
-
-    // Transition to ST_Idle via an internal event
-    SM_InternalEvent(ST_IDLE, NULL);
+    SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
 }
 
-// Start the motor going
-STATE_DEFINE(Start, MotorData)
+
+STATE_DEFINE(ReadError, NoEventData)
 {
-    ASSERT_TRUE(pEventData);
+    //Muesto READ ERROR
+    SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
+}
+STATE_DEFINE(IdNonExistent, NoEventData)
+{
+    //Muestro ID NON EXISTENT
+    SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
+}
+STATE_DEFINE(PinRequest, NoEventData)
+{
+    //Muestro ENTER PIN
+    //veo el largo del pin segun el ID
 
-    // Get pointer to the instance data and update currentSpeed
-    Motor* pInstance = SM_GetInstance(Motor);
-    pInstance->currentSpeed = pEventData->speed;
+    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    
+    pInstance->current_option = PIN4; //El id tiene un pin de 4 digitos 
+    pInstance->current_option = PIN5; //El id tiene un pin de 5 digitos 
+    
+    SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
 
-    // Set initial motor speed processing here
-    printf("%s ST_Start: %d\n", self->name, pInstance->currentSpeed);
+}
+STATE_DEFINE(CheckPin, NoEventData)
+{
+    //PIN es correcto segun el ID ?
+
+    //SI SM_InternalEvent(ST_ACCESS_GRANTED, NULL);
+    //NO SM_InternalEvent(ST_INVALID_PIN, NULL);
+
+    
+}
+STATE_DEFINE(AccessGranted, NoEventData)
+{
+    //Muestro ACCESS GRANTED
+    //Prendo LED 
+    //Espero 5 seg
+    //Apago LED
+    
+}
+STATE_DEFINE(InvalidPin, NoEventData)
+{
+    //Muestro INCORRECT PIN
+    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    pInstance->PIN_attempts ++; //El id tiene un pin de 4 
+
+    //Retardo de unos segundos
+
+    if(pInstance->PIN_attempts == MAX_NUM_ATTEMPTS)
+        SM_InternalEvent(ST_BLOCK_ID, NULL);
+    else
+        SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+    
+}
+STATE_DEFINE(BlockId, NoEventData)
+{
+    //Muestro ID BLOCKED
+    //Agrego a la lista de bloqueados el ID actual
+
+    SM_InternalEvent(ST_WELCOME, NULL); 
+    
+}
+STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
+{
+    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    pInstance->PIN_attempts = 0; 
+
+    //EXISTE EL ID ?
+    //NO 
+    SM_InternalEvent(ST_ID_NON_EXISTENT, NULL); 
+
+    //SI, ESTA BLOQUEDO?
+
+    //NO 
+    SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+
+    //SI
+    SM_InternalEvent(ST_BLOCK_ID, NULL); 
+
 }
 
-// Changes the motor speed once the motor is moving
-STATE_DEFINE(ChangeSpeed, MotorData)
+//INGRESO DE PALABRA
+
+STATE_DEFINE(EnterDigitsRequest, NoEventData)
 {
-    ASSERT_TRUE(pEventData);
-
-    // Get pointer to the instance data and update currentSpeed
-    Motor* pInstance = SM_GetInstance(Motor);
-    pInstance->currentSpeed = pEventData->speed;
-
-    // Perform the change motor speed here
-    printf("%s ST_ChangeSpeed: %d\n", self->name, pInstance->currentSpeed);
+    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    pInstance->current_num = 0;
+    pInstance->digits_introduced = 0;
+    pInstance->word_introduced = 0;
+     
+    SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); 
 }
+STATE_DEFINE(EnterDigitDisplay1, NoEventData)
+{
+   //Muestra el ccurrent_num 
+}
+STATE_DEFINE(ChangeDigitDisplay1A, NoEventData)
+{
+    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    if(pInstance->current_num = MIN_DIGIT_DISPLAY)
+       pInstance->current_num = MAX_DIGIT_DISPLAY; 
+    else
+       pInstance->current_num --; 
+
+    SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); 
+}
+STATE_DEFINE(ChangeDigitDisplay1B, NoEventData)
+{
+    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    if(pInstance->current_num = MAX_DIGIT_DISPLAY)
+       pInstance->current_num = MIN_DIGIT_DISPLAY; 
+    else
+       pInstance->current_num ++; 
+
+    SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); 
+ 
+}
+STATE_DEFINE(DigitsRecount1, NoEventData)
+{
+    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    pInstance->digits_introduced ++;
+    pInstance->word_introduced[pInstance->digits_introduced] = pInstance->current_num;
+    pInstance->current_num = 0;
+
+    if(pInstance->current_option == PIN5 && pInstance->digits_introduced == 5)
+    {
+        //Se ocula el display *****
+        SM_InternalEvent(ST_CHECK_PIN, NULL); 
+    }
+    else
+    {
+        if(pInstance->current_option == PIN4)
+            //Se ocula el display ****
+        else
+            SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_2, NULL);
+        
+    }
+}
+STATE_DEFINE(EnterDigitDisplay2, NoEventData)
+{
+    
+}
+STATE_DEFINE(ChangeDigitDisplay2A, NoEventData)
+{
+    
+}
+STATE_DEFINE(ChangeDigitDisplay2B, NoEventData)
+{
+    
+}
+STATE_DEFINE(DigitsRecount2, NoEventData)
+{
+    
+}
+STATE_DEFINE(EnterDigitDisplay3, NoEventData)
+{
+    
+}
+STATE_DEFINE(ChangeDigitDisplay3A, NoEventData)
+{
+    
+}
+STATE_DEFINE(ChangeDigitDisplay3B, NoEventData)
+{
+    
+}
+STATE_DEFINE(DigitsRecount3, NoEventData)
+{
+    
+}
+STATE_DEFINE(EnterDigitDisplay4, NoEventData)
+{
+    
+}
+STATE_DEFINE(ChangeDigitDisplay4A, NoEventData)
+{
+    
+}
+STATE_DEFINE(ChangeDigitDisplay4B, NoEventData)
+{
+    
+}
+STATE_DEFINE(DigitsRecount4, NoEventData)
+{
+    
+}
+//VERDE
+
+    
+
+STATE_DEFINE(ChangeBrightness, NoEventData)
+{
+    
+}
+STATE_DEFINE(SetBrightness, NoEventData)
+{
+    
+}
+STATE_DEFINE(LowerBrightness, NoEventData)
+{
+    
+}
+STATE_DEFINE(HigherBrightness, NoEventData)
+{
+    
+}
+//VIOLETA
+
+STATE_DEFINE(AddID, NoEventData)
+{
+    
+}
+STATE_DEFINE(SetNewID, NoEventData)
+{
+    
+}
+STATE_DEFINE(CheckNewID, NoEventData)
+{
+    
+}
+//NARANJA
+
+STATE_DEFINE(EliminateID, NoEventData)
+{
+    
+}
+STATE_DEFINE(ShowID, NoEventData)
+{
+    
+}
+STATE_DEFINE(PreviousID, NoEventData)
+{
+    
+}
+STATE_DEFINE(NextID, NoEventData)
+{
+    
+}
+STATE_DEFINE(IDElimination, NoEventData)
+{
+    
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
