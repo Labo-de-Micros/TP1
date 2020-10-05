@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "gpio.h"		//No se si meter gpio aca esta bien, per necesitaria
+#include "gpio.h"		//No se si meter gpio aca esta bien, pero necesitaria
 						//el tipo de dato pin_t, que hacemos?
 
 //////////////////////////////////////////////////////////////////

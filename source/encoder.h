@@ -25,6 +25,11 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
+#define ENC_MAX_BUFFER_EVENTS_LENGHT    50  //Maxima candidad de eventos que son posibles de guardar antes de sacarlos de la cola.
+#if (ENC_MAX_BUFFER_EVENTS_LENGHT >= 256)
+#error ENC_MAX_BUFFER_EVENTS_LENGHT cant be superior to 256, decrease its value or change the uint8_t varibales for its indexes.
+#endif
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS			//
@@ -33,6 +38,7 @@
 
 typedef uint8_t tim_id_t;
 typedef void (*enc_callback_t)(void);
+typedef enum {ENC_SINGLE_PRESS, ENC_DOUBLE_PRESS, ENC_LONG_PRESS, ENC_CLOCKWISE_TURN, ENC_COUNTER_CLOCKWISE_TURN, ENC_NO_EV}enc_events_t;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -45,12 +51,12 @@ void encoder_init(void);
  * @brief: Initialize the encoder Driver
  * **************************************************************/
 
-void encoder_set_callback(
-    enc_callback_t ccw, 
-    enc_callback_t cw,
-    enc_callback_t click, 
-    enc_callback_t double_click, 
-    enc_callback_t long_click);
+void encoder_set_callback(void);
+    // enc_callback_t ccw, 
+    // enc_callback_t cw,
+    // enc_callback_t click, 
+    // enc_callback_t double_click, 
+    // enc_callback_t long_click);
 /*****************************************************************
  * @brief: Set the callbacks corresponding to the different types
  *			of modes
@@ -60,5 +66,7 @@ void encoder_set_callback(
  * @param double_click: Callback for button pressed double time.
  * @param long_click: Callback for button long press.
  * **************************************************************/
+
+enc_events_t get_event(void);
 
 #endif	// _ENCODER_H_

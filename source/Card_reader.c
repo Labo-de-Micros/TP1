@@ -89,9 +89,9 @@ typedef uint32_t UINT_REGISTER;
 
 static UINT_REGISTER card_data_compressed[CARD_DATA_REGISTERS_LENGTH];
 static uint8_t index;
-static card_callback_t	call;
 static card_states_t current_state;
 static card_t card;
+static bool card_readed;
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -122,10 +122,9 @@ static UINT_REGISTER reverseBits(UINT_REGISTER n);
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void card_init(card_callback_t callback){
+void card_init(void){
 /*****************************************************************
  * @brief: Initializer the card reader driver and its components
- * @param callback: callback to be called when a new card is readed.
  ****************************************************************/
 	static bool yaInit = false;
 	if(yaInit)
@@ -135,9 +134,9 @@ void card_init(card_callback_t callback){
 	gpioMode(CARD_ENABLE, INPUT);
 	gpioIRQ (CARD_CLOCK, GPIO_IRQ_MODE_FALLING_EDGE , clock_callback);	//Inicializo las interrupciones
 	gpioIRQ (CARD_ENABLE, GPIO_IRQ_MODE_BOTH_EDGES , enable_callback);
-	call = callback;
 	current_state = CARD_WAIT_FOR_START;	//Seteo el estado de la maquina de estados como 'esperando targeta'.
 	index = 0;
+	card_readed = false;
 	clear_buffer();	// Limpio el buffer para que todo quede seteado en 0.
 	yaInit = true;
 	return;
@@ -150,6 +149,8 @@ card_t get_data(void){
  * @return: A struct card_t containing the information readed in the card.
  ****************************************************************/
 	clear_card();
+	if(!card_readed)
+		return card;
 	uint8_t ind = get_pan_number();
 	ind = get_exp_date(ind);
 	ind = get_service_code(ind);
@@ -159,6 +160,15 @@ card_t get_data(void){
 	return card;
 }
 
+bool was_a_card_readed(void){
+	return card_readed;
+}
+
+void card_data_readed(void){
+	clear_card();
+	card_readed = false;
+	return;
+}
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					LOCAL FUNCTION DEFINITIONS					//
@@ -176,6 +186,7 @@ static void card_machine(card_events_t ev){
 		case CARD_WAIT_FOR_START:		// Estado inicial, esperando a que se empieze a leer una targeta.
 			if(ev == ENABLE_FALLING_EV){// Si llega un flanco negativo del pin ENABLE, se empezo a leer una targeta
 										// entonces pasamos al estado WAIT_DATA.
+				card_readed = false;
 				current_state = CARD_WAIT_DATA;
 				index = 0;
 				clear_buffer();
@@ -189,7 +200,7 @@ static void card_machine(card_events_t ev){
 				index++;		// incremento el indice del dato actual.
 			}
 			else if(ev == ENABLE_RISING_EV){		// Si llega un flanco positivo del pin ENABLE, se termino de leer la targeta
-				call();								// entonces llamo al callback, y seteo el estado como el estado inicial, por si se lee
+				card_readed = true;								// entonces llamo al callback, y seteo el estado como el estado inicial, por si se lee
 				current_state = CARD_WAIT_FOR_START;// otra trageta.
 			}
 			break;
