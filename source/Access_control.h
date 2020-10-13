@@ -56,7 +56,7 @@ typedef struct
     int digits_introduced; //Cantidad de numeros introducidos 
     word_option current_option;
 
-    IDData *IDs; 
+    IDData *IDsList; 
     
 } AccessControl;
 
