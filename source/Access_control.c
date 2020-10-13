@@ -922,7 +922,7 @@ STATE_DEFINE(IDElimination, NoEventData)
 
     AccessControl* pInstance = SM_GetInstance(AccessControl);
     int ID_index = pInstance->current_ID_index;
-    pInstance->IDs[ID_index].blocked_status = TRUE;
+    pInstance->IDsList[ID_index].blocked_status = TRUE;
 
     //Mostrar ID ELIMINATED;
 
