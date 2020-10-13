@@ -40,6 +40,7 @@ typedef struct{
     uint8_t exp_year;
 	uint8_t exp_month;
     uint8_t PVKI;
+	bool everything_ok;
 }card_t;
 
 //////////////////////////////////////////////////////////////////
@@ -48,10 +49,16 @@ typedef struct{
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void card_init(card_callback_t callback);
+void card_init(void);
 /*****************************************************************
  * @brief: Initializer the card reader driver and its components
- * @param callback: callback to be called when a new card is readed.
+ ****************************************************************/
+
+bool was_a_card_readed(void);
+/*****************************************************************
+ * @brief: Function for event generator
+ * @return: true if a card was readed and the system is ready to
+ * 			return its data (must call get_data()), false otherwise.
  ****************************************************************/
 
 card_t get_data(void);
@@ -60,5 +67,7 @@ card_t get_data(void);
  * 			by the driver, so this function returns the card data.
  * @return: A struct card_t containing the information readed in the card.
  ****************************************************************/
+
+void card_data_readed(void);
 
 #endif	//_CARD_READER_H_

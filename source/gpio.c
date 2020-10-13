@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-//	@file		gpio.c					.					    //
+//	@file		gpio.c										    //
 //	@brief		Simple GPIO Pin services, similar to Arduino	//
 //	@author		Grupo	4										//
 //////////////////////////////////////////////////////////////////
@@ -42,7 +42,6 @@ static GPIO_Type* gpioPtrs[] = GPIO_BASE_PTRS;
 static PORT_Type* portPtrs[] = PORT_BASE_PTRS;
 static uint32_t simMasks[] = {SIM_SCGC5_PORTA_MASK, SIM_SCGC5_PORTB_MASK, SIM_SCGC5_PORTC_MASK, SIM_SCGC5_PORTD_MASK, SIM_SCGC5_PORTE_MASK };
 static uint32_t IRQn_ports[] = {PORTA_IRQn, PORTB_IRQn, PORTC_IRQn, PORTD_IRQn, PORTE_IRQn};
-//static bool pin_ports_activated[5][32];
 static uint32_t pin_ports_activated[5];
 static SIM_Type* sim_ptr = SIM;
 static IRQ_callback_t callbacks[5][32];

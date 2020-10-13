@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-//	@file			timer.h										//
+//	@file		timer.h											//
 //	@brief		Timer driver. Advance Implementation			//
-//	@author		Ian Diaz and the magnificent three				//
+//	@author		Grupo 4											//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,7 @@
 #error Las frecuencias no coinciden!!
 #endif // TIMER_TICK_MS != (1000U/SYSTICK_ISR_FREQUENCY_HZ)
 
-#define TIMER_DEVELOPMENT_MODE    1
+#define TIMER_DEVELOPMENT_MODE    0
 #define TIMER_ID_INTERNAL   0
 
 

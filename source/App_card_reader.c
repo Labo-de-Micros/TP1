@@ -30,12 +30,16 @@ static void card_reader_callback(void);
  ******************************************************************************/
 
 void App_Init (void) {
-	card_init(card_reader_callback);
+	card_init();
 	return;
 }
 
 void App_Run (void){
-	while (true);
+	while (true){
+		if(was_a_card_readed()){
+			card_reader_callback();
+		}
+	}
 	return;
 }
 
@@ -48,5 +52,6 @@ void App_Run (void){
 static void card_reader_callback(void){
     card_t data;
     data = get_data();
+    card_data_readed();
     return;
 }

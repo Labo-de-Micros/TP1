@@ -27,6 +27,10 @@
 
 #define ENCODER_TIME_TIMER	1
 
+#if ENCODER_TIME_TIMER >= 5
+#warning ENCODER_TIME_TIMER too High! Check if that´s ok, maybe when you turn the encoder too fast it wont work!.
+#endif
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
@@ -66,12 +70,15 @@ typedef enum{
 
 static tim_id_t encoder_timer;
 static button_id_t encoder_button;
-static enc_callback_t  callback_ccw;
-static enc_callback_t  callback_cw;
-static enc_callback_t  callback_click;
-static enc_callback_t  callback_double;
-static enc_callback_t  callback_long;
+//static enc_callback_t  callback_ccw;
+//static enc_callback_t  callback_cw;
+//static enc_callback_t  callback_click;
+//static enc_callback_t  callback_double;
+//static enc_callback_t  callback_long;
 static encoder_states_t current_state;
+static enc_events_t events_buffer[ENC_MAX_BUFFER_EVENTS_LENGHT];
+static uint8_t buffer_index_push = 0;
+static uint8_t buffer_index_pull = 0;
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -79,9 +86,39 @@ static encoder_states_t current_state;
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
-void callback_B(void);
-void callback_A(void);
-void encoder_state_machine(encoder_events_t ev);
+static void callback_A(void);
+/*****************************************************************
+ * @brief: Callback called by both edges of A encoder pin. It calls
+ * 			the state machine handler with the corresponding event.
+ * **************************************************************/
+
+static void callback_B(void);
+/*****************************************************************
+ * @brief: Callback called by both edges of B encoder pin. It calls
+ * 			the state machine handler with the corresponding event.
+ * **************************************************************/
+
+static void callback_timer(void);
+/*****************************************************************
+ * @brief: Callback called when the singleshot timer of the state
+ * 			machine finishes. It calls the stame machine with the 
+ * 			timer finished event.
+ * **************************************************************/
+
+static void encoder_state_machine(encoder_events_t ev);
+/*****************************************************************
+ * @brief: Encoder state machines, it determines which state to go
+ * 			whenever an event arrives. When the correct moment arrives
+ * 			it calls the clockwise or conter-clockwise callbacks.
+ * **************************************************************/
+
+static void push_event(enc_events_t ev);
+static enc_events_t pull_ev(void);
+static void click_callback(void);
+static void double_click_callback(void);
+static void long_click_callback(void);
+static void reset_buffer(void);
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -98,18 +135,20 @@ void encoder_init(void){
 		return;
 	timerInit();
 	encoder_timer = timerGetId();
-	gpioMode(ENCODER_PIN_A, INPUT);
-	gpioMode(ENCODER_PIN_B, INPUT);
-	gpioIRQ (ENCODER_PIN_B, GPIO_IRQ_MODE_BOTH_EDGES, callback_B);
+	gpioMode(ENCODER_PIN_A, INPUT_PULLUP);
+	gpioMode(ENCODER_PIN_B, INPUT_PULLUP);
 	gpioIRQ (ENCODER_PIN_A, GPIO_IRQ_MODE_BOTH_EDGES, callback_A);
+	gpioIRQ (ENCODER_PIN_B, GPIO_IRQ_MODE_BOTH_EDGES, callback_B);
 	buttonInit();
-	encoder_button = get_new_button(ENCODER_PIN_SW, INPUT);
+	reset_buffer();
+	encoder_button = get_new_button(ENCODER_PIN_SW, INPUT_PULLUP);
 	current_state = ENCODER_IDLE_ST;
+	configure_button(encoder_button, click_callback,long_click_callback,double_click_callback);
 	yaInit = true;
 	return;
 }
 
-void encoder_set_callback(enc_callback_t  ccw, enc_callback_t  cw, enc_callback_t  click, enc_callback_t double_click, enc_callback_t long_click){
+void encoder_set_callback(){//enc_callback_t  ccw, enc_callback_t  cw, enc_callback_t  click, enc_callback_t double_click, enc_callback_t long_click){
 /*****************************************************************
  * @brief: Set the callbacks corresponding to the different types
  *			of modes
@@ -119,14 +158,19 @@ void encoder_set_callback(enc_callback_t  ccw, enc_callback_t  cw, enc_callback_
  * @param double_click: Callback for button pressed double time.
  * @param long_click: Callback for button long press.
  * **************************************************************/
-	callback_ccw=ccw;
-	callback_cw=cw;
-	callback_click=click;
-	callback_double=double_click;
-	callback_long=long_click;
-	configure_button(encoder_button, callback_click,callback_long,callback_double);
+	//callback_ccw=ccw;
+	//callback_cw=cw;
+	//callback_click=click;
+	//callback_double=double_click;
+	//callback_long=long_click;
+	//configure_button(encoder_button, callback_click,callback_long,callback_double);
 	return;
 }
+
+enc_events_t get_event(void){
+	return pull_ev();
+}
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -202,7 +246,8 @@ static void encoder_state_machine(encoder_events_t ev){
 			break;
 		case ENCODER_CASE_1_3_ST:
 			if(ev == ENCODER_TIMER_FINISHED_EV){
-				callback_ccw();
+				//callback_ccw();
+				push_event(ENC_COUNTER_CLOCKWISE_TURN);
 				current_state = ENCODER_IDLE_ST;
 				gpioIRQ (ENCODER_PIN_B, GPIO_IRQ_MODE_BOTH_EDGES, callback_B);
 			}
@@ -226,7 +271,8 @@ static void encoder_state_machine(encoder_events_t ev){
 			break;
 		case ENCODER_CASE_2_3_ST:
 			if(ev == ENCODER_TIMER_FINISHED_EV){
-				callback_cw();
+				//callback_cw();
+				push_event(ENC_CLOCKWISE_TURN);
 				current_state = ENCODER_IDLE_ST;
 				gpioIRQ (ENCODER_PIN_A, GPIO_IRQ_MODE_BOTH_EDGES, callback_A);
 			}
@@ -235,5 +281,45 @@ static void encoder_state_machine(encoder_events_t ev){
 			current_state = ENCODER_ERROR_ST;
 			break;
 	}
+	return;
+}
+
+static void push_event(enc_events_t ev){
+	events_buffer[buffer_index_push] = ev;
+	buffer_index_push++;
+	if(buffer_index_push>=ENC_MAX_BUFFER_EVENTS_LENGHT)
+		buffer_index_push = 0;
+	return;
+}
+
+static enc_events_t pull_ev(void){
+	enc_events_t temp = events_buffer[buffer_index_pull];
+	if(temp == ENC_NO_EV)
+		return temp;
+	events_buffer[buffer_index_pull] = ENC_NO_EV;
+	buffer_index_pull++;
+	if(buffer_index_pull >= ENC_MAX_BUFFER_EVENTS_LENGHT)
+		buffer_index_pull = 0;
+	return temp;
+}
+
+static void click_callback(void){
+	push_event(ENC_SINGLE_PRESS);
+	return;
+}
+
+static void double_click_callback(void){
+	push_event(ENC_DOUBLE_PRESS);
+	return;
+}
+
+static void long_click_callback(void){
+	push_event(ENC_LONG_PRESS);
+	return;
+}
+
+static void reset_buffer(void){
+	for(uint8_t i=0; i < ENC_MAX_BUFFER_EVENTS_LENGHT; i++)
+		events_buffer[i] = ENC_NO_EV;
 	return;
 }
