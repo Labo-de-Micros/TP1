@@ -87,12 +87,20 @@
 
 
 #define DISP_MASK 0x01
-#define BRIGHTNESS_LEVELS 10
+#define BRIGHTNESS_LEVELS 4
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS			//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
+
+typedef enum{
+	BRIGHT_MIN,
+	BRIGHT_LOW,
+	BRIGHT_HIGH,
+	BRIGHT_MAX
+} display_brightness_level_t;
 
 
 typedef struct{
@@ -104,8 +112,9 @@ typedef struct{
 	tim_id_t pwm_timer;
 	uint8_t buf[4];
 	uint8_t aux_buf[4];
+	display_brightness_level_t brightness[4];	
+	display_brightness_level_t brightness_level;
 	display_mode_t mode;
-	uint8_t pwm_level;
 }display_t;
 
 //////////////////////////////////////////////////////////////////
@@ -133,6 +142,8 @@ void digit_select(uint8_t digit);
 void display_refresh_callback();
 void split_number(uint16_t num, uint8_t * buffers);
 void set_blank();
+void set_brightness_level(display_brightness_level_t level);
+void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -148,7 +159,7 @@ void display_init(void){
 	display.timer=timerGetId();
 	display.temp_timer=timerGetId();
 	display.pwm_timer=timerGetId();
-	display.pwm_level= BRIGHTNESS_LEVELS;
+	display.brightness_level= LOW;
 	return;
 }
 
@@ -195,8 +206,11 @@ void display_configure_mux(pin_t pin0, pin_t pin1){
 
 void display_set_string(char * string){
 	uint8_t index;
-	for(index=0; string[index]!='\0' && index<DIGITS; index++){
-		load_buffer(get_7_segments_char(string[index]), index);
+	uint8_t done=false;
+	for(index=0; index<DIGITS; index++){
+		if(string[index]=='\0') done=true;
+		if(!done) load_buffer(get_7_segments_char(string[index]), index);
+		else load_buffer(get_7_segments_char(DISP_CLEAR), index);
 	}
 	return;
 }
@@ -206,22 +220,47 @@ void display_set_number(uint16_t number){
 	split_number(number, buffer);
 	
 	uint8_t index;
-	for(index=0; index<4; index++){
+	for(index=0; index<4; index++)
 		load_buffer(get_7_segments_number(buffer[index]), index);
-	}
+		
 
 	return;
 }
 
-void display_set_pwm_level(uint8_t level){
-	if (level>BRIGHTNESS_LEVELS) display.pwm_level=BRIGHTNESS_LEVELS;
-	else if (level<1) display.pwm_level=1;
-	else display.pwm_level=level;
+void display_set_brightness_level(display_brightness_level_t level){
+	display_brightness_level_t checked_level;
+	
+	switch(level){
+		case BRIGHT_MIN: case BRIGHT_LOW:
+			checked_level=BRIGHT_LOW;
+			break;
+		case BRIGHT_HIGH: case BRIGHT_MAX:
+			checked_level=BRIGHT_HIGH;
+			break;
+	}
+
+	uint8_t index;
+	for(index=0; index<DIGITS; index++)
+		display.brightness[index]=checked_level;
+
+}
+
+void display_enable_soft_highlight(uint8_t digit){
+	set_digit_brightness_level(BRIGHT_MAX, digit);
+}
+
+void display_enable_hard_highlight(uint8_t digit){
+	set_brightness_level(BRIGHT_MIN);
+	set_digit_brightness_level(BRIGHT_MAX, digit);
+}
+
+void display_disable_highlight(){
+	set_brightness_level(display.brightness_level);	
 }
 
 void display_on(){
 	uint16_t ticks=(uint16_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS));
-	timerStart(display.timer, ticks, TIM_MODE_PERIODIC, display_refresh_callback);
+	timerStart(display.timer, ticks, TIM_MODE_PERIODIC, refresh_callback);
 	return;
 }
 
@@ -295,8 +334,7 @@ static void load_buffer(uint8_t pins, uint8_t digit){
  *  @param digit: buffer digit to be modified
  * **************************************************************/
 	if(digit<DIGITS)
-		for(uint8_t i = 0; i<7; i++)
-			display.buf[digit]=pins;
+		display.buf[digit]=pins;
 	return;
 }
 
@@ -508,6 +546,7 @@ uint8_t get_7_segments_number(uint8_t num){
 			return_val = DISP_9;
 			break;
 		default:
+			return_val = DISP_CLEAR;
 			break;
 	}
 	return return_val;
@@ -546,11 +585,11 @@ void digit_select(uint8_t digit){
 	return;
 }
 
-void display_refresh_callback(){
+void refresh_callback(){
 	static uint8_t digit = 0;
 	if (digit>=DIGITS) digit=0;
 	digit_select(digit);
-	uint8_t pwm_ticks=(uint8_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(1+BRIGHTNESS_LEVELS-display.pwm_level)));
+	uint8_t pwm_ticks=(uint8_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(BRIGHTNESS_LEVELS-display.brightness[digit])));
 	timerStart(display.pwm_timer, pwm_ticks, TIM_MODE_SINGLESHOT, set_blank);
 	set_pins(display.buf[digit++]);
 	return;
@@ -564,8 +603,21 @@ void split_number(uint16_t num, uint8_t * buffers){
 	int8_t index=3;
 	while(index >= 0) //do till num greater than  0
 	{
-		buffers[index--] = num % 10;  //split last digit from number
-		num = num / 10;    //divide num by 10. num /= 10 also a valid one 
+		if(num>0){
+			buffers[index--] = num % 10;  //split last digit from number
+			num = num / 10;    //divide num by 10. num /= 10 also a valid one 
+		}
+		else buffers[index--] = 10;
 	}
 	return;
+}
+
+void set_brightness_level(display_brightness_level_t level){
+	uint8_t index;
+	for(index=0; index<DIGITS; index++)
+		display.brightness[index]=level;
+}
+
+void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit){
+	if (digit<DIGITS) display.brightness[digit]=level;
 }
