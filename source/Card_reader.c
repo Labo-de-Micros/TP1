@@ -24,7 +24,7 @@
 //////////////////////////////////////////////////////////////////
 
 #define CARD_DATA_LENGTH		256		//Bits totales en la targeta, midiendolo llegue a que eran 256
-#define CARD_DATA_REGISTER		32		//Uso registros de 32 bits para guardar la data.
+#define CARD_DATA_REGISTER		32		//Uso registros de 32 bits para guardar la data. //Por ahora no logre hacer que funcione para distintos valores
 #define CARD_CHARACTERS_LENGTH	40		//Segun la consigna.
 #define CARD_PAN_LENGHT			19		//Maxima cantidad de caracteres de PAN
 #define	CARD_EXP_LENGHT			4		//Maxima cantidad de caracteres de expiration date (YYMM)
@@ -100,27 +100,120 @@ static bool card_read;
 ////////////////////////////////////////////////////////////////
 
 static void card_machine(card_events_t);
+/*****************************************************************
+ * @brief: Runs the state machine for the card reader protocol
+ * 			(ISO/IEC 7811-2)
+ ****************************************************************/
+
 static void clear_buffer(void);
+/*****************************************************************
+ * @brief: Clears the 'card_data_compressed' buffer
+ ****************************************************************/
+
 static void enable_callback(void);
+/*****************************************************************
+ * @brief: Generates the events of the enable pin for the state machine 
+ ****************************************************************/
+
 static void clock_callback(void);
+/*****************************************************************
+ * @brief: Generates the events of the clock pin for the state machine 
+ ****************************************************************/
+
 static card_char_t get_current_char(uint8_t ind);
+/*****************************************************************
+ * @brief: Generates the char associated with the index given.
+ * @param ind: index for the character start.
+ * @return card_char_t containing the information of the character in the
+ * 			selected position.
+ * @example: Given the sequence 01100101111000101 and ind = 2, the returned char
+ * 				will be composed of:
+ * 					data_0 = 1
+ * 					data_1 = 0
+ * 					data_2 = 0
+ * 					data_3 = 1
+ * 					data_p = 0
+ * The sequence of data checked must be stored in card_data_compressed.
+ ****************************************************************/
+
 static uint8_t get_char_num(card_char_t character);
+/*****************************************************************
+ * @brief: Gets the hexadecimal number corresponding to the character given
+ * @param character: caharacter to get its hexadecimal value.
+ * @returns: hexadecimal value.
+ ****************************************************************/
+
 static bool is_char_valid(card_char_t character);
+/*****************************************************************
+ * @brief: Checks if a given character is valid (parity code)
+ * @param character: caharacter to check.
+ * @returns: true if the character is a valid one, false otherwise.
+ ****************************************************************/
+
 static uint8_t search_for_start(void);
+/*****************************************************************
+ * @brief: Search for the start of the Card Sequence.
+ * @returns: uint8_t index of the start of the card sequence.
+ ****************************************************************/
+
 static void clear_card(void);
+/*****************************************************************
+ * @brief: Clears all data from the variable card.
+ ****************************************************************/
+
 static uint8_t get_pan_number(void);
+/*****************************************************************
+ * @brief: Reads the pan number, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+
 static uint8_t get_exp_date(uint8_t ind);
+/*****************************************************************
+ * @brief: Reads the expiration date, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+
 static uint8_t get_service_code(uint8_t ind);
+/*****************************************************************
+ * @brief: Reads the service code, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+
 static uint8_t get_pvki(uint8_t ind);
+/*****************************************************************
+ * @brief: Reads the PVKI, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+
 static uint8_t get_pvv(uint8_t ind);
+/*****************************************************************
+ * @brief: Reads the PVV, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+
 static uint8_t get_cvv(uint8_t ind);
-static UINT_REGISTER reverseBits(UINT_REGISTER n);
+/*****************************************************************
+ * @brief: Reads the CVV, and returns the index for the next
+ * 			data to be taken.
+ ****************************************************************/
+
+/*static UINT_REGISTER reverseBits(UINT_REGISTER n);
+*****************************************************************
+ * @brief: Given a sequence of bits it reverse it.
+ * 			Ex:
+ * 				Input: 011101
+ * 				Output 101110
+ ****************************************************************/
+
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
+
+
 
 void card_init(void){
 /*****************************************************************
@@ -177,11 +270,17 @@ void card_data_clear(void){
 	card_read = false;
 	return;
 }
+
+
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					LOCAL FUNCTION DEFINITIONS					//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
+
+
+
 
 static void card_machine(card_events_t ev){
 /*****************************************************************
@@ -328,6 +427,7 @@ static uint8_t search_for_start(void){
 			break;
 		}
 	}
+	// Para el caso en que la tarjeta sea pasada en sentido contrario, todavia no funciona.
 	/*if(i+5 >= 30){//Significa que la tarjeta fue pasada en sentido contrario, debo swapear el array.
 		UINT_REGISTER _temp_[CARD_DATA_REGISTERS_LENGTH];
 		for(uint8_t i = 0; i<CARD_DATA_REGISTERS_LENGTH; i++){
@@ -453,13 +553,13 @@ static uint8_t get_cvv(uint8_t ind){
 	return ind+i*5;
 }
 
-static UINT_REGISTER reverseBits(UINT_REGISTER n) {
+/*static UINT_REGISTER reverseBits(UINT_REGISTER n) {
 /*****************************************************************
  * @brief: Given a sequence of bits it reverse it.
  * 			Ex:
  * 				Input: 011101
  * 				Output 101110
- ****************************************************************/
+ ****************************************************************
     for(int i = 0, j = CARD_DATA_REGISTER-1; i < j; i++, j--) {
         bool iSet = (bool)(n & (1 << i));
         bool jSet = (bool)(n & (1 << j));
@@ -469,4 +569,4 @@ static UINT_REGISTER reverseBits(UINT_REGISTER n) {
         if(jSet) n |= (1 << i);
     }
     return n;
-}
+}*/
