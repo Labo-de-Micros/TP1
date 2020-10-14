@@ -36,7 +36,7 @@ void App_Init (void) {
 
 void App_Run (void){
 	while (true){
-		if(was_a_card_readed()){
+		if(card_was_read()){
 			card_reader_callback();
 		}
 	}
@@ -51,7 +51,7 @@ void App_Run (void){
 
 static void card_reader_callback(void){
     card_t data;
-    data = get_data();
-    card_data_readed();
+    data = card_get_data();
+    card_data_clear();
     return;
 }

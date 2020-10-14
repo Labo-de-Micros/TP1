@@ -48,7 +48,7 @@ void App_Init (void) {
 void App_Run (void){
 	//while (true);
 	while(true){
-		enc_events_t temp = get_event();
+		enc_events_t temp = encoder_get_event();
 		switch(temp){
 		case ENC_SINGLE_PRESS:
 			click();
