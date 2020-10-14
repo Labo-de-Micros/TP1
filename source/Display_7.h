@@ -43,6 +43,12 @@ typedef enum {
 	DISPLAY_MODE_BLINK
 } display_mode_t;
 
+typedef enum{
+	BRIGHT_MIN,
+	BRIGHT_LOW,
+	BRIGHT_HIGH,
+	BRIGHT_MAX
+} display_brightness_level_t;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -99,6 +105,12 @@ void display_off();
 
 void display_temp_message(char * message, uint8_t seconds);
 
-void display_set_pwm_level(uint8_t level);
+void display_set_brightness_level(display_brightness_level_t level);
+
+void display_enable_soft_highlight(uint8_t digit);
+
+void display_enable_hard_highlight(uint8_t digit);
+
+void display_disable_highlight();
 
 #endif

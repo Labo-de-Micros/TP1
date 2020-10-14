@@ -2,6 +2,16 @@
 #include "StateMachine/State_machine.h"
 #include <stdio.h>
 
+#include "Display_7.h"
+#include "Encoder.h"
+#include "Card_reader.h"
+
+uint64_t array_to_int(uint8_t* array, uint8_t length);
+void error_msg();
+
+
+static access_control_t access_control;
+
 enum States
 {
     ST_WELCOME,
@@ -163,6 +173,7 @@ BEGIN_STATE_MAP(AccessControl)
     STATE_MAP_ENTRY(ST_AddID)
     STATE_MAP_ENTRY(ST_SetNewID)
     STATE_MAP_ENTRY(ST_CheckNewID)
+
     //NARANJA
     STATE_MAP_ENTRY(ST_EliminateID)
     STATE_MAP_ENTRY(ST_ShowID)
@@ -465,7 +476,7 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
 }
 
 //Lector de tarjetas external event
-EVENT_DEFINE(Card_Reader, CardReaderData)
+EVENT_DEFINE(Card_Reader, NoEventData)
 {
     
     BEGIN_TRANSITION_MAP                                            // - Current State -
@@ -535,29 +546,36 @@ STATE_DEFINE(Welcome, NoEventData)
 
 STATE_DEFINE(IdEnteringByCard, NoEventData)
 {
-    SM_InternalEvent(ST_ID_ENTERING_BY_CARD, NULL);
+    SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_CARD, NULL);
 }
 
-STATE_DEFINE(CheckIdEnteringByCard, AccessControlData)
+STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
 {
-    ASSERT_TRUE(pEventData);
-
     // Get pointer to the instance data and update id
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    pInstance->current_id = pEventData->id;
+    card_t card_data = card_get_data();
+    bool id_exists=false;
+    
+    uint16_t index;
+    for(index=0; index<access_control.total_of_IDs; index++)
+        if(access_control.IDsList[index].card_id==card_data.pan){
+            id_exists=true;
+            access_control.current_ID_index=index;
+            break;
+        }
 
-    //Existe el ID?
-    //NO SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
-    //SI SM_InternalEvent(ST_PIN_REQUEST, NULL);
+    if(id_exists) SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+    else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
 
+    return;
 }
 
 STATE_DEFINE(IdEnteringByEncoder, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    pInstance->current_option = ID;
+    access_control.current_option = ID;
 
     SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
+
+    return;
 }
 
 
@@ -566,50 +584,59 @@ STATE_DEFINE(ReadError, NoEventData)
     //Muesto READ ERROR
     SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
 }
+
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
     //Muestro ID NON EXISTENT
     SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
 }
+
 STATE_DEFINE(PinRequest, NoEventData)
 {
     //Muestro ENTER PIN
     //veo el largo del pin segun el ID
-
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    
-    pInstance->current_option = PIN4; //El id tiene un pin de 4 digitos 
-    pInstance->current_option = PIN5; //El id tiene un pin de 5 digitos 
-    
+    switch(access_control.IDsList[access_control.current_ID_index].PIN_length){
+        case 4 :
+            access_control.current_option = PIN4;
+            break;
+        case 5 :
+            access_control.current_option = PIN5;
+            break;
+        default :
+            //error
+            break;
+    }
     SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
-
 }
+
 STATE_DEFINE(CheckPin, NoEventData)
 {
     //PIN es correcto segun el ID ?
+    uint32_t pin = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.current_ID_index].PIN_length);
 
-    //SI SM_InternalEvent(ST_ACCESS_GRANTED, NULL);
-    //NO SM_InternalEvent(ST_INVALID_PIN, NULL);
-
+    if(access_control.IDsList[access_control.current_ID_index].PIN==pin) SM_InternalEvent(ST_ACCESS_GRANTED, NULL);
+    else SM_InternalEvent(ST_INVALID_PIN, NULL);
     
 }
+
 STATE_DEFINE(AccessGranted, NoEventData)
 {
+    // TODO
     //Muestro ACCESS GRANTED
     //Prendo LED 
     //Espero 5 seg
     //Apago LED
-    
+    SM_InternalEvent(ST_WELCOME, NULL);
 }
+
+
 STATE_DEFINE(InvalidPin, NoEventData)
 {
     //Muestro INCORRECT PIN
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    pInstance->PIN_attempts ++; //El id tiene un pin de 4 
-
+    
     //Retardo de unos segundos
 
-    if(pInstance->PIN_attempts == MAX_NUM_ATTEMPTS)
+    if((access_control.IDsList[access_control.current_ID_index].PIN_attempts++) == MAX_NUM_ATTEMPTS)
         SM_InternalEvent(ST_BLOCK_ID, NULL);
     else
         SM_InternalEvent(ST_PIN_REQUEST, NULL); 
@@ -625,7 +652,7 @@ STATE_DEFINE(BlockId, NoEventData)
 }
 STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    access_control_t* pInstance = SM_GetInstance(AccessControl);
     pInstance->PIN_attempts = 0; 
 
     //EXISTE EL ID ?
@@ -646,7 +673,7 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
 
 STATE_DEFINE(EnterDigitsRequest, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    access_control_t* pInstance = SM_GetInstance(AccessControl);
     pInstance->current_num = 0;
     pInstance->digits_introduced = 0;
     pInstance->word_introduced = 0;
@@ -930,10 +957,26 @@ STATE_DEFINE(IDElimination, NoEventData)
 
 }
 
+uint64_t array_to_int(uint8_t* array, uint8_t length){
+    uint8_t index;
+    uint64_t return_value=0;
+    for(index=0; index<length; index++){
+        return_value*=10;
+        return_value+=array[index]; 
+    }
+    return return_value;
+}
 
 
 
-
+void error_msg(){
+    uint8_t message[4];
+    message[0]='E';
+    message[1]='r';
+    message[2]='r';
+    message[3]='\0';
+    display_temp_message(message, ERR_MSG_TIME);
+}
 
 
 
