@@ -175,7 +175,7 @@ void encoder_init(void){
 	return;
 }
 
-enc_events_t get_event(void){
+enc_events_t encoder_get_event(void){
 /*****************************************************************
  * @brief: Function to get the events of the encoder. It saves the 
  *          coming events in order in an internal buffer FIFO type

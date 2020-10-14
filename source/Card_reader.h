@@ -68,6 +68,9 @@ card_t card_get_data(void);
  * @return: A struct card_t containing the information readed in the card.
  ****************************************************************/
 
-void card_data_read(void);
+void card_data_clear(void);
+/*****************************************************************
+ * @brief: Clears a card data that was read.
+ ****************************************************************/
 
 #endif	//_CARD_READER_H_

@@ -161,10 +161,18 @@ card_t card_get_data(void){
 }
 
 bool card_was_read(void){
+/*****************************************************************
+ * @brief: Function for event generator
+ * @return: true if a card was read and the system is ready to
+ * 			return its data (must call get_data()), false otherwise.
+ ****************************************************************/
 	return card_read;
 }
 
-void card_data_read(void){
+void card_data_clear(void){
+/*****************************************************************
+ * @brief: Clears a card data that was read.
+ ****************************************************************/
 	clear_card();
 	card_read = false;
 	return;
