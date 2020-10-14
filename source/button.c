@@ -73,8 +73,21 @@ static tim_id_t button_timer;
 ////////////////////////////////////////////////////////////////
 
 static void button_callback(void);
+/*****************************************************************
+ * @brief: Callback of the timer pooling, that runs the state machine
+ * **************************************************************/
+
 static void get_events(void);
+/*****************************************************************
+ * @brief: Update the events of each button configured
+ * **************************************************************/
+
 static void run_state_machine(button_id_t i);
+/*****************************************************************
+ * @brief: Runs the state machine for a given button
+ * @param i: Button id of the button to run the state machine.
+ * **************************************************************/
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -82,7 +95,7 @@ static void run_state_machine(button_id_t i);
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void buttonInit(void){
+void button_init(void){
 /*****************************************************************
  * @brief: Initialize the button Driver
  * **************************************************************/
@@ -97,7 +110,7 @@ void buttonInit(void){
 	return;
 }
 
-button_id_t get_new_button(pin_t pin, uint8_t mode){
+button_id_t button_get_new_button(pin_t pin, uint8_t mode){
 /*****************************************************************
  * @brief: Create new button
  * @param pin: Pin of the button connected, (gpioMode will be called
@@ -115,7 +128,7 @@ button_id_t get_new_button(pin_t pin, uint8_t mode){
 	return id;
 }
 
-void configure_button(button_id_t button_id, button_callback_t callback_single, button_callback_t callback_long, button_callback_t callback_double){
+void button_configure(button_id_t button_id, button_callback_t callback_single, button_callback_t callback_long, button_callback_t callback_double){
 /*****************************************************************
  * @brief: Configure the callbacks of the selected button
  * @param button_id: Button id of the button to configure its callbacks.
@@ -133,7 +146,7 @@ void configure_button(button_id_t button_id, button_callback_t callback_single, 
 	return;
 }
 
-void disable(button_id_t button_id){
+void button_disable(button_id_t button_id){
 /*****************************************************************
  * @brief: Disable a specific button for not to take into account
  * 			its actions

@@ -166,11 +166,11 @@ void encoder_init(void){
 	gpioMode(ENCODER_PIN_B, INPUT_PULLUP);
 	gpioIRQ (ENCODER_PIN_A, GPIO_IRQ_MODE_BOTH_EDGES, callback_A);
 	gpioIRQ (ENCODER_PIN_B, GPIO_IRQ_MODE_BOTH_EDGES, callback_B);
-	buttonInit();
+	button_init();
 	reset_buffer();
-	encoder_button = get_new_button(ENCODER_PIN_SW, INPUT_PULLUP);
+	encoder_button = button_get_new_button(ENCODER_PIN_SW, INPUT_PULLUP);
 	current_state = ENCODER_IDLE_ST;
-	configure_button(encoder_button, click_callback,long_click_callback,double_click_callback);
+	button_configure(encoder_button, click_callback,long_click_callback,double_click_callback);
 	yaInit = true;
 	return;
 }
