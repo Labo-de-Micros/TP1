@@ -54,20 +54,20 @@ void card_init(void);
  * @brief: Initializer the card reader driver and its components
  ****************************************************************/
 
-bool was_a_card_readed(void);
+bool card_was_read(void);
 /*****************************************************************
  * @brief: Function for event generator
- * @return: true if a card was readed and the system is ready to
+ * @return: true if a card was read and the system is ready to
  * 			return its data (must call get_data()), false otherwise.
  ****************************************************************/
 
-card_t get_data(void);
+card_t card_get_data(void);
 /*****************************************************************
- * @brief: When the callback is called, one must obtain the data readed
+ * @brief: When the callback is called, one must obtain the data read
  * 			by the driver, so this function returns the card data.
  * @return: A struct card_t containing the information readed in the card.
  ****************************************************************/
 
-void card_data_readed(void);
+void card_data_read(void);
 
 #endif	//_CARD_READER_H_

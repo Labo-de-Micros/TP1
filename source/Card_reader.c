@@ -91,7 +91,7 @@ static UINT_REGISTER card_data_compressed[CARD_DATA_REGISTERS_LENGTH];
 static uint8_t index;
 static card_states_t current_state;
 static card_t card;
-static bool card_readed;
+static bool card_read;
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -136,20 +136,20 @@ void card_init(void){
 	gpioIRQ (CARD_ENABLE, GPIO_IRQ_MODE_BOTH_EDGES , enable_callback);
 	current_state = CARD_WAIT_FOR_START;	//Seteo el estado de la maquina de estados como 'esperando targeta'.
 	index = 0;
-	card_readed = false;
+	card_read = false;
 	clear_buffer();	// Limpio el buffer para que todo quede seteado en 0.
 	yaInit = true;
 	return;
 }
 
-card_t get_data(void){
+card_t card_get_data(void){
 /*****************************************************************
- * @brief: When the callback is called, one must obtain the data readed
+ * @brief: When the callback is called, one must obtain the data read
  * 			by the driver, so this function returns the card data.
- * @return: A struct card_t containing the information readed in the card.
+ * @return: A struct card_t containing the information read in the card.
  ****************************************************************/
 	clear_card();
-	if(!card_readed)
+	if(!card_read)
 		return card;
 	uint8_t ind = get_pan_number();
 	ind = get_exp_date(ind);
@@ -160,13 +160,13 @@ card_t get_data(void){
 	return card;
 }
 
-bool was_a_card_readed(void){
-	return card_readed;
+bool card_was_read(void){
+	return card_read;
 }
 
-void card_data_readed(void){
+void card_data_read(void){
 	clear_card();
-	card_readed = false;
+	card_read = false;
 	return;
 }
 //////////////////////////////////////////////////////////////////
@@ -186,7 +186,7 @@ static void card_machine(card_events_t ev){
 		case CARD_WAIT_FOR_START:		// Estado inicial, esperando a que se empieze a leer una targeta.
 			if(ev == ENABLE_FALLING_EV){// Si llega un flanco negativo del pin ENABLE, se empezo a leer una targeta
 										// entonces pasamos al estado WAIT_DATA.
-				card_readed = false;
+				card_read = false;
 				current_state = CARD_WAIT_DATA;
 				index = 0;
 				clear_buffer();
@@ -200,7 +200,7 @@ static void card_machine(card_events_t ev){
 				index++;		// incremento el indice del dato actual.
 			}
 			else if(ev == ENABLE_RISING_EV){		// Si llega un flanco positivo del pin ENABLE, se termino de leer la targeta
-				card_readed = true;								// entonces llamo al callback, y seteo el estado como el estado inicial, por si se lee
+				card_read = true;								// entonces llamo al callback, y seteo el estado como el estado inicial, por si se lee
 				current_state = CARD_WAIT_FOR_START;// otra trageta.
 			}
 			break;
