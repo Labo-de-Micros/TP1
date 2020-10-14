@@ -51,13 +51,23 @@ void encoder_init(void);
  * @brief: Initialize the encoder Driver
  * **************************************************************/
 
-void encoder_set_callback(void);
+enc_events_t get_event(void);
+/*****************************************************************
+ * @brief: Function to get the events of the encoder. It saves the 
+ *          coming events in order in an internal buffer FIFO type
+ *          and it returns them in order. One muste check periodically
+ *          this function for not to lose any event.
+ * @return: Event arrived of type 'enc_events_t'. ENC_NO_EV will be 
+ * 			returned if no event arrived.
+ * **************************************************************/
+
+/*void encoder_set_callback(void);
     // enc_callback_t ccw, 
     // enc_callback_t cw,
     // enc_callback_t click, 
     // enc_callback_t double_click, 
     // enc_callback_t long_click);
-/*****************************************************************
+*****************************************************************
  * @brief: Set the callbacks corresponding to the different types
  *			of modes
  * @param ccw: Callback for Counter-Clockwise turn.
@@ -65,8 +75,7 @@ void encoder_set_callback(void);
  * @param click: Callback for button pressed single time.
  * @param double_click: Callback for button pressed double time.
  * @param long_click: Callback for button long press.
- * **************************************************************/
-
-enc_events_t get_event(void);
+ * **************************************************************
+ * */
 
 #endif	// _ENCODER_H_

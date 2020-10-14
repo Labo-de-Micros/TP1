@@ -70,15 +70,16 @@ typedef enum{
 
 static tim_id_t encoder_timer;
 static button_id_t encoder_button;
+static encoder_states_t current_state;
+static enc_events_t events_buffer[ENC_MAX_BUFFER_EVENTS_LENGHT];
+static uint8_t buffer_index_push = 0;
+static uint8_t buffer_index_pull = 0;
 //static enc_callback_t  callback_ccw;
 //static enc_callback_t  callback_cw;
 //static enc_callback_t  callback_click;
 //static enc_callback_t  callback_double;
 //static enc_callback_t  callback_long;
-static encoder_states_t current_state;
-static enc_events_t events_buffer[ENC_MAX_BUFFER_EVENTS_LENGHT];
-static uint8_t buffer_index_push = 0;
-static uint8_t buffer_index_pull = 0;
+
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -113,11 +114,37 @@ static void encoder_state_machine(encoder_events_t ev);
  * **************************************************************/
 
 static void push_event(enc_events_t ev);
+/*****************************************************************
+ * @brief: Pushes an event to the buffer.
+ * **************************************************************/
+
 static enc_events_t pull_ev(void);
+/*****************************************************************
+ * @brief: Pulls an event from the buffer, removing it.
+ * **************************************************************/
+
 static void click_callback(void);
+/*****************************************************************
+ * @brief: Callback for a single press in the encoder. It pushes an
+ * 			event to the event buffer.
+ * **************************************************************/
+
 static void double_click_callback(void);
+/*****************************************************************
+ * @brief: Callback for a double press in the encoder. It pushes an
+ * 			event to the event buffer.
+ * **************************************************************/
+
 static void long_click_callback(void);
+/*****************************************************************
+ * @brief: Callback for a long press in the encoder. It pushes an
+ * 			event to the event buffer.
+ * **************************************************************/
+
 static void reset_buffer(void);
+/*****************************************************************
+ * @brief: Reset the buffer to ENC_NO_EV in the entire array.
+ * **************************************************************/
 
 
 //////////////////////////////////////////////////////////////////
@@ -148,8 +175,20 @@ void encoder_init(void){
 	return;
 }
 
-void encoder_set_callback(){//enc_callback_t  ccw, enc_callback_t  cw, enc_callback_t  click, enc_callback_t double_click, enc_callback_t long_click){
+enc_events_t get_event(void){
 /*****************************************************************
+ * @brief: Function to get the events of the encoder. It saves the 
+ *          coming events in order in an internal buffer FIFO type
+ *          and it returns them in order. One muste check periodically
+ *          this function for not to lose any event.
+ * @return: Event arrived of type 'enc_events_t'. ENC_NO_EV will be 
+ * 			returned if no event arrived.
+ * **************************************************************/
+	return pull_ev();
+}
+
+/*void encoder_set_callback(){//enc_callback_t  ccw, enc_callback_t  cw, enc_callback_t  click, enc_callback_t double_click, enc_callback_t long_click){
+*****************************************************************
  * @brief: Set the callbacks corresponding to the different types
  *			of modes
  * @param ccw: Callback for Counter-Clockwise turn.
@@ -157,7 +196,7 @@ void encoder_set_callback(){//enc_callback_t  ccw, enc_callback_t  cw, enc_callb
  * @param click: Callback for button pressed single time.
  * @param double_click: Callback for button pressed double time.
  * @param long_click: Callback for button long press.
- * **************************************************************/
+ * **************************************************************
 	//callback_ccw=ccw;
 	//callback_cw=cw;
 	//callback_click=click;
@@ -165,12 +204,7 @@ void encoder_set_callback(){//enc_callback_t  ccw, enc_callback_t  cw, enc_callb
 	//callback_long=long_click;
 	//configure_button(encoder_button, callback_click,callback_long,callback_double);
 	return;
-}
-
-enc_events_t get_event(void){
-	return pull_ev();
-}
-
+}*/
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -285,41 +319,63 @@ static void encoder_state_machine(encoder_events_t ev){
 }
 
 static void push_event(enc_events_t ev){
-	events_buffer[buffer_index_push] = ev;
-	buffer_index_push++;
+/*****************************************************************
+ * @brief: Pushes an event to the buffer.
+ * **************************************************************/
+	events_buffer[buffer_index_push] = ev;	//Pusheo evento
+	buffer_index_push++;					//Incremento el indice
 	if(buffer_index_push>=ENC_MAX_BUFFER_EVENTS_LENGHT)
-		buffer_index_push = 0;
+		buffer_index_push = 0;				// Si el indice es mayor al largo del buffer seteo el indice en 0 
+											// porque es un buffer circular.
 	return;
 }
 
 static enc_events_t pull_ev(void){
-	enc_events_t temp = events_buffer[buffer_index_pull];
-	if(temp == ENC_NO_EV)
+/*****************************************************************
+ * @brief: Pulls an event from the buffer, removing it.
+ * **************************************************************/
+	enc_events_t temp = events_buffer[buffer_index_pull];	//Guardo el ultimo evento recibido
+	if(temp == ENC_NO_EV)	//Si no hubo evento, salgo de la funcion.
 		return temp;
-	events_buffer[buffer_index_pull] = ENC_NO_EV;
-	buffer_index_pull++;
+	events_buffer[buffer_index_pull] = ENC_NO_EV;	//caso contrario, seteo ENC_NO_EV y incremento el indice actual
+	buffer_index_pull++;							//teniendo en cuenta el buffer circular.
 	if(buffer_index_pull >= ENC_MAX_BUFFER_EVENTS_LENGHT)
 		buffer_index_pull = 0;
 	return temp;
 }
 
 static void click_callback(void){
-	push_event(ENC_SINGLE_PRESS);
+/*****************************************************************
+ * @brief: Callback for a single press in the encoder. It pushes an
+ * 			event to the event buffer.
+ * **************************************************************/
+	push_event(ENC_SINGLE_PRESS);	//Pusheo el evento de click.
 	return;
 }
 
 static void double_click_callback(void){
-	push_event(ENC_DOUBLE_PRESS);
+/*****************************************************************
+ * @brief: Callback for a double press in the encoder. It pushes an
+ * 			event to the event buffer.
+ * **************************************************************/
+	push_event(ENC_DOUBLE_PRESS);	//Pusheo un evento de doble click.
 	return;
 }
 
 static void long_click_callback(void){
-	push_event(ENC_LONG_PRESS);
+/*****************************************************************
+ * @brief: Callback for a long press in the encoder. It pushes an
+ * 			event to the event buffer.
+ * **************************************************************/
+	push_event(ENC_LONG_PRESS);	//Pusheo un evento de long press.
 	return;
 }
 
 static void reset_buffer(void){
-	for(uint8_t i=0; i < ENC_MAX_BUFFER_EVENTS_LENGHT; i++)
+/*****************************************************************
+ * @brief: Reset the buffer to ENC_NO_EV in the entire array.
+ * **************************************************************/
+	for(uint8_t i=0; i < ENC_MAX_BUFFER_EVENTS_LENGHT; i++)	//Seteo todo el buffer en ENC_NO_EV.
 		events_buffer[i] = ENC_NO_EV;
 	return;
 }
