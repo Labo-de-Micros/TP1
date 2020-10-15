@@ -5,7 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../source/Access_control.c \
-../source/App_pwm.c \
+../source/App_access.c \
 ../source/Card_reader.c \
 ../source/Display_7.c \
 ../source/FTM.c \
@@ -17,7 +17,7 @@ C_SRCS += \
 
 OBJS += \
 ./source/Access_control.o \
-./source/App_pwm.o \
+./source/App_access.o \
 ./source/Card_reader.o \
 ./source/Display_7.o \
 ./source/FTM.o \
@@ -29,7 +29,7 @@ OBJS += \
 
 C_DEPS += \
 ./source/Access_control.d \
-./source/App_pwm.d \
+./source/App_access.d \
 ./source/Card_reader.d \
 ./source/Display_7.d \
 ./source/FTM.d \

@@ -232,7 +232,7 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_DIGITS_RECOUNT_4       
         // //VERDE
         TRANSITION_MAP_ENTRY(ST_SET_BRIGHTNESS)                     // ST_CHANGE_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_WELCOME)                         // ST_SET_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_LOWER_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_HIGHER_BRIGHTNESS     
         // //VIOLETA
@@ -313,7 +313,7 @@ EVENT_DEFINE(Encoder_CW, NoEventData)
 
     BEGIN_TRANSITION_MAP                                            // - Current State -
       
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_WELCOME
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                         // ST_WELCOME
         TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)                  // ST_ACCESS_REQUEST,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_ID_ENTERING_BY_CARD,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_CHECK_ID_ENTERING_BY_CARD,
@@ -346,7 +346,7 @@ EVENT_DEFINE(Encoder_CW, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_DIGITS_RECOUNT_4       
         // //VERDE
         TRANSITION_MAP_ENTRY(ST_ADD_ID)                             // ST_CHANGE_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_HIGHER_BRIGHTNESS)                         // ST_SET_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_LOWER_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_HIGHER_BRIGHTNESS     
         // //VIOLETA
@@ -403,7 +403,7 @@ EVENT_DEFINE(Encoder_CCW, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_DIGITS_RECOUNT_4       
         // //VERDE
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     // ST_CHANGE_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_LOWER_BRIGHTNESS)                         // ST_SET_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_LOWER_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_HIGHER_BRIGHTNESS     
         // //VIOLETA
@@ -912,29 +912,19 @@ STATE_DEFINE(ChangeBrightness, NoEventData)
 
 STATE_DEFINE(SetBrightness, NoEventData)
 {
-    display_set_number(access_control.current_brightness);
-    
     // TODO incorporar el fascinante driver de ftm para que nadie nunca regule el brillo
-
-    if(access_control.current_brightness==0)
-        display_set_brightness_level(BRIGHT_LOW);
-    else 
-        display_set_brightness_level(BRIGHT_HIGH); 
+    display_set_number(display_get_brightness());
 }
 
 STATE_DEFINE(LowerBrightness, NoEventData)
 {
-    if(access_control.current_brightness != MIN_BRIGHTNESS)
-        access_control.current_brightness--;
-
+    display_set_brightness_level(display_get_brightness()-1);
     SM_InternalEvent(ST_SET_BRIGHTNESS, NULL); 
 }
 
 STATE_DEFINE(HigherBrightness, NoEventData)
 {
-    if(access_control.current_brightness != MAX_BRIGHTNESS)
-        access_control.current_brightness++;
-
+    display_set_brightness_level(display_get_brightness()+1);
     SM_InternalEvent(ST_SET_BRIGHTNESS, NULL); 
 }
 
@@ -1051,7 +1041,6 @@ void access_control_init(){
 
     access_control.current_num=0;
     access_control.current_ID_index=0;
-    access_control.current_brightness=0;
     access_control.IDsList[0]=sample_id;
     access_control.total_of_IDs=1;
     access_control.digits_introduced=0;
