@@ -23,9 +23,9 @@
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 
-static void click_call(void);
-static void ccw_call(void);
-static void cw_call(void);
+static void click(void);
+static void ccw(void);
+static void cw(void);
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -49,13 +49,13 @@ void App_Run (void){
 	while (true){
 		switch(encoder_get_event()){
 			case ENC_SINGLE_PRESS:
-				click_call();
+				click();
 				break;
 			case ENC_CLOCKWISE_TURN:
-				cw_call();
+				cw();
 				break;
 			case ENC_COUNTER_CLOCKWISE_TURN:
-				ccw_call();
+				ccw();
 				break;
 			default:
 				break;
@@ -72,18 +72,18 @@ void App_Run (void){
 
 static uint8_t number=10;
 
-static void click_call(void){
+static void click(void){
 	char text[]="hola ian";
 	display_temp_message(text, 2);
 	return;
 }
 
-static void ccw_call(void){
+static void ccw(void){
 	display_rotate_left();
 	return;
 }
 
-static void cw_call(void){
+static void cw(void){
 	display_rotate_right();
 	return;
 }
