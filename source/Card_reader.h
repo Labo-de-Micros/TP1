@@ -34,13 +34,13 @@ typedef void (*card_callback_t)(void);
 
 typedef struct{
 	uint64_t pan;
+	bool everything_ok;
 	uint16_t service_code;
 	uint16_t PVV;
 	uint16_t CVV;
     uint8_t exp_year;
 	uint8_t exp_month;
     uint8_t PVKI;
-	bool everything_ok;
 }card_t;
 
 //////////////////////////////////////////////////////////////////

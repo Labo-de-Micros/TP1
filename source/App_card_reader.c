@@ -22,7 +22,7 @@
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 
-static void card_reader_callback(void);
+static void read(void);
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -36,8 +36,8 @@ void App_Init (void) {
 
 void App_Run (void){
 	while (true){
-		if(was_a_card_readed()){
-			card_reader_callback();
+		if(card_was_read()){
+			read();
 		}
 	}
 	return;
@@ -49,9 +49,9 @@ void App_Run (void){
  *******************************************************************************
  ******************************************************************************/
 
-static void card_reader_callback(void){
+static void read(void){
     card_t data;
-    data = get_data();
-    card_data_readed();
+    data = card_get_data();
+    card_data_clear();
     return;
 }
