@@ -543,7 +543,23 @@ EVENT_DEFINE(Card_Reader, NoEventData)
 
 STATE_DEFINE(Welcome, NoEventData)
 {
-    //Muestro welcome en el display
+	char message[4];
+	message[0]='w';
+	message[1]='e';
+	message[2]='l';
+	message[3]='c';
+	//message[4]='\0';
+	//display_set_string(message);
+}
+
+STATE_DEFINE(AccessRequest, NoEventData)
+{
+	char message[4];
+    message[0]='e';
+    message[1]='n';
+    message[2]='t';
+    message[3]='\0';
+    //display_set_string(message);
 }
 
 STATE_DEFINE(IdEnteringByCard, NoEventData)
@@ -603,7 +619,7 @@ STATE_DEFINE(PinRequest, NoEventData)
     message[1]='i';
     message[2]='n';
     message[3]='\0';
-    display_set_string(message);
+    //display_set_string(message);
     //veo el largo del pin segun el ID
     switch(access_control.IDsList[access_control.current_ID_index].PIN_length){
         case 4 :
@@ -636,8 +652,8 @@ STATE_DEFINE(AccessGranted, NoEventData)
     message[1]='a';
     message[2]='s';
     message[3]='s';
-    message[4]='\0';
-    display_set_string(message);
+    //message[4]='\0';
+    //display_set_string(message);
 
     // TODO
     //Muestro ACCESS GRANTED
@@ -669,7 +685,7 @@ STATE_DEFINE(BlockId, NoEventData)
     message[1]='A';
     message[2]='n';
     message[3]='\0';
-    display_temp_message(message, ERR_MSG_TIME);
+    //display_temp_message(message, ERR_MSG_TIME);
 
     //Agrego a la lista de bloqueados el ID actual
     access_control.IDsList[access_control.current_ID_index].blocked_status=true;
@@ -914,8 +930,8 @@ STATE_DEFINE(ChangeBrightness, NoEventData)
     message[1]='r';
     message[2]='i';
     message[3]='g';
-    message[4]='\0';
-    display_set_string(message);
+    //message[4]='\0';
+    //display_set_string(message);
 }
 
 STATE_DEFINE(SetBrightness, NoEventData)
@@ -955,7 +971,7 @@ STATE_DEFINE(AddID, NoEventData)
     message[1]='d';
     message[2]='d';
     message[3]='\0';
-    display_set_string(message);
+    //display_set_string(message);
 }
 
 STATE_DEFINE(SetNewID, NoEventData)
@@ -1004,7 +1020,7 @@ STATE_DEFINE(EliminateID, NoEventData)
     message[1]='e';
     message[2]='l';
     message[3]='\0';
-    display_set_string(message);
+    //display_set_string(message);
 
     access_control.current_ID_index=0;
 
@@ -1053,16 +1069,6 @@ STATE_DEFINE(IDElimination, NoEventData)
 
 }
 
-STATE_DEFINE(AccessRequest, NoEventData)
-{
-	char message[4];
-    message[0]='e';
-    message[1]='n';
-    message[2]='t';
-    message[3]='\0';
-    display_set_string(message);
-}
-
 
 // init function
 
@@ -1105,7 +1111,7 @@ void error_msg(){
     message[1]='r';
     message[2]='r';
     message[3]='\0';
-    display_temp_message(message, ERR_MSG_TIME);
+    //display_temp_message(message, ERR_MSG_TIME);
 }
 
 void done_msg(){
@@ -1114,8 +1120,8 @@ void done_msg(){
     message[1]='o';
     message[2]='n';
     message[3]='e';
-    message[4]='\0';
-    display_temp_message(message, ERR_MSG_TIME);
+    //message[4]='\0';
+    //display_temp_message(message, ERR_MSG_TIME);
 }
 
 

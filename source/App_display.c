@@ -23,9 +23,9 @@
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 
-static void click_call(void);
-static void ccw_call(void);
-static void cw_call(void);
+static void click(void);
+static void ccw(void);
+static void cw(void);
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -34,7 +34,6 @@ static void cw_call(void);
 
 void App_Init (void) {
 	encoder_init();
-	encoder_set_callback(ccw_call,cw_call,click_call);
     display_init();
     display_configure_pins(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
     display_configure_mux(DISPLAY_MUX_PIN_0, DISPLAY_MUX_PIN_1);
@@ -47,7 +46,21 @@ void App_Init (void) {
 }
 
 void App_Run (void){
-	while (true);
+	while (true){
+		switch(encoder_get_event()){
+			case ENC_SINGLE_PRESS:
+				click();
+				break;
+			case ENC_CLOCKWISE_TURN:
+				cw();
+				break;
+			case ENC_COUNTER_CLOCKWISE_TURN:
+				ccw();
+				break;
+			default:
+				break;
+		}
+	}
 	return;
 }
 
@@ -59,18 +72,18 @@ void App_Run (void){
 
 static uint8_t number=10;
 
-static void click_call(void){
+static void click(void){
 	char text[]="hola ian";
 	display_temp_message(text, 2);
 	return;
 }
 
-static void ccw_call(void){
+static void ccw(void){
 	display_rotate_left();
 	return;
 }
 
-static void cw_call(void){
+static void cw(void){
 	display_rotate_right();
 	return;
 }

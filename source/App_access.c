@@ -4,6 +4,7 @@
 #include "board.h"
 #include "timer.h"
 #include "SysTick.h"
+#include "Display_7.h"
 #include "Card_reader.h"
 #include "encoder.h"
 #include "StateMachine/DataTypes.h"
@@ -55,11 +56,15 @@ void App_Init (void) {
     card_init();
     display_init();
     access_control_init();
+	reset_buffer();
 	return;
 }
 
 void App_Run (void){
-
+	while(true){
+		get_new_event();
+		run_state_machine();
+	}
 }
 
 /*******************************************************************************
