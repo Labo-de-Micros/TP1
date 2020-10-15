@@ -50,3 +50,10 @@ Debug/Blink_Debug_library.ld
 Debug/Blink_Debug.ld
 Debug/Blink.map
 Debug/Blink.axf
+Debug/Blink.axf
+Debug/Blink.map
+Debug/Blink_Debug.ld
+Debug/Blink_Debug_library.ld
+Debug/Blink_Debug_memory.ld
+Debug/source/Display_7.o
+Debug/source/subdir.mk
