@@ -31,8 +31,6 @@ typedef enum{
     PIN5
 } word_option_t;
 
-
-
 typedef struct{
     uint64_t card_id;
     uint32_t number; //Numero de ID (8 digitos)
@@ -60,6 +58,7 @@ typedef struct{
     ID_data_t IDsList[MAX_IDS]; 
 } access_control_t;
 
+void access_control_init();
 /*
 // Event data structure
 typedef struct

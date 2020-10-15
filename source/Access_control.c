@@ -638,7 +638,7 @@ STATE_DEFINE(AccessGranted, NoEventData)
     message[3]='s';
     message[4]='\0';
     display_set_string(message);
-    
+
     // TODO
     //Muestro ACCESS GRANTED
     //Prendo LED 
@@ -1054,7 +1054,25 @@ STATE_DEFINE(IDElimination, NoEventData)
 }
 
 
+// init function
 
+void access_control_init(){
+    ID_data_t sample_id;
+    sample_id.blocked_status=false;
+    sample_id.valid=true;
+    sample_id.number=12345678;
+    sample_id.card_id=6391300355831573;
+    sample_id.PIN=1234;
+    sample_id.PIN_attempts=0;
+    sample_id.PIN_length=4;
+
+    access_control.current_num=0;
+    access_control.current_ID_index=0;
+    access_control.current_brightness=0;
+    access_control.IDsList[0]=sample_id;
+    access_control.total_of_IDs=1;
+    access_control.digits_introduced=0;
+}
 
 
 // auxiliary functions
