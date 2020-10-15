@@ -34,7 +34,6 @@ static void cw_call(void);
 
 void App_Init (void) {
 	encoder_init();
-	encoder_set_callback(ccw_call,cw_call,click_call);
     display_init();
     display_configure_pins(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
     display_configure_mux(DISPLAY_MUX_PIN_0, DISPLAY_MUX_PIN_1);
@@ -47,7 +46,21 @@ void App_Init (void) {
 }
 
 void App_Run (void){
-	while (true);
+	while (true){
+		switch(encoder_get_event()){
+			case ENC_SINGLE_PRESS:
+				click_call();
+				break;
+			case ENC_CLOCKWISE_TURN:
+				cw_call();
+				break;
+			case ENC_COUNTER_CLOCKWISE_TURN:
+				ccw_call();
+				break;
+			default:
+				break;
+		}
+	}
 	return;
 }
 
