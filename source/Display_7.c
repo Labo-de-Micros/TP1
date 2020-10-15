@@ -90,6 +90,7 @@
 
 #define DISP_MASK 0x01
 #define BRIGHTNESS_LEVELS 4
+#define EXT_BUF_LEN 10
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -105,11 +106,14 @@ typedef struct{
 	tim_id_t timer;
 	tim_id_t temp_timer;
 	tim_id_t pwm_timer;
-	uint8_t buf[4];
-	uint8_t aux_buf[4];
-	display_brightness_level_t brightness[4];	
+	tim_id_t rotation_timer;
+	uint8_t buf[EXT_BUF_LEN];
+	uint8_t aux_buf[EXT_BUF_LEN];
+	uint8_t ext_index;
+	display_brightness_level_t brightness[BRIGHTNESS_LEVELS];	
 	display_brightness_level_t brightness_level;
 	display_mode_t mode;
+	bool auto_rotation;
 }display_t;
 
 //////////////////////////////////////////////////////////////////
@@ -134,12 +138,12 @@ uint8_t get_7_segments_char(char character);
 uint8_t get_7_segments_number(uint8_t num);
 
 void digit_select(uint8_t digit);
-void display_refresh_callback();
+void refresh_callback();
 void split_number(uint16_t num, uint8_t * buffers);
 void set_blank();
 void set_brightness_level(display_brightness_level_t level);
 void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit);
-
+void rotate_buffer();
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
@@ -202,7 +206,7 @@ void display_configure_mux(pin_t pin0, pin_t pin1){
 void display_set_string(char * string){
 	uint8_t index;
 	uint8_t done=false;
-	for(index=0; index<DIGITS; index++){
+	for(index=0; index<EXT_BUF_LEN; index++){
 		if(string[index]=='\0') done=true;
 		if(!done) load_buffer(get_7_segments_char(string[index]), index);
 		else load_buffer(get_7_segments_char(DISP_CLEAR), index);
@@ -211,11 +215,11 @@ void display_set_string(char * string){
 }
 
 void display_set_number(uint16_t number){
-	uint8_t buffer[4];
+	uint8_t buffer[EXT_BUF_LEN];
 	split_number(number, buffer);
 	
 	uint8_t index;
-	for(index=0; index<4; index++)
+	for(index=0; index<EXT_BUF_LEN; index++)
 		load_buffer(get_7_segments_number(buffer[index]), index);
 	return;
 }
@@ -241,7 +245,7 @@ void display_set_brightness_level(display_brightness_level_t level){
 	}
 
 	uint8_t index;
-	for(index=0; index<DIGITS; index++)
+	for(index=0; index<EXT_BUF_LEN; index++)
 		display.brightness[index]=checked_level;
 
 }
@@ -272,7 +276,7 @@ void display_off(){
 
 void display_temp_message(char * message, uint8_t seconds){
 	uint8_t i;
-	for(i = 0; i < DIGITS; i++)
+	for(i = 0; i < EXT_BUF_LEN; i++)
 		display.aux_buf[i]=display.buf[i];
 	display_set_string(message);
 	timerStart(display.temp_timer, 1000*seconds, TIM_MODE_SINGLESHOT, return_from_temp);
@@ -283,10 +287,34 @@ void display_clear_buffer(void){
  * @brief: Clears the screen of the display (nothing will be displayed).
  * **************************************************************/
 	uint8_t index;
-	for(index=0;index<DIGITS;index++)
+	for(index=0; index<EXT_BUF_LEN; index++)
 		load_buffer(DISP_CLEAR, index);
 }
 
+void display_enable_auto_rotation(){
+	display.auto_rotation=true;
+}
+
+void display_disable_auto_rotation(){
+	display.auto_rotation=false;
+}
+
+void display_rotate_left(){
+	display.ext_index--;
+	if(display.ext_index<0) 
+	{
+		display.ext_index=0;
+	}
+}
+
+void display_rotate_right(){
+	display.ext_index++;
+	if(display.ext_index>EXT_BUF_LEN-DIGITS || display.buf[display.ext_index+3]==0xFF) 
+	{
+		display.ext_index=0;
+		if(timerRunning(display.rotation_timer)) timerStop(display.rotation_timer);
+	}
+}
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -297,7 +325,7 @@ void display_clear_buffer(void){
 
 void return_from_temp(void){
 	uint8_t i;
-	for(i = 0; i < DIGITS;i++)
+	for(i = 0; i < EXT_BUF_LEN; i++)
 		display.buf[i]=display.aux_buf[i];
 }
 
@@ -342,8 +370,14 @@ static void load_buffer(uint8_t pins, uint8_t digit){
  * 							a -> HIGH	1
  *  @param digit: buffer digit to be modified
  * **************************************************************/
-	if(digit<DIGITS)
+	bool extended=false;
+
+	if(digit<EXT_BUF_LEN)
+		if(digit>3) extended=true;
 		display.buf[digit]=pins;
+	
+	if(extended && display.auto_rotation && !timerRunning(display.rotation_timer)) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, display_rotate_right);
+
 	return;
 }
 
@@ -565,8 +599,6 @@ uint8_t get_7_segments_number(uint8_t num){
 	return return_val;
 }
 
-
-
 void digit_select(uint8_t digit){
 	switch (digit){
 		case 0:
@@ -595,9 +627,9 @@ void refresh_callback(){
 	static uint8_t digit = 0;
 	if (digit>=DIGITS) digit=0;
 	digit_select(digit);
-	uint8_t pwm_ticks=(uint8_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(BRIGHTNESS_LEVELS-display.brightness[digit])));
+	uint8_t pwm_ticks=(uint8_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(BRIGHTNESS_LEVELS-display.brightness[display.ext_index+digit])));
 	timerStart(display.pwm_timer, pwm_ticks, TIM_MODE_SINGLESHOT, set_blank);
-	set_pins(display.buf[digit++]);
+	set_pins(display.buf[display.ext_index+(digit++)]);
 	return;
 }
 
@@ -606,7 +638,7 @@ void set_blank(){
 }
 
 void split_number(uint16_t num, uint8_t * buffers){
-	int8_t index=3;
+	int8_t index=EXT_BUF_LEN-1;
 	while(index >= 0) //do till num greater than  0
 	{
 		if(num>0){
@@ -620,10 +652,11 @@ void split_number(uint16_t num, uint8_t * buffers){
 
 void set_brightness_level(display_brightness_level_t level){
 	uint8_t index;
-	for(index=0; index<DIGITS; index++)
+	for(index=0; index<EXT_BUF_LEN; index++)
 		display.brightness[index]=level;
 }
 
 void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit){
-	if (digit<DIGITS) display.brightness[digit]=level;
+	if (digit<EXT_BUF_LEN) display.brightness[digit]=level;
 }
+
