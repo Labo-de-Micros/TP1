@@ -543,23 +543,14 @@ EVENT_DEFINE(Card_Reader, NoEventData)
 
 STATE_DEFINE(Welcome, NoEventData)
 {
-	char message[4];
-	message[0]='w';
-	message[1]='e';
-	message[2]='l';
-	message[3]='c';
-	//message[4]='\0';
-	//display_set_string(message);
+    char message[]="welcome";
+	display_set_string(message);
 }
 
 STATE_DEFINE(AccessRequest, NoEventData)
 {
-	char message[4];
-    message[0]='e';
-    message[1]='n';
-    message[2]='t';
-    message[3]='\0';
-    //display_set_string(message);
+    char message[]="access request";
+	display_set_string(message);
 }
 
 STATE_DEFINE(IdEnteringByCard, NoEventData)
@@ -613,13 +604,8 @@ STATE_DEFINE(IdNonExistent, NoEventData)
 
 STATE_DEFINE(PinRequest, NoEventData)
 {
-    //Muestro ENTER PIN
-    char message[4];
-    message[0]='p';
-    message[1]='i';
-    message[2]='n';
-    message[3]='\0';
-    //display_set_string(message);
+    char message[]="enter PIN";
+	display_set_string(message);
     //veo el largo del pin segun el ID
     switch(access_control.IDsList[access_control.current_ID_index].PIN_length){
         case 4 :
@@ -647,13 +633,8 @@ STATE_DEFINE(CheckPin, NoEventData)
 
 STATE_DEFINE(AccessGranted, NoEventData)
 {
-    char message[4];
-    message[0]='p';
-    message[1]='a';
-    message[2]='s';
-    message[3]='s';
-    //message[4]='\0';
-    //display_set_string(message);
+    char message[]="access granted";
+	display_set_string(message);
 
     // TODO
     //Muestro ACCESS GRANTED
@@ -667,7 +648,9 @@ STATE_DEFINE(AccessGranted, NoEventData)
 STATE_DEFINE(InvalidPin, NoEventData)
 {
     //Muestro INCORRECT PIN
-    error_msg();
+    char message[]="incorrect PIN";
+	display_set_string(message);
+
     //Retardo de unos segundos
 
     if((access_control.IDsList[access_control.current_ID_index].PIN_attempts++) == MAX_NUM_ATTEMPTS)
@@ -680,11 +663,9 @@ STATE_DEFINE(BlockId, NoEventData)
 {
     //Muestro ID BLOCKED
 
-    char message[4];
-    message[0]='B';
-    message[1]='A';
-    message[2]='n';
-    message[3]='\0';
+     char message[]="Id Ban";
+	display_set_string(message);
+
     //display_temp_message(message, ERR_MSG_TIME);
 
     //Agrego a la lista de bloqueados el ID actual
@@ -925,13 +906,8 @@ STATE_DEFINE(DigitsRecount4, NoEventData)
 
 STATE_DEFINE(ChangeBrightness, NoEventData)
 {
-    char message[4];
-    message[0]='b';
-    message[1]='r';
-    message[2]='i';
-    message[3]='g';
-    //message[4]='\0';
-    //display_set_string(message);
+    char message[]="Brightness";
+	display_set_string(message);
 }
 
 STATE_DEFINE(SetBrightness, NoEventData)
@@ -966,12 +942,8 @@ STATE_DEFINE(HigherBrightness, NoEventData)
 
 STATE_DEFINE(AddID, NoEventData)
 {
-    char message[4];
-    message[0]='a';
-    message[1]='d';
-    message[2]='d';
-    message[3]='\0';
-    //display_set_string(message);
+    char message[]="Add Id";
+	display_set_string(message);
 }
 
 STATE_DEFINE(SetNewID, NoEventData)
@@ -1008,19 +980,14 @@ STATE_DEFINE(CheckNewID, NoEventData)
 
     SM_InternalEvent(ST_WELCOME, NULL); 
 
-
 }
 
 //NARANJA
 
 STATE_DEFINE(EliminateID, NoEventData)
 {
-    char message[4];
-    message[0]='d';
-    message[1]='e';
-    message[2]='l';
-    message[3]='\0';
-    //display_set_string(message);
+    char message[]="Delete Id";
+	display_set_string(message);
 
     access_control.current_ID_index=0;
 
@@ -1036,7 +1003,6 @@ STATE_DEFINE(ShowID, NoEventData)
 STATE_DEFINE(PreviousID, NoEventData)
 {
     
-    //Se muestra el ID actual
     if(access_control.current_ID_index == 0)
         access_control.current_ID_index = access_control.total_of_IDs;
     else
@@ -1048,7 +1014,7 @@ STATE_DEFINE(PreviousID, NoEventData)
 
 STATE_DEFINE(NextID, NoEventData)
 {
-    //Se muestra el ID actual
+    
     if(access_control.current_ID_index == access_control.total_of_IDs)
         access_control.current_ID_index = 0;
     else
@@ -1064,7 +1030,8 @@ STATE_DEFINE(IDElimination, NoEventData)
     access_control.IDsList[ID_index].valid = false;
 
     //Mostrar ID ELIMINATED;
-    done_msg();
+    char message[]="Id deleted";
+	display_set_string(message);
     SM_InternalEvent(ST_WELCOME, NULL); 
 
 }
