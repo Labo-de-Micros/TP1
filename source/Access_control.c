@@ -598,7 +598,7 @@ STATE_DEFINE(ReadError, NoEventData)
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
     //Muestro ID NON EXISTENT
-    error_msg();
+    display_set_string("ID NO EXISTS");
     SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
 }
 
@@ -634,7 +634,7 @@ STATE_DEFINE(CheckPin, NoEventData)
 STATE_DEFINE(AccessGranted, NoEventData)
 {
     char message[]="access granted";
-	display_set_string(message);
+	display_temp_message(message,2);
 
     // TODO
     //Muestro ACCESS GRANTED
@@ -741,8 +741,8 @@ STATE_DEFINE(ChangeDigitDisplay1B, NoEventData)
 
 STATE_DEFINE(DigitsRecount1, NoEventData)
 {
-    access_control.digits_introduced++;
     access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
+    access_control.digits_introduced++;
     access_control.current_num = 0;
 
     if(access_control.current_option == PIN5 && access_control.digits_introduced == 5)
@@ -791,8 +791,8 @@ STATE_DEFINE(ChangeDigitDisplay2B, NoEventData)
 STATE_DEFINE(DigitsRecount2, NoEventData)
 {
     
-    access_control.digits_introduced ++;
     access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
+    access_control.digits_introduced++;
     access_control.current_num = 0;
 
     if(access_control.current_option == PIN4 || access_control.current_option == PIN5)
@@ -834,8 +834,8 @@ STATE_DEFINE(ChangeDigitDisplay3B, NoEventData)
 
 STATE_DEFINE(DigitsRecount3, NoEventData)
 {
-    access_control.digits_introduced++;
     access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
+    access_control.digits_introduced++;
     access_control.current_num = 0;
 
     if(access_control.current_option == PIN4 || access_control.current_option == PIN5)
@@ -875,8 +875,8 @@ STATE_DEFINE(ChangeDigitDisplay4B, NoEventData)
 
 STATE_DEFINE(DigitsRecount4, NoEventData)
 {
-    access_control.digits_introduced++;
     access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
+    access_control.digits_introduced++;
     access_control.current_num = 0;
 
     if(access_control.current_option == PIN4 || access_control.current_option == PIN5)

@@ -259,7 +259,11 @@ bool card_was_read(void){
  * @return: true if a card was read and the system is ready to
  * 			return its data (must call get_data()), false otherwise.
  ****************************************************************/
-	return card_read;
+	if(card_read){
+		card_read = false;	
+		return true;
+	}
+	return false;
 }
 
 void card_data_clear(void){
@@ -267,7 +271,6 @@ void card_data_clear(void){
  * @brief: Clears a card data that was read.
  ****************************************************************/
 	clear_card();
-	card_read = false;
 	return;
 }
 
