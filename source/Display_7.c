@@ -112,7 +112,7 @@ typedef struct{
 	uint8_t buf[EXT_BUF_LEN];
 	uint8_t aux_buf[EXT_BUF_LEN];
 	uint8_t ext_index;
-	display_brightness_level_t brightness[BRIGHTNESS_LEVELS];	
+	display_brightness_level_t brightness[EXT_BUF_LEN];	
 	display_brightness_level_t brightness_level;
 	display_mode_t mode;
 	bool auto_rotation;
@@ -165,6 +165,7 @@ void display_init(void){
 	display.ext_index=0;
 	display.auto_rotation=true;
 	display.queued_return=false;
+	set_brightness_level(display.brightness_level);
 	return;
 }
 
