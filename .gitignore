@@ -14,3 +14,16 @@ Debug/source/gpio.o
 Debug/source/subdir.mk
 Debug/source/timer.o
 Debug/sources.mk
+Debug/Blink.axf
+Debug/Blink.axf
+Debug/Blink.map
+Debug/Blink_Debug.ld
+Debug/Blink_Debug_library.ld
+Debug/Blink_Debug_memory.ld
+Debug/source/Access_control.d
+Debug/source/Access_control.o
+Debug/source/App_access.d
+Debug/source/App_access.o
+Debug/source/App_display.d
+Debug/source/App_display.o
+Debug/source/subdir.mk
