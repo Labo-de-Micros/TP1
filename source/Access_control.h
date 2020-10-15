@@ -15,8 +15,6 @@
 #define MAX_DIGIT_DISPLAY 9
 #define MIN_DIGIT_DISPLAY 0
 
-#define MAX_BRIGHTNESS 10
-#define MIN_BRIGHTNESS 1
 
 #define MAX_IDS 2000
 
@@ -45,9 +43,6 @@ typedef struct{
 typedef struct{
     uint16_t current_ID_index; // index ID actual 0,1,2,3 
     uint16_t total_of_IDs; //Cantidad de ids en la lista de IDS 
-
-    uint8_t current_brightness; //Nivel de brillo actual
-
     //Manejo de introduccion de palabra
     uint8_t word_introduced[8]; //Palabra de 4,5 o 8 digitos
     uint8_t current_num; //Numero que se esta mostrando en el display

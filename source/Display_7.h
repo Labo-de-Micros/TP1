@@ -131,4 +131,6 @@ void display_rotate_left();
 
 void display_rotate_right();
 
+uint8_t display_get_brightness(void);
+
 #endif

@@ -112,7 +112,7 @@ typedef struct{
 	uint8_t buf[EXT_BUF_LEN];
 	uint8_t aux_buf[EXT_BUF_LEN];
 	uint8_t ext_index;
-	display_brightness_level_t brightness[BRIGHTNESS_LEVELS];	
+	display_brightness_level_t brightness[EXT_BUF_LEN];	
 	display_brightness_level_t brightness_level;
 	display_mode_t mode;
 	bool auto_rotation;
@@ -161,10 +161,11 @@ void display_init(void){
 	display.timer=timerGetId();
 	display.temp_timer=timerGetId();
 	display.pwm_timer=timerGetId();
-	display.brightness_level= LOW;
+	display.brightness_level= BRIGHT_HIGH;
 	display.ext_index=0;
 	display.auto_rotation=true;
 	display.queued_return=false;
+	set_brightness_level(display.brightness_level);
 	return;
 }
 
@@ -215,7 +216,6 @@ void display_set_string(char * string){
  * **************************************************************/
 	display_clear_buffer();
 	uint8_t index;
-	uint8_t done=false;
 	for(index=0; index<EXT_BUF_LEN; index++){
 		if(string[index]=='\0') load_buffer(DISP_END, index);
 		else load_buffer(get_7_segments_char(string[index]), index);
@@ -231,9 +231,13 @@ void display_set_number(uint16_t number){
 	uint8_t buffer[EXT_BUF_LEN];
 	split_number(number, buffer);
 	
-	uint8_t index;
-	for(index=0; index<EXT_BUF_LEN; index++)
-		load_buffer(get_7_segments_number(buffer[index]), index);
+	uint8_t index, index_2;
+	for(index=0, index_2 = 0; index<EXT_BUF_LEN; index++){
+		if(buffer[index] != DISP_END){
+			load_buffer(get_7_segments_number(buffer[index]), index_2);
+			index_2++;
+		}
+	}
 	return;
 }
 
@@ -264,9 +268,8 @@ void display_set_brightness_level(display_brightness_level_t level){
 			checked_level=BRIGHT_HIGH;
 			break;
 	}
-	uint8_t index;
-	for(index=0; index<EXT_BUF_LEN; index++)
-		display.brightness[index]=checked_level;
+	display.brightness_level = checked_level;
+	set_brightness_level(display.brightness_level);
 }
 
 void display_enable_soft_highlight(uint8_t digit){
@@ -328,6 +331,7 @@ void display_clear_buffer(void){
  * @brief: Clears the screen of the display (nothing will be displayed).
  * **************************************************************/
 	uint8_t index;
+	display_disable_highlight();
 	for(index=0; index<EXT_BUF_LEN; index++)
 		load_buffer(DISP_END, index);
 }
@@ -376,6 +380,9 @@ void display_rotate_right(){
 	rotate_callback();
 }
 
+uint8_t display_get_brightness(void){
+	return display.brightness_level;
+}
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -443,9 +450,11 @@ static void load_buffer(uint8_t pins, uint8_t digit){
  * **************************************************************/
 	bool extended=false;
 	display_stop_rotation();
-	if(digit<EXT_BUF_LEN)
-		if(digit>3) extended=true;
+	if(digit<EXT_BUF_LEN){
+		if(digit>3)
+			extended=true;
 		display.buf[digit]=pins;
+	}
 	
 	if(extended && display.auto_rotation && !timerRunning(display.rotation_timer)) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
 
@@ -733,6 +742,11 @@ void split_number(uint16_t num, uint8_t * buffers){
  * in a buffer.
  * **************************************************************/
 	int8_t index=EXT_BUF_LEN-1;
+	bool ian_diaz = false;
+
+	if(num == 0){
+		ian_diaz = true;
+	}
 	while(index >= 0) //do till num greater than  0
 	{
 		if(num>0){
@@ -740,6 +754,9 @@ void split_number(uint16_t num, uint8_t * buffers){
 			num = num / 10;    //divide num by 10. num /= 10 also a valid one 
 		}
 		else buffers[index--] = DISP_END;
+	}
+	if(ian_diaz){
+		buffers[EXT_BUF_LEN-1] = 0;
 	}
 	return;
 }

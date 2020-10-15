@@ -1,6 +1,5 @@
 
 #include "FTM.h"
-#include "PORT.h"
 #include "FTM.h"
 #include "gpio.h"
 
