@@ -70,7 +70,7 @@ static void timer_isr(void);
 
 void timerInit(void){
 /*****************************************************************
- * @brief Initialice timer and corresponding peripheral
+ * @brief Initialize timer and corresponding peripheral
  *****************************************************************/
     static bool yaInit = false;
     if (yaInit)

@@ -146,7 +146,7 @@ void split_number(uint16_t num, uint8_t * buffers);
 void set_blank();
 void set_brightness_level(display_brightness_level_t level);
 void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit);
-void rotate_buffer();
+void rotate_callback();
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
@@ -167,8 +167,6 @@ void display_init(void){
 	display.queued_return=false;
 	return;
 }
-
-
 
 void display_configure_pins(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_t g){
 /*****************************************************************
@@ -196,8 +194,10 @@ void display_configure_pins(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_
     return;
 }
 
-
 void display_configure_mux(pin_t pin0, pin_t pin1){
+	/*****************************************************************
+ * @brief: Initialize the pins of the seven segment display multiplexor.
+ * **************************************************************/
 	uint8_t index;
 	
 	display.mux_control_pins[1] = pin0;
@@ -210,6 +210,10 @@ void display_configure_mux(pin_t pin0, pin_t pin1){
 }
 
 void display_set_string(char * string){
+/*****************************************************************
+ * @brief: Writes a string to the main display buffer
+ * **************************************************************/
+	display_clear_buffer();
 	uint8_t index;
 	uint8_t done=false;
 	for(index=0; index<EXT_BUF_LEN; index++){
@@ -220,6 +224,10 @@ void display_set_string(char * string){
 }
 
 void display_set_number(uint16_t number){
+/*****************************************************************
+ * @brief: Writes a number to the main display buffer
+ * **************************************************************/
+	display_clear_buffer();
 	uint8_t buffer[EXT_BUF_LEN];
 	split_number(number, buffer);
 	
@@ -230,16 +238,24 @@ void display_set_number(uint16_t number){
 }
 
 void display_set_single_number(uint8_t number, uint8_t index){
+/*****************************************************************
+ * @brief: Writes a number to a single digit of the display
+ * **************************************************************/
 	load_buffer(get_7_segments_number(number), index);
 }
 
 void display_set_single_char(char character, uint8_t index){
+/*****************************************************************
+ * @brief: Writes a character to a single digit of the display
+ * **************************************************************/
 	load_buffer(get_7_segments_char(character), index);
 }
 
 void display_set_brightness_level(display_brightness_level_t level){
+/*****************************************************************
+ * @brief: Sets a brightness level for the display
+ * **************************************************************/
 	display_brightness_level_t checked_level;
-	
 	switch(level){
 		case BRIGHT_MIN: case BRIGHT_LOW:
 			checked_level=BRIGHT_LOW;
@@ -248,38 +264,58 @@ void display_set_brightness_level(display_brightness_level_t level){
 			checked_level=BRIGHT_HIGH;
 			break;
 	}
-
 	uint8_t index;
 	for(index=0; index<EXT_BUF_LEN; index++)
 		display.brightness[index]=checked_level;
-
 }
 
 void display_enable_soft_highlight(uint8_t digit){
+/*****************************************************************
+ * @brief: Sets high brightness for a digit and normal brightness
+ * for the rest of them
+ * **************************************************************/
 	set_digit_brightness_level(BRIGHT_MAX, digit);
 }
 
 void display_enable_hard_highlight(uint8_t digit){
+/*****************************************************************
+ * @brief: Sets high brightness for a digit and low brightness
+ * for the rest of them
+ * **************************************************************/
 	set_brightness_level(BRIGHT_MIN);
 	set_digit_brightness_level(BRIGHT_MAX, digit);
 }
 
 void display_disable_highlight(){
+/*****************************************************************
+ * @brief: Sets brightness back to nominal level
+ * **************************************************************/
 	set_brightness_level(display.brightness_level);	
 }
 
 void display_on(){
+/*****************************************************************
+ * @brief: Turns display refresh on
+ * **************************************************************/
 	uint16_t ticks=(uint16_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS));
 	timerStart(display.timer, ticks, TIM_MODE_PERIODIC, refresh_callback);
 	return;
 }
 
 void display_off(){
+/*****************************************************************
+ * @brief: Turns display refresh off
+ * **************************************************************/
 	timerStop(display.timer);
 	return;
 }
 
 void display_temp_message(char * message, uint8_t seconds){
+/*****************************************************************
+ * @brief: Displays a string on the display for a number of seconds.
+ * If message length exceeds that of the display, the delay starts 
+ * after the message completes a rotation.
+ * **************************************************************/
 	uint8_t i;
 	for(i = 0; i < EXT_BUF_LEN; i++)
 		display.aux_buf[i]=display.buf[i];
@@ -293,18 +329,28 @@ void display_clear_buffer(void){
  * **************************************************************/
 	uint8_t index;
 	for(index=0; index<EXT_BUF_LEN; index++)
-		load_buffer(DISP_CLEAR, index);
+		load_buffer(DISP_END, index);
 }
 
 void display_enable_auto_rotation(){
+/*****************************************************************
+ * @brief: Turns automatic rotation on. When a string is loaded, 
+ * it will rotate once automatically.
+ * **************************************************************/
 	display.auto_rotation=true;
 }
 
 void display_disable_auto_rotation(){
+/*****************************************************************
+ * @brief: Turns automatic rotation off.
+ * **************************************************************/
 	display.auto_rotation=false;
 }
 
 void display_stop_rotation(){
+/*****************************************************************
+ * @brief: Stops current rotation (if happening)
+ * **************************************************************/
 	if(timerRunning(display.rotation_timer)) 
 	{
 		timerStop(display.rotation_timer);
@@ -314,21 +360,22 @@ void display_stop_rotation(){
 }
 
 void display_rotate_left(){
+/*****************************************************************
+ * @brief: Shifts digits on the display to the left.
+ * **************************************************************/
 	display_stop_rotation();
 	if(display.ext_index!=0) 
 		display.ext_index--;
 }
 
 void display_rotate_right(){
+/*****************************************************************
+ * @brief: Shifts digits on the display to the right.
+ * **************************************************************/
 	display_stop_rotation();
-	display.ext_index++;
-	if(display.ext_index>EXT_BUF_LEN-DIGITS || display.buf[display.ext_index+3]==0xFF) 
-	{
-		display.ext_index=0;
-		if(timerRunning(display.rotation_timer)) timerStop(display.rotation_timer);
-		if(display.queued_return) timerStart(display.temp_timer, 1000, TIM_MODE_SINGLESHOT, return_from_temp);
-	}
+	rotate_callback();
 }
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -336,8 +383,12 @@ void display_rotate_right(){
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-
 void return_from_temp(void){
+/*****************************************************************
+ * @brief: If the display is not rotating, transfers contents back
+ * from aux to main buffer, returning from a temp message. If it is,
+ * queue the transfer for when its done.
+ * **************************************************************/
 	uint8_t i;
 	if(!timerRunning(display.rotation_timer)){	
 		for(i = 0; i < EXT_BUF_LEN; i++)
@@ -396,7 +447,7 @@ static void load_buffer(uint8_t pins, uint8_t digit){
 		if(digit>3) extended=true;
 		display.buf[digit]=pins;
 	
-	if(extended && display.auto_rotation && !timerRunning(display.rotation_timer)) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, display_rotate_right);
+	if(extended && display.auto_rotation && !timerRunning(display.rotation_timer)) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
 
 	return;
 }
@@ -568,6 +619,12 @@ uint8_t get_7_segments_char(char character){
 		case '-':
 			return_val = DISP_bar;
 			break;
+		case ' ':
+			return_val = DISP_CLEAR;
+			break;
+		case '\0':
+			return_val = DISP_END;
+			break;
 			
 		default:
 			break;
@@ -581,6 +638,7 @@ uint8_t get_7_segments_number(uint8_t num){
  * @param num: A number from 0-9 to be converted.
  * **************************************************************/	
 	uint8_t return_val;
+	return_val = DISP_E;
 	switch(num){
 		case 0:
 			return_val = DISP_0;
@@ -612,14 +670,20 @@ uint8_t get_7_segments_number(uint8_t num){
 		case 9:
 			return_val = DISP_9;
 			break;
+		case DISP_END:
+			return_val=DISP_END;
+			break;
 		default:
-			return_val = DISP_CLEAR;
 			break;
 	}
 	return return_val;
 }
 
 void digit_select(uint8_t digit){
+/*****************************************************************
+ * @brief: Configures display multiplexer to write to a certain 
+ * digit.
+ * **************************************************************/
 	switch (digit){
 		case 0:
 			gpioWrite(display.mux_control_pins[0],0);
@@ -644,6 +708,9 @@ void digit_select(uint8_t digit){
 }
 
 void refresh_callback(){
+/*****************************************************************
+ * @brief: Callback called every time the display is refreshed.
+ * **************************************************************/
 	static uint8_t digit = 0;
 	if (digit>=DIGITS) digit=0;
 	digit_select(digit);
@@ -654,10 +721,17 @@ void refresh_callback(){
 }
 
 void set_blank(){
+/*****************************************************************
+ * @brief: Sets selected digit to blank.
+ * **************************************************************/
 	set_pins(DISP_CLEAR);
 }
 
 void split_number(uint16_t num, uint8_t * buffers){
+/*****************************************************************
+ * @brief: Splits a number into digits and stores the digits 
+ * in a buffer.
+ * **************************************************************/
 	int8_t index=EXT_BUF_LEN-1;
 	while(index >= 0) //do till num greater than  0
 	{
@@ -665,18 +739,36 @@ void split_number(uint16_t num, uint8_t * buffers){
 			buffers[index--] = num % 10;  //split last digit from number
 			num = num / 10;    //divide num by 10. num /= 10 also a valid one 
 		}
-		else buffers[index--] = 10;
+		else buffers[index--] = DISP_END;
 	}
 	return;
 }
 
 void set_brightness_level(display_brightness_level_t level){
+/*****************************************************************
+ * @brief: Sets the brightness level for the entire display.
+ * **************************************************************/
 	uint8_t index;
 	for(index=0; index<EXT_BUF_LEN; index++)
 		display.brightness[index]=level;
 }
 
 void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit){
+/*****************************************************************
+ * @brief: Sets the brightness level for a digit.
+ * **************************************************************/
 	if (digit<EXT_BUF_LEN) display.brightness[digit]=level;
 }
 
+void rotate_callback(){
+/*****************************************************************
+ * @brief: Callback for auto rotation.
+ * **************************************************************/
+	display.ext_index++;
+	if(display.ext_index>EXT_BUF_LEN-DIGITS || display.buf[display.ext_index+3]==DISP_END) 
+	{
+		display.ext_index=0;
+		if(timerRunning(display.rotation_timer)) timerStop(display.rotation_timer);
+		if(display.queued_return) timerStart(display.temp_timer, 1000, TIM_MODE_SINGLESHOT, return_from_temp);
+	}
+}
