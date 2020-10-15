@@ -23,9 +23,6 @@
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 
-static void click(void);
-static void ccw(void);
-static void cw(void);
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -35,7 +32,6 @@ static void cw(void);
 void App_Init (void) {
 
  	 	 	 	hw_Init ();
- 	 	 	 	PORT_Init();
  	 	 		FTM_Init(FTM0);
 	return;
 }
