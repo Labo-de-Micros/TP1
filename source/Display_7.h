@@ -31,6 +31,7 @@
 #define DIGITS 4
 #define MUX_PINS 2
 #define ROTATION_TIME_S 1
+#define EXT_BUF_LEN 15
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS			//
@@ -119,5 +120,15 @@ void display_clear_buffer(void);
 void display_set_single_number(uint8_t number, uint8_t index);
 
 void display_set_single_char(char character, uint8_t index);
+
+void display_enable_auto_rotation();
+
+void display_disable_auto_rotation();
+
+void display_stop_rotation();
+
+void display_rotate_left();
+
+void display_rotate_right();
 
 #endif
