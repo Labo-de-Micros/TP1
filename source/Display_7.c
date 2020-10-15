@@ -85,12 +85,14 @@
 #define DISP_y		0x6E
 #define DISP_z		0x5B
 #define DISP_bar	0x80
+#define DISP_END	0xFF
+
 
 
 
 #define DISP_MASK 0x01
 #define BRIGHTNESS_LEVELS 4
-#define EXT_BUF_LEN 10
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -114,6 +116,7 @@ typedef struct{
 	display_brightness_level_t brightness_level;
 	display_mode_t mode;
 	bool auto_rotation;
+	bool queued_return;
 }display_t;
 
 //////////////////////////////////////////////////////////////////
@@ -159,6 +162,9 @@ void display_init(void){
 	display.temp_timer=timerGetId();
 	display.pwm_timer=timerGetId();
 	display.brightness_level= LOW;
+	display.ext_index=0;
+	display.auto_rotation=true;
+	display.queued_return=false;
 	return;
 }
 
@@ -207,9 +213,8 @@ void display_set_string(char * string){
 	uint8_t index;
 	uint8_t done=false;
 	for(index=0; index<EXT_BUF_LEN; index++){
-		if(string[index]=='\0') done=true;
-		if(!done) load_buffer(get_7_segments_char(string[index]), index);
-		else load_buffer(get_7_segments_char(DISP_CLEAR), index);
+		if(string[index]=='\0') load_buffer(DISP_END, index);
+		else load_buffer(get_7_segments_char(string[index]), index);
 	}
 	return;
 }
@@ -299,20 +304,29 @@ void display_disable_auto_rotation(){
 	display.auto_rotation=false;
 }
 
-void display_rotate_left(){
-	display.ext_index--;
-	if(display.ext_index<0) 
+void display_stop_rotation(){
+	if(timerRunning(display.rotation_timer)) 
 	{
+		timerStop(display.rotation_timer);
+		if(display.queued_return) timerStart(display.temp_timer, 1000, TIM_MODE_SINGLESHOT, return_from_temp);
 		display.ext_index=0;
 	}
 }
 
+void display_rotate_left(){
+	display_stop_rotation();
+	if(display.ext_index!=0) 
+		display.ext_index--;
+}
+
 void display_rotate_right(){
+	display_stop_rotation();
 	display.ext_index++;
 	if(display.ext_index>EXT_BUF_LEN-DIGITS || display.buf[display.ext_index+3]==0xFF) 
 	{
 		display.ext_index=0;
 		if(timerRunning(display.rotation_timer)) timerStop(display.rotation_timer);
+		if(display.queued_return) timerStart(display.temp_timer, 1000, TIM_MODE_SINGLESHOT, return_from_temp);
 	}
 }
 
@@ -325,8 +339,13 @@ void display_rotate_right(){
 
 void return_from_temp(void){
 	uint8_t i;
-	for(i = 0; i < EXT_BUF_LEN; i++)
-		display.buf[i]=display.aux_buf[i];
+	if(!timerRunning(display.rotation_timer)){	
+		for(i = 0; i < EXT_BUF_LEN; i++)
+			display.buf[i]=display.aux_buf[i];
+		display.queued_return=false;
+	}
+	else display.queued_return=true;
+	return;
 }
 
 static void set_pins(uint8_t pins){
@@ -343,6 +362,7 @@ static void set_pins(uint8_t pins){
  * 							b -> HIGH	1
  * 							a -> HIGH	1
  * **************************************************************/
+	if(pins==DISP_END) pins=DISP_CLEAR;
 	for(uint8_t i = 0; i<7; i++){	// Get the pins and starts shifting the mask
 									// 00000001 i spaces left to OR and set the pin 
 									// HIGH or LOW.
@@ -371,7 +391,7 @@ static void load_buffer(uint8_t pins, uint8_t digit){
  *  @param digit: buffer digit to be modified
  * **************************************************************/
 	bool extended=false;
-
+	display_stop_rotation();
 	if(digit<EXT_BUF_LEN)
 		if(digit>3) extended=true;
 		display.buf[digit]=pins;
