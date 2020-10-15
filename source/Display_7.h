@@ -113,4 +113,10 @@ void display_enable_hard_highlight(uint8_t digit);
 
 void display_disable_highlight();
 
+void display_clear_buffer(void);
+
+void display_set_single_number(uint8_t number, uint8_t index);
+
+void display_set_single_char(char character, uint8_t index);
+
 #endif

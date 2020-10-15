@@ -22,6 +22,8 @@
 
 #define ERR_MSG_TIME 2
 
+#define ID_LENGTH 8
+
 typedef enum{ 
 	NEW_ID,
 	ID,
@@ -38,6 +40,7 @@ typedef struct{
     uint8_t PIN_length;
     bool blocked_status; //Si el ID esta bloquedo es TRUE
     uint8_t PIN_attempts;
+    bool valid;
 } ID_data_t;
 
 // Access control object structure

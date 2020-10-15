@@ -84,6 +84,8 @@
 #define DISP_x		0x76
 #define DISP_y		0x6E
 #define DISP_z		0x5B
+#define DISP_bar	0x80
+
 
 
 #define DISP_MASK 0x01
@@ -130,7 +132,7 @@ static void load_buffer(uint8_t pins, uint8_t digit);
 void return_from_temp(void);
 uint8_t get_7_segments_char(char character);
 uint8_t get_7_segments_number(uint8_t num);
-void display_clear_buffer(void);
+
 void digit_select(uint8_t digit);
 void display_refresh_callback();
 void split_number(uint16_t num, uint8_t * buffers);
@@ -215,9 +217,15 @@ void display_set_number(uint16_t number){
 	uint8_t index;
 	for(index=0; index<4; index++)
 		load_buffer(get_7_segments_number(buffer[index]), index);
-		
-
 	return;
+}
+
+void display_set_single_number(uint8_t number, uint8_t index){
+	load_buffer(get_7_segments_number(number), index);
+}
+
+void display_set_single_char(char character, uint8_t index){
+	load_buffer(get_7_segments_char(character), index);
 }
 
 void display_set_brightness_level(display_brightness_level_t level){
@@ -270,6 +278,14 @@ void display_temp_message(char * message, uint8_t seconds){
 	timerStart(display.temp_timer, 1000*seconds, TIM_MODE_SINGLESHOT, return_from_temp);
 }
 
+void display_clear_buffer(void){
+/*****************************************************************
+ * @brief: Clears the screen of the display (nothing will be displayed).
+ * **************************************************************/
+	uint8_t index;
+	for(index=0;index<DIGITS;index++)
+		load_buffer(DISP_CLEAR, index);
+}
 
 
 //////////////////////////////////////////////////////////////////
@@ -495,6 +511,10 @@ uint8_t get_7_segments_char(char character){
 		case 'z':
 			return_val = DISP_z;
 			break;
+		case '-':
+			return_val = DISP_bar;
+			break;
+			
 		default:
 			break;
 	}	
@@ -506,7 +526,7 @@ uint8_t get_7_segments_number(uint8_t num){
  * @brief: Return 7 segment value for the number.
  * @param num: A number from 0-9 to be converted.
  * **************************************************************/	
-	uint8_t return_val = DISP_E;
+	uint8_t return_val;
 	switch(num){
 		case 0:
 			return_val = DISP_0;
@@ -545,14 +565,7 @@ uint8_t get_7_segments_number(uint8_t num){
 	return return_val;
 }
 
-void display_clear_buffer(void){
-/*****************************************************************
- * @brief: Clears the screen of the display (nothing will be displayed).
- * **************************************************************/
-	uint8_t index;
-	for(index=0;index<DIGITS;index++)
-		load_buffer(DISP_CLEAR, index);
-}
+
 
 void digit_select(uint8_t digit){
 	switch (digit){

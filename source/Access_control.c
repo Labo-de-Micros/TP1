@@ -8,6 +8,8 @@
 
 uint64_t array_to_int(uint8_t* array, uint8_t length);
 void error_msg();
+void done_msg();
+void hide_digit(uint8_t digit);
 
 
 static access_control_t access_control;
@@ -582,18 +584,26 @@ STATE_DEFINE(IdEnteringByEncoder, NoEventData)
 STATE_DEFINE(ReadError, NoEventData)
 {
     //Muesto READ ERROR
+    error_msg();
     SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
 }
 
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
     //Muestro ID NON EXISTENT
+    error_msg();
     SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
 }
 
 STATE_DEFINE(PinRequest, NoEventData)
 {
     //Muestro ENTER PIN
+    char message[4];
+    message[0]='p';
+    message[1]='i';
+    message[2]='n';
+    message[3]='\0';
+    display_set_string(message);
     //veo el largo del pin segun el ID
     switch(access_control.IDsList[access_control.current_ID_index].PIN_length){
         case 4 :
@@ -621,6 +631,14 @@ STATE_DEFINE(CheckPin, NoEventData)
 
 STATE_DEFINE(AccessGranted, NoEventData)
 {
+    char message[4];
+    message[0]='p';
+    message[1]='a';
+    message[2]='s';
+    message[3]='s';
+    message[4]='\0';
+    display_set_string(message);
+    
     // TODO
     //Muestro ACCESS GRANTED
     //Prendo LED 
@@ -633,7 +651,7 @@ STATE_DEFINE(AccessGranted, NoEventData)
 STATE_DEFINE(InvalidPin, NoEventData)
 {
     //Muestro INCORRECT PIN
-    
+    error_msg();
     //Retardo de unos segundos
 
     if((access_control.IDsList[access_control.current_ID_index].PIN_attempts++) == MAX_NUM_ATTEMPTS)
@@ -645,260 +663,329 @@ STATE_DEFINE(InvalidPin, NoEventData)
 STATE_DEFINE(BlockId, NoEventData)
 {
     //Muestro ID BLOCKED
+
+    uint8_t message[4];
+    message[0]='B';
+    message[1]='A';
+    message[2]='n';
+    message[3]='\0';
+    display_temp_message(message, ERR_MSG_TIME);
+
     //Agrego a la lista de bloqueados el ID actual
+    access_control.IDsList[access_control.current_ID_index].blocked_status=true;
 
     SM_InternalEvent(ST_WELCOME, NULL); 
     
 }
+
 STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
 {
-    access_control_t* pInstance = SM_GetInstance(AccessControl);
-    pInstance->PIN_attempts = 0; 
-
     //EXISTE EL ID ?
-    //NO 
-    SM_InternalEvent(ST_ID_NON_EXISTENT, NULL); 
+    uint32_t entered_id = array_to_int(access_control.word_introduced,ID_LENGTH);
 
-    //SI, ESTA BLOQUEDO?
+    bool id_exists=false;
+    
+    uint16_t index;
+    for(index=0; index<access_control.total_of_IDs; index++)
+        if(access_control.IDsList[index].number==entered_id){
+            id_exists=true;
+            access_control.current_ID_index=index;
+            break;
+        }
 
-    //NO 
-    SM_InternalEvent(ST_PIN_REQUEST, NULL); 
-
-    //SI
-    SM_InternalEvent(ST_BLOCK_ID, NULL); 
-
+    if(!id_exists) 
+        SM_InternalEvent(ST_ID_NON_EXISTENT, NULL); 
+    else
+        if(access_control.IDsList[index].blocked_status)
+            SM_InternalEvent(ST_BLOCK_ID, NULL);
+        else{
+            access_control.IDsList[index].PIN_attempts=0;
+            SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+        }
 }
 
 //INGRESO DE PALABRA
-
 STATE_DEFINE(EnterDigitsRequest, NoEventData)
 {
-    access_control_t* pInstance = SM_GetInstance(AccessControl);
-    pInstance->current_num = 0;
-    pInstance->digits_introduced = 0;
-    pInstance->word_introduced = 0;
-     
+    access_control.current_num = 0;
+    access_control.digits_introduced = 0;
+    display_clear_buffer();
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); 
 }
+
+//1
+
+
 STATE_DEFINE(EnterDigitDisplay1, NoEventData)
 {
-   //Muestra el ccurrent_num 
+   //Muestra el current_num 
+   display_enable_hard_highlight(0);
+   display_set_single_number(access_control.current_num, 0);
 }
+
 STATE_DEFINE(ChangeDigitDisplay1A, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_num = MIN_DIGIT_DISPLAY)
-       pInstance->current_num = MAX_DIGIT_DISPLAY; 
+    if(access_control.current_num == MIN_DIGIT_DISPLAY)
+       access_control.current_num = MAX_DIGIT_DISPLAY; 
     else
-       pInstance->current_num --; 
+       access_control.current_num--; 
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); 
 }
 STATE_DEFINE(ChangeDigitDisplay1B, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_num = MAX_DIGIT_DISPLAY)
-       pInstance->current_num = MIN_DIGIT_DISPLAY; 
+    if(access_control.current_num == MAX_DIGIT_DISPLAY)
+       access_control.current_num = MIN_DIGIT_DISPLAY; 
     else
-       pInstance->current_num ++; 
+       access_control.current_num++; 
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); 
- 
 }
+
 STATE_DEFINE(DigitsRecount1, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    pInstance->digits_introduced ++;
-    pInstance->word_introduced[pInstance->digits_introduced] = pInstance->current_num;
-    pInstance->current_num = 0;
+    access_control.digits_introduced++;
+    access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
+    access_control.current_num = 0;
 
-    if(pInstance->current_option == PIN5 && pInstance->digits_introduced == 5)
+    if(access_control.current_option == PIN5 && access_control.digits_introduced == 5)
     {
-        //Se ocula el display *****
+        hide_digit(0);
         SM_InternalEvent(ST_CHECK_PIN, NULL); 
     }
     else
     {
-        if(pInstance->current_option == PIN4)
-            //Se ocula el display ****
-        
+        if(access_control.current_option == PIN4)
+            hide_digit(0);
         SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_2, NULL);
         
     }
 }
+
+
+//2
+
 STATE_DEFINE(EnterDigitDisplay2, NoEventData)
 {
     //Muestra el current_num en el segundo display
+    display_enable_hard_highlight(1);
+    display_set_single_number(access_control.current_num, 1);
 }
+
 STATE_DEFINE(ChangeDigitDisplay2A, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_num = MIN_DIGIT_DISPLAY)
-       pInstance->current_num = MAX_DIGIT_DISPLAY; 
+    if(access_control.current_num == MIN_DIGIT_DISPLAY)
+       access_control.current_num = MAX_DIGIT_DISPLAY; 
     else
-       pInstance->current_num --; 
+       access_control.current_num--; 
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_2, NULL);     
 }
 STATE_DEFINE(ChangeDigitDisplay2B, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_num = MAX_DIGIT_DISPLAY)
-       pInstance->current_num = MIN_DIGIT_DISPLAY; 
+    if(access_control.current_num == MAX_DIGIT_DISPLAY)
+       access_control.current_num = MIN_DIGIT_DISPLAY; 
     else
-       pInstance->current_num ++; 
+       access_control.current_num++; 
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_2, NULL); 
 
 }
 STATE_DEFINE(DigitsRecount2, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    pInstance->digits_introduced ++;
-    pInstance->word_introduced[pInstance->digits_introduced] = pInstance->current_num;
-    pInstance->current_num = 0;
+    
+    access_control.digits_introduced ++;
+    access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
+    access_control.current_num = 0;
 
-    if(pInstance->current_option == PIN4 || pInstance->current_option == PIN5)
-        //Se ocula el display *****
+    if(access_control.current_option == PIN4 || access_control.current_option == PIN5)
+        hide_digit(1);
     
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_3, NULL);
         
     
 }
+
+//3
+
 STATE_DEFINE(EnterDigitDisplay3, NoEventData)
 {
-    //Muestra el current_num en el segundo display
+    //Muestra el current_num en el tercer display
+    display_enable_hard_highlight(2);
+    display_set_single_number(access_control.current_num, 2);
 }
+
 STATE_DEFINE(ChangeDigitDisplay3A, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_num = MIN_DIGIT_DISPLAY)
-       pInstance->current_num = MAX_DIGIT_DISPLAY; 
+    if(access_control.current_num == MIN_DIGIT_DISPLAY)
+       access_control.current_num = MAX_DIGIT_DISPLAY; 
     else
-       pInstance->current_num --; 
+       access_control.current_num--; 
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_3, NULL); 
 }
+
 STATE_DEFINE(ChangeDigitDisplay3B, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_num = MAX_DIGIT_DISPLAY)
-       pInstance->current_num = MIN_DIGIT_DISPLAY; 
+    if(access_control.current_num == MAX_DIGIT_DISPLAY)
+       access_control.current_num = MIN_DIGIT_DISPLAY; 
     else
-       pInstance->current_num ++; 
+       access_control.current_num++; 
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_3, NULL); 
 }
+
 STATE_DEFINE(DigitsRecount3, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    pInstance->digits_introduced ++;
-    pInstance->word_introduced[pInstance->digits_introduced] = pInstance->current_num;
-    pInstance->current_num = 0;
+    access_control.digits_introduced++;
+    access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
+    access_control.current_num = 0;
 
-    if(pInstance->current_option == PIN4 || pInstance->current_option == PIN5)
-        //Se ocula el display *****
+    if(access_control.current_option == PIN4 || access_control.current_option == PIN5)
+        hide_digit(2);
     
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_4, NULL);
 }
+
+//4
+
 STATE_DEFINE(EnterDigitDisplay4, NoEventData)
 {
     //MUESTRA EL CURRENT_NUM EN el cuarto display
+    display_enable_hard_highlight(3);
+    display_set_single_number(access_control.current_num, 3);
 }
+
 STATE_DEFINE(ChangeDigitDisplay4A, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_num = MIN_DIGIT_DISPLAY)
-       pInstance->current_num = MAX_DIGIT_DISPLAY; 
+    if(access_control.current_num == MIN_DIGIT_DISPLAY)
+       access_control.current_num = MAX_DIGIT_DISPLAY; 
     else
-       pInstance->current_num --; 
+       access_control.current_num --; 
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_4, NULL); 
 }
+
 STATE_DEFINE(ChangeDigitDisplay4B, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_num = MAX_DIGIT_DISPLAY)
-       pInstance->current_num = MIN_DIGIT_DISPLAY; 
+    if(access_control.current_num == MAX_DIGIT_DISPLAY)
+       access_control.current_num = MIN_DIGIT_DISPLAY; 
     else
-       pInstance->current_num ++; 
+       access_control.current_num++; 
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_4, NULL); 
-
 }
+
 STATE_DEFINE(DigitsRecount4, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    pInstance->digits_introduced ++;
-    pInstance->word_introduced[pInstance->digits_introduced] = pInstance->current_num;
-    pInstance->current_num = 0;
+    access_control.digits_introduced++;
+    access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
+    access_control.current_num = 0;
 
-    if(pInstance->current_option == PIN4 || pInstance->current_option == PIN5)
-        //Se ocula el display *****
+    if(access_control.current_option == PIN4 || access_control.current_option == PIN5)
+        hide_digit(3);
     
-    if((pInstance->current_option == ID || pInstance->current_option == NEW_ID PIN5) &&
-    pInstance->word_introduced == 4) 
+    if((access_control.current_option == ID || access_control.current_option == NEW_ID) &&
+    access_control.word_introduced == 4) 
         SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); //Es un ID y se requieren 4 digitos mas 
     else
-        if((pInstance->current_option == ID || pInstance->current_option == NEW_ID PIN5) &&
-    pInstance->word_introduced == 8)
-            if(pInstance->current_option == ID)
+        if((access_control.current_option == ID || access_control.current_option == NEW_ID) &&
+    access_control.word_introduced == 8)
+            if(access_control.current_option == ID)
                 SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL); //Se trata de un ID y ya se tienen los 8 digitos
             else
                 SM_InternalEvent(ST_CHECK_NEW_ID, NULL); //Se trata de un nuevo ID y se tienen los 8 digitos
         else
-            if(pInstance->current_option == PIN5)       
+            if(access_control.current_option == PIN5)       
                 SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); //Es un pin de 5 y falta un digito mas 
             else
                 SM_InternalEvent(ST_CHECK_PIN, NULL); //Es un pin de 4 y ya se tienen los 4 digitos
               
 }
+
 //VERDE
 
     
 
 STATE_DEFINE(ChangeBrightness, NoEventData)
 {
-    //Se muestra BRIGHTNESS
+    char message[4];
+    message[0]='b';
+    message[1]='r';
+    message[2]='i';
+    message[3]='g';
+    message[4]='\0';
+    display_set_string(message);
 }
+
 STATE_DEFINE(SetBrightness, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    display_set_number(access_control.current_brightness);
     
-    //Se pone el current brighness en el display
-    pInstance->current_brightness; 
-    
+    // TODO incorporar el fascinante driver de ftm para que nadie nunca regule el brillo
+
+    if(access_control.current_brightness==0)
+        display_set_brightness_level(BRIGHT_LOW);
+    else 
+        display_set_brightness_level(BRIGHT_HIGH); 
 }
+
 STATE_DEFINE(LowerBrightness, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_brightness != MIN_BRIGHTNESS)
-        pInstance->current_brightness--;
+    if(access_control.current_brightness != MIN_BRIGHTNESS)
+        access_control.current_brightness--;
 
     SM_InternalEvent(ST_SET_BRIGHTNESS, NULL); 
 }
+
 STATE_DEFINE(HigherBrightness, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    if(pInstance->current_brightness != MAX_BRIGHTNESS)
-        pInstance->current_brightness++;
+    if(access_control.current_brightness != MAX_BRIGHTNESS)
+        access_control.current_brightness++;
 
     SM_InternalEvent(ST_SET_BRIGHTNESS, NULL); 
 }
+
 //VIOLETA
 
 STATE_DEFINE(AddID, NoEventData)
 {
-    //Muestra NEW ID
+    char message[4];
+    message[0]='a';
+    message[1]='d';
+    message[2]='d';
+    message[3]='\0';
+    display_set_string(message);
 }
+
 STATE_DEFINE(SetNewID, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    pInstance->current_option = NEW_ID;
+    access_control.current_option = NEW_ID;
     SM_InternalEvent(ST_SET_BRIGHTNESS, NULL); 
 }
+
 STATE_DEFINE(CheckNewID, NoEventData)
 {
+    uint32_t entered_id = array_to_int(access_control.word_introduced,ID_LENGTH);
+
+    bool id_exists=false;
+    
+    uint16_t index;
+
+    for(index=0; index<access_control.total_of_IDs; index++)
+        if(access_control.IDsList[index].number==entered_id){
+            id_exists=true;
+            break;
+        }
+
+    
+    if (id_exists) error_msg();
+    else{
+        done_msg();
+        // TODO terminar esto MANUEL
+
+    }
+
     //Existe el ID?
     //Si ---> Muestro ID ALREADY EXISTS
     //NO ---> Muestro NEW ID INTRODUCED, se agrega a la lista de IDs
@@ -907,55 +994,70 @@ STATE_DEFINE(CheckNewID, NoEventData)
 
 
 }
+
 //NARANJA
 
 STATE_DEFINE(EliminateID, NoEventData)
 {
-    //Se muestra ELIMINATE ID
+    char message[4];
+    message[0]='d';
+    message[1]='e';
+    message[2]='l';
+    message[3]='\0';
+    display_set_string(message);
+
+    access_control.current_ID_index=0;
+
 }
+
 STATE_DEFINE(ShowID, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    display_set_number(access_control.IDsList[access_control.current_ID_index].number);
     //Se muestra el ID actual
-    pInstance->current_ID_index;
+    
 }
+
 STATE_DEFINE(PreviousID, NoEventData)
 {
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
+    
     //Se muestra el ID actual
-    if(pInstance->current_ID_index == 0)
-        pInstance->current_ID_index = pInstance->total_of_IDs;
+    if(access_control.current_ID_index == 0)
+        access_control.current_ID_index = access_control.total_of_IDs;
     else
-        pInstance->current_ID_index --;
+        access_control.current_ID_index --;
 
     SM_InternalEvent(ST_SHOW_ID, NULL); 
 
 }
+
 STATE_DEFINE(NextID, NoEventData)
 {
-    
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
     //Se muestra el ID actual
-    if(pInstance->current_ID_index == pInstance->total_of_IDs)
-        pInstance->current_ID_index = 0;
+    if(access_control.current_ID_index == access_control.total_of_IDs)
+        access_control.current_ID_index = 0;
     else
-        pInstance->current_ID_index --;
+        access_control.current_ID_index --;
 
     SM_InternalEvent(ST_SHOW_ID, NULL); 
 
 }
+
 STATE_DEFINE(IDElimination, NoEventData)
 {
-
-    AccessControl* pInstance = SM_GetInstance(AccessControl);
-    int ID_index = pInstance->current_ID_index;
-    pInstance->IDsList[ID_index].blocked_status = TRUE;
+    int ID_index = access_control.current_ID_index;
+    access_control.IDsList[ID_index].valid = false;
 
     //Mostrar ID ELIMINATED;
-
+    done_msg();
     SM_InternalEvent(ST_WELCOME, NULL); 
 
 }
+
+
+
+
+
+// auxiliary functions
 
 uint64_t array_to_int(uint8_t* array, uint8_t length){
     uint8_t index;
@@ -978,8 +1080,20 @@ void error_msg(){
     display_temp_message(message, ERR_MSG_TIME);
 }
 
+void done_msg(){
+    uint8_t message[4];
+    message[0]='D';
+    message[1]='o';
+    message[2]='n';
+    message[3]='e';
+    message[4]='\0';
+    display_temp_message(message, ERR_MSG_TIME);
+}
 
 
+void hide_digit(uint8_t digit){
+    display_set_single_char('-', digit);
+}
 
 
 
