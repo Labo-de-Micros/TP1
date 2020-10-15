@@ -1,0 +1,16 @@
+
+Debug/Blink.axf
+Debug/Blink.map
+Debug/Blink_Debug.ld
+Debug/Blink_Debug_library.ld
+Debug/Blink_Debug_memory.ld
+Debug/makefile
+Debug/source/App_display.o
+Debug/source/button.o
+Debug/source/Card_reader.o
+Debug/source/Display_7.o
+Debug/source/encoder.o
+Debug/source/gpio.o
+Debug/source/subdir.mk
+Debug/source/timer.o
+Debug/sources.mk
