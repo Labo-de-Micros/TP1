@@ -1,4 +1,4 @@
-#include "Fault.h"
+//#include "Fault.h"
 #include "State_machine.h"
 
 // Generates an external event. Called once per external event 
@@ -9,8 +9,8 @@ void _SM_ExternalEvent(SM_StateMachine* self, const SM_StateMachineConst* selfCo
     if (newState == EVENT_IGNORED) 
     {
         // Just delete the event data, if any
-        if (pEventData)
-            SM_XFree(pEventData);
+        // if (pEventData)
+        //    SM_XFree(pEventData);
     }
     else 
     {
@@ -33,7 +33,7 @@ void _SM_ExternalEvent(SM_StateMachine* self, const SM_StateMachineConst* selfCo
 // function to transition to a new state
 void _SM_InternalEvent(SM_StateMachine* self, BYTE newState, void* pEventData)
 {
-    ASSERT_TRUE(self);
+    // ASSERT_TRUE(self);
 
     self->pEventData = pEventData;
     self->eventGenerated = TRUE;
@@ -45,14 +45,14 @@ void _SM_StateEngine(SM_StateMachine* self, const SM_StateMachineConst* selfCons
 {
     void* pDataTemp = NULL;
 
-    ASSERT_TRUE(self);
-    ASSERT_TRUE(selfConst);
+    // ASSERT_TRUE(self);
+    // ASSERT_TRUE(selfConst);
 
     // While events are being generated keep executing states
     while (self->eventGenerated)
     {
         // Error check that the new state is valid before proceeding
-        ASSERT_TRUE(self->newState < selfConst->maxStates);
+        // ASSERT_TRUE(self->newState < selfConst->maxStates);
 
         // Get the pointers from the state map
         SM_StateFunc state = selfConst->stateMap[self->newState].pStateFunc;
@@ -70,13 +70,13 @@ void _SM_StateEngine(SM_StateMachine* self, const SM_StateMachineConst* selfCons
         self->currentState = self->newState;
 
         // Execute the state action passing in event data
-        ASSERT_TRUE(state != NULL);
+        // ASSERT_TRUE(state != NULL);
         state(self, pDataTemp);
 
         // If event data was used, then delete it
         if (pDataTemp)
         {
-            SM_XFree(pDataTemp);
+            // SM_XFree(pDataTemp);
             pDataTemp = NULL;
         }
     }
@@ -88,14 +88,14 @@ void _SM_StateEngineEx(SM_StateMachine* self, const SM_StateMachineConst* selfCo
     BOOL guardResult = TRUE;
     void* pDataTemp = NULL;
 
-    ASSERT_TRUE(self);
-    ASSERT_TRUE(selfConst);
+    // ASSERT_TRUE(self);
+    // ASSERT_TRUE(selfConst);
 
     // While events are being generated keep executing states
     while (self->eventGenerated)
     {
         // Error check that the new state is valid before proceeding
-        ASSERT_TRUE(self->newState < selfConst->maxStates);
+        // ASSERT_TRUE(self->newState < selfConst->maxStates);
 
         // Get the pointers from the extended state map
         SM_StateFunc state = selfConst->stateMapEx[self->newState].pStateFunc;
@@ -131,21 +131,21 @@ void _SM_StateEngineEx(SM_StateMachine* self, const SM_StateMachineConst* selfCo
                     entry(self, pDataTemp);
 
                 // Ensure exit/entry actions didn't call SM_InternalEvent by accident 
-                ASSERT_TRUE(self->eventGenerated == FALSE);
+                // ASSERT_TRUE(self->eventGenerated == FALSE);
             }
 
             // Switch to the new current state
             self->currentState = self->newState;
 
             // Execute the state action passing in event data
-            ASSERT_TRUE(state != NULL);
+            // ASSERT_TRUE(state != NULL);
             state(self, pDataTemp);
         }
 
         // If event data was used, then delete it
         if (pDataTemp)
         {
-            SM_XFree(pDataTemp);
+            // SM_XFree(pDataTemp);
             pDataTemp = NULL;
         }
     }

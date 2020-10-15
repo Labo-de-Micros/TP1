@@ -8,6 +8,7 @@
 #include "encoder.h"
 #include "StateMachine/DataTypes.h"
 #include "StateMachine/State_machine.h"
+#include "Access_control.h"
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
@@ -29,12 +30,15 @@ typedef enum {EV_CCW, EV_CW, EV_CLICK, EV_LONG_CLICK, EV_DOUBLE_CLICK, EV_CARD, 
 static void get_new_event(void);
 static void push_event(events_t ev);
 static events_t pull_ev(void);
+static void reset_buffer(void);
+static void run_state_machine(void);
+
+
+access_control_t hola;
 static events_t evs[MAX_EVENTS];
 static uint32_t index_push = 0;
 static uint32_t index_pull = 0;
-static void reset_buffer(void);
-static void run_state_machine(void);
-access_control_t hola;
+
 
 SM_DEFINE(ACC, &hola)
 /*******************************************************************************
@@ -45,8 +49,7 @@ SM_DEFINE(ACC, &hola)
 
 
 void App_Init (void) {
-	ALLOC_Init();
-
+	//ALLOC_Init();
 	timerInit();
     encoder_init();
     card_init();
