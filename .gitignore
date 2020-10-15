@@ -1,5 +1,4 @@
-/StateMachine/
-Debug/
-/.settings/
-/.metadata/
-/SDK/
+Debug\
+.settings\
+.metadata\
+SDK\
