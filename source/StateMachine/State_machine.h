@@ -2,23 +2,23 @@
 #define _STATE_MACHINE_H
 
 #include "DataTypes.h"
-#include "Fault.h"
+//#include "Fault.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+// #ifdef __cplusplus
+// extern "C" {
+// #endif
 
 // Define USE_SM_ALLOCATOR to use the fixed block allocator instead of heap
-#define USE_SM_ALLOCATOR
-#ifdef USE_SM_ALLOCATOR
-    #include "sm_allocator.h"
-    #define SM_XAlloc(size)    SMALLOC_Alloc(size)
-    #define SM_XFree(ptr)      SMALLOC_Free(ptr)
-#else
-    #include <stdlib.h>
-    #define SM_XAlloc(size)    malloc(size)
-    #define SM_XFree(ptr)      free(ptr)
-#endif
+// #define USE_SM_ALLOCATOR
+// #ifdef USE_SM_ALLOCATOR
+//     #include "sm_allocator.h"
+//     #define SM_XAlloc(size)    SMALLOC_Alloc(size)
+//     #define SM_XFree(ptr)      SMALLOC_Free(ptr)
+// #else
+//     #include <stdlib.h>
+//     #define SM_XAlloc(size)    malloc(size)
+//     #define SM_XFree(ptr)      free(ptr)
+// #endif
 
 enum { EVENT_IGNORED = 0xFE, CANNOT_HAPPEN = 0xFF };
 
@@ -152,7 +152,7 @@ void _SM_StateEngineEx(SM_StateMachine* self, const SM_StateMachineConst* selfCo
 #define END_TRANSITION_MAP(_smName_, _eventData_) \
     }; \
     _SM_ExternalEvent(self, &_smName_##Const, TRANSITIONS[self->currentState], _eventData_); \
-    C_ASSERT((sizeof(TRANSITIONS)/sizeof(BYTE)) == (sizeof(_smName_##StateMap)/sizeof(_smName_##StateMap[0])));
+    // C_ASSERT((sizeof(TRANSITIONS)/sizeof(BYTE)) == (sizeof(_smName_##StateMap)/sizeof(_smName_##StateMap[0])));
 
 #ifdef __cplusplus
 }

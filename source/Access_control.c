@@ -664,7 +664,7 @@ STATE_DEFINE(BlockId, NoEventData)
 {
     //Muestro ID BLOCKED
 
-    uint8_t message[4];
+    char message[4];
     message[0]='B';
     message[1]='A';
     message[2]='n';
@@ -886,11 +886,11 @@ STATE_DEFINE(DigitsRecount4, NoEventData)
         hide_digit(3);
     
     if((access_control.current_option == ID || access_control.current_option == NEW_ID) &&
-    access_control.word_introduced == 4) 
+    access_control.digits_introduced == 4) 
         SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); //Es un ID y se requieren 4 digitos mas 
     else
         if((access_control.current_option == ID || access_control.current_option == NEW_ID) &&
-    access_control.word_introduced == 8)
+    access_control.digits_introduced == 8)
             if(access_control.current_option == ID)
                 SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL); //Se trata de un ID y ya se tienen los 8 digitos
             else
@@ -1053,6 +1053,16 @@ STATE_DEFINE(IDElimination, NoEventData)
 
 }
 
+STATE_DEFINE(AccessRequest, NoEventData)
+{
+	char message[4];
+    message[0]='e';
+    message[1]='n';
+    message[2]='t';
+    message[3]='\0';
+    display_set_string(message);
+}
+
 
 // init function
 
@@ -1090,7 +1100,7 @@ uint64_t array_to_int(uint8_t* array, uint8_t length){
 
 
 void error_msg(){
-    uint8_t message[4];
+    char message[4];
     message[0]='E';
     message[1]='r';
     message[2]='r';
@@ -1099,7 +1109,7 @@ void error_msg(){
 }
 
 void done_msg(){
-    uint8_t message[4];
+    char message[4];
     message[0]='D';
     message[1]='o';
     message[2]='n';
