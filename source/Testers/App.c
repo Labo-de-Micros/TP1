@@ -1,9 +1,9 @@
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
-#include "board.h"
-#include "gpio.h"
-#include "SysTick.h"
+#include "./board.h"
+#include "../Drivers/GPIO/gpio.h"
+#include "../Drivers/SysTick/SysTick.h"
 #define DEBUG_OSCILLOSCOPE
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE

@@ -1,10 +1,9 @@
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
-#include "board.h"
+#include "./board.h"
 #include "hardware.h"
-
-#include "FTM.h"
+#include "./Drivers/PWM/FTM.h"
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE

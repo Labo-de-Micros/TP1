@@ -1,9 +1,9 @@
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
-#include "board.h"
-#include "timer.h"
-#include "SysTick.h"
+#include "./board.h"
+#include "./Drivers/Timer/timer.h"
+#include "./Drivers/SysTick/SysTick.h"
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/

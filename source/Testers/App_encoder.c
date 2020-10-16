@@ -1,10 +1,10 @@
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
-#include "board.h"
-#include "timer.h"
-#include "SysTick.h"
-#include "encoder.h"
+#include "./board.h"
+#include "./Drivers/Timer/timer.h"
+#include "./Drivers/SysTick/SysTick.h"
+#include "./Drivers/Encoder/encoder.h"
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
  ******************************************************************************/
