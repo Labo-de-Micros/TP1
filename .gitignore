@@ -79,3 +79,4 @@ Debug/source/SysTick.o
 Debug/source/timer.d
 Debug/source/timer.o
 Debug/sources.mk
+Debug/*
