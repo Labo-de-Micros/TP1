@@ -557,7 +557,7 @@ static uint8_t get_cvv(uint8_t ind){
 }
 
 /*static UINT_REGISTER reverseBits(UINT_REGISTER n) {
-/*****************************************************************
+*****************************************************************
  * @brief: Given a sequence of bits it reverse it.
  * 			Ex:
  * 				Input: 011101
