@@ -1,7 +1,5 @@
-
-#include "FTM.h"
-#include "FTM.h"
-#include "gpio.h"
+#include "./FTM.h"
+#include "../GPIO/gpio.h"
 
 //enum { PA, PB, PC, PD, PE };
 // Convert port and number into pin ID

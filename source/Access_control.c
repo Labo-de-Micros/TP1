@@ -2,9 +2,9 @@
 #include "StateMachine/State_machine.h"
 #include <stdio.h>
 
-#include "Display_7.h"
-#include "Encoder.h"
-#include "Card_reader.h"
+#include "./Drivers/Display_7/Display_7.h"
+#include "./Drivers/Encoder/encoder.h"
+#include "./Drivers/Card_reader/Card_reader.h"
 
 uint64_t array_to_int(uint8_t* array, uint8_t length);
 void error_msg();

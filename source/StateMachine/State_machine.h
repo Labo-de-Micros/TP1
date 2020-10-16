@@ -1,7 +1,7 @@
 #ifndef _STATE_MACHINE_H
 #define _STATE_MACHINE_H
 
-#include "DataTypes.h"
+#include "./DataTypes.h"
 //#include "Fault.h"
 
 // #ifdef __cplusplus

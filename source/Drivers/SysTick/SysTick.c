@@ -12,11 +12,11 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#include "SysTick.h"
-#include "MK64F12.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "./SysTick.h"
+#include "MK64F12.h"
 #include "core_cm4.h"
 #include "hardware.h"
 

@@ -2,11 +2,11 @@
  * INCLUDE HEADER FILES
  ******************************************************************************/
 #include "board.h"
-#include "timer.h"
-#include "SysTick.h"
-#include "Display_7.h"
-#include "Card_reader.h"
-#include "encoder.h"
+#include "./Drivers/Timer/timer.h"
+#include "./Drivers/SysTick/Systick.h"
+#include "./Drivers/Display_7/Display_7.h"
+#include "./Drivers/Card_reader/Card_reader.h"
+#include "./Drivers/Encoder/encoder.h"
 #include "StateMachine/DataTypes.h"
 #include "StateMachine/State_machine.h"
 #include "Access_control.h"

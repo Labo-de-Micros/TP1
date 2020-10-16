@@ -1,5 +1,5 @@
 //#include "Fault.h"
-#include "State_machine.h"
+#include "./State_machine.h"
 
 // Generates an external event. Called once per external event 
 // to start the state machine executing
