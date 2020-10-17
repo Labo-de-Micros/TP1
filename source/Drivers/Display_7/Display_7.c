@@ -15,6 +15,7 @@
 #include "./Display_7.h"
 #include "../Timer/timer.h"
 #include "../../StateMachine/State_machine.h"
+#include "../../board.h"
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 		 	//
@@ -123,6 +124,16 @@ typedef struct{
 }display_t;
 
 
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//						STATIC VARIABLES						//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+static display_t display;
+SM_DEFINE(DISP, &display)
+
+
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 //FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS W FILE LEVEL SCOPE//
@@ -142,6 +153,8 @@ void set_blank();
 void set_brightness_level(display_brightness_level_t level);
 void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit);
 void rotate_callback();
+void idle_timeout_callback();
+
 
 
 ////////////////////////////////////////////////////////////////
@@ -149,117 +162,172 @@ void rotate_callback();
 //								FSM							  //
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
-
 // STATE MACHINE EVENT ENUMERATION
-enum States
+typedef enum
 {
     ST_IDLE,
     ST_IDLE_DIM,
     ST_IDLE_OFF,
     ST_ROTATING
-};
+}states_t;
 
-// STATE FUNCTION PROTOTYPES
-STATE_DECLARE(idle, NoEventData)
-STATE_DECLARE(idle_dim, NoEventData)
-STATE_DECLARE(idle_off, NoEventData)
-STATE_DECLARE(rotating, NoEventData)
-
-// STATE MAP DEFINITION
-BEGIN_STATE_MAP(Display)
-    STATE_MAP_ENTRY(ST_idle)
-    STATE_MAP_ENTRY(ST_idle_dim)
-    STATE_MAP_ENTRY(ST_idle_off)
-    STATE_MAP_ENTRY(ST_rotating)
-END_STATE_MAP(Display)
-
-// TRANSITION MAP DEFINITION FOR EVENTS
-EVENT_DEFINE(ev_buffer_update, NoEventData)
+typedef enum
 {
-    BEGIN_TRANSITION_MAP                                            // - Current State -
-        TRANSITION_MAP_ENTRY(ST_ROTATING)                         // ST_IDLE
-        TRANSITION_MAP_ENTRY(ST_ROTATING)     					        // ST_IDLE_DIM
-        TRANSITION_MAP_ENTRY(ST_ROTATING)                       		// ST_IDLE_OFF
-        TRANSITION_MAP_ENTRY(ST_ROTATING)                         // ST_ROTATING
-	END_TRANSITION_MAP(Display, pEventData)
-}
+    EV_BUFFER_UPDATE,
+    EV_IDLE_TIMEOUT,
+    EV_ROTATION_DONE,
+	EV_START
+}events_t;
 
-EVENT_DEFINE(ev_idle_timeout, NoEventData)
-{
-    BEGIN_TRANSITION_MAP                                            // - Current State -
-        TRANSITION_MAP_ENTRY(ST_IDLE_DIM)                   	    // ST_IDLE
-        TRANSITION_MAP_ENTRY(ST_IDLE_OFF)  				        	// ST_IDLE_DIM
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_IDLE_OFF
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_ROTATING
-	END_TRANSITION_MAP(Display, pEventData)
-}
+states_t current_state = ST_IDLE;
+void run_state_machine(events_t ev);
 
-EVENT_DEFINE(rotation_done, NoEventData)
-{
-    BEGIN_TRANSITION_MAP                                            // - Current State -
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_IDLE
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)             			// ST_IDLE_DIM
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_IDLE_OFF
-        TRANSITION_MAP_ENTRY(ST_IDLE)                       		// ST_ROTATING
-	END_TRANSITION_MAP(Display, pEventData)
-}
 
-// STATE DEFINITIONS
-STATE_DEFINE(idle, NoEventData)
-{
-	display.state_machine_ptr=self;
-	timerStop(display.rotation_timer);
-	display.ext_index=0;
-    display_on();
-	display_set_brightness_level(display.brightness_level);
-	timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
-}
+// // STATE FUNCTION PROTOTYPES
+// STATE_DECLARE(idle, NoEventData)
+// STATE_DECLARE(idle_dim, NoEventData)
+// STATE_DECLARE(idle_off, NoEventData)
+// STATE_DECLARE(rotating, NoEventData)
 
-STATE_DEFINE(idle_dim, NoEventData)
-{
-	display_set_brightness_level(display.brightness_dim_level);
-	timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
-}
+// // STATE MAP DEFINITION
+// BEGIN_STATE_MAP(Display)
+//     STATE_MAP_ENTRY(ST_idle)
+//     STATE_MAP_ENTRY(ST_idle_dim)
+//     STATE_MAP_ENTRY(ST_idle_off)
+//     STATE_MAP_ENTRY(ST_rotating)
+// END_STATE_MAP(Display)
 
-STATE_DEFINE(idle_off, NoEventData)
-{
-	display_off();
-}
+// // TRANSITION MAP DEFINITION FOR EVENTS
+// EVENT_DEFINE(ev_buffer_update, NoEventData)
+// {
+// 	BEGIN_TRANSITION_MAP                                          	// - Current State -
+// 		TRANSITION_MAP_ENTRY(ST_ROTATING)                         	// ST_IDLE
+// 		TRANSITION_MAP_ENTRY(ST_ROTATING)     					  	// ST_IDLE_DIM
+// 		TRANSITION_MAP_ENTRY(ST_ROTATING)                      		// ST_IDLE_OFF
+// 		TRANSITION_MAP_ENTRY(ST_ROTATING)                         	// ST_ROTATING
+// 	END_TRANSITION_MAP(Display, pEventData)
+// }
 
-STATE_DEFINE(rotating, NoEventData)
-{
-    display_on();
-	display_set_brightness_level(display.brightness_level);
-	if(display.auto_rotation) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
-	else SM_InternalEvent(ST_idle,NULL);
-}
+// EVENT_DEFINE(ev_idle_timeout, NoEventData)
+// {
+//     BEGIN_TRANSITION_MAP                                            // - Current State -
+//         TRANSITION_MAP_ENTRY(ST_IDLE_DIM)                   	    // ST_IDLE
+//         TRANSITION_MAP_ENTRY(ST_IDLE_OFF)  				        	// ST_IDLE_DIM
+//         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_IDLE_OFF
+//         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_ROTATING
+// 	END_TRANSITION_MAP(Display, pEventData)
+// }
+
+// EVENT_DEFINE(rotation_done, NoEventData)
+// {
+//     BEGIN_TRANSITION_MAP                                            // - Current State -
+//         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_IDLE
+//         TRANSITION_MAP_ENTRY(EVENT_IGNORED)             			// ST_IDLE_DIM
+//         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_IDLE_OFF
+//         TRANSITION_MAP_ENTRY(ST_IDLE)                       		// ST_ROTATING
+// 	END_TRANSITION_MAP(Display, pEventData)
+// }
+
+// // STATE DEFINITIONS
+// STATE_DEFINE(idle, NoEventData)
+// {
+// 	timerStop(display.rotation_timer);
+// 	display.ext_index=0;
+// 	display_on();
+// 	display_set_brightness_level(display.brightness_level);
+// 	timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
+// }
+
+// STATE_DEFINE(idle_dim, NoEventData)
+// {
+// 	display_set_brightness_level(display.brightness_dim_level);
+// 	timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
+// }
+
+// STATE_DEFINE(idle_off, NoEventData)
+// {
+// 	display_off();
+// }
+
+// STATE_DEFINE(rotating, NoEventData)
+// {
+//     display_on();
+// 	display_set_brightness_level(display.brightness_level);
+// 	if(display.auto_rotation) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
+// 	else SM_InternalEvent(ST_idle,NULL);
+// }
+
 
 // FSM TIMER CALLBACKS
 void idle_timeout_callback(){
-	SM_StateMachine * self=display.state_machine_ptr;
-	SM_InternalEvent(ev_idle_timeout, NULL);
+	run_state_machine(EV_IDLE_TIMEOUT);
+	return;
 }
+
 
 void rotate_callback(){
 /*****************************************************************
  * @brief: Callback for auto rotation.
  * **************************************************************/
-	SM_StateMachine * self=display.state_machine_ptr;
 	display.ext_index++;
 	if(display.ext_index>EXT_BUF_LEN-DIGITS || display.buf[display.ext_index+3]==DISP_END) 
-		SM_InternalEvent(ST_idle,NULL);
+		run_state_machine(EV_ROTATION_DONE);
+	return;
+}
+
+void run_state_machine(events_t ev){
+	switch(ev){
+		case EV_BUFFER_UPDATE:
+			current_state = ST_ROTATING;
+			display_on();
+			display_set_brightness_level(display.brightness_level);
+			if(display.auto_rotation) 
+				timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
+			else {
+				timerStop(display.rotation_timer);
+				display.ext_index=0;
+				display_on();
+				display_set_brightness_level(display.brightness_level);
+				timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
+			}
+			break;
+		case EV_IDLE_TIMEOUT:
+			if(current_state == ST_IDLE){
+				current_state = ST_IDLE_DIM;
+				display_set_brightness_level(display.brightness_dim_level);
+				//timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
+			}
+			else if(current_state == ST_IDLE_DIM){
+				current_state = ST_IDLE_OFF;
+				display_off();
+			}
+			break;
+		case EV_ROTATION_DONE:
+			if(current_state == ST_ROTATING){
+				current_state = ST_IDLE;
+				timerStop(display.rotation_timer);
+				display.ext_index=0;
+				display_on();
+				display_set_brightness_level(display.brightness_level);
+				timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
+			}
+			break;
+		case EV_START:
+			current_state = ST_IDLE;
+			timerStop(display.rotation_timer);
+			display.ext_index=0;
+			display_on();
+			display_set_brightness_level(display.brightness_level);
+			timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
+			break;
+		default:
+			break;
+	}
+	return;
 }
 
 
 
-
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-//						STATIC VARIABLES						//
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-
-static display_t display;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -272,12 +340,18 @@ void display_init(void){
  * @brief: Initialize the Seven segment display driver
  * **************************************************************/
 	timerInit();
+	//display.state_machine_ptr = &DISPObj;
 	display.timer=timerGetId();
 	display.pwm_timer=timerGetId();
+	display.idle_timer=timerGetId();
+	display.rotation_timer=timerGetId();
 	display.brightness_level= BRIGHT_HIGH;
 	display.ext_index=0;
 	display.auto_rotation=true;
-	set_brightness_level(display.brightness_level);
+	display_set_brightness_level(display.brightness_level);
+	display_configure_pins(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
+    display_configure_mux(DISPLAY_MUX_PIN_0, DISPLAY_MUX_PIN_1);
+	run_state_machine(EV_START);
 	return;
 }
 
@@ -329,9 +403,12 @@ void display_set_string(char * string){
 	display_clear_buffer();
 	uint8_t index;
 	for(index=0; index<EXT_BUF_LEN; index++){
-		if(string[index]=='\0') load_buffer(DISP_END, index);
-		else load_buffer(get_7_segments_char(string[index]), index);
+		if(string[index] == '\0')
+			load_buffer(DISP_END, index);
+		else
+			load_buffer(get_7_segments_char(string[index]), index);
 	}
+	run_state_machine(EV_BUFFER_UPDATE);
 	return;
 }
 
@@ -350,6 +427,7 @@ void display_set_number(uint16_t number){
 			index_2++;
 		}
 	}
+	run_state_machine(EV_BUFFER_UPDATE);
 	return;
 }
 
@@ -410,7 +488,7 @@ void display_disable_highlight(){
 /*****************************************************************
  * @brief: Sets brightness back to nominal level
  * **************************************************************/
-	set_brightness_level(display.brightness_level);	
+	display_set_brightness_level(display.brightness_level);
 }
 
 void display_on(){
@@ -459,8 +537,7 @@ void display_disable_auto_rotation(){
 }
 
 void display_stop_rotation(){
-	SM_StateMachine * self=display.state_machine_ptr;
-	SM_InternalEvent(ST_idle,NULL);
+	run_state_machine(EV_START);
 }
 
 void display_rotate_left(){
@@ -533,7 +610,6 @@ static void load_buffer(uint8_t pins, uint8_t digit){
  * **************************************************************/
 	
 	if(digit<EXT_BUF_LEN){
-		if(digit>3)	
 		display.buf[digit]=pins;
 	}
 
@@ -804,7 +880,7 @@ void refresh_callback(){
 	digit_select(digit);
 	uint8_t pwm_ticks=(uint8_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(BRIGHTNESS_LEVELS-display.brightness[display.ext_index+digit])));
 	timerStart(display.pwm_timer, pwm_ticks, TIM_MODE_SINGLESHOT, set_blank);
-	set_pins(display.current_buf[display.ext_index+(digit++)]);
+	set_pins(display.buf[display.ext_index+(digit++)]);
 	return;
 }
 

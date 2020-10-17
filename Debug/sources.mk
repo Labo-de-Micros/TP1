@@ -17,5 +17,13 @@ SUBDIRS := \
 SDK/CMSIS \
 SDK/startup \
 source \
+source/Drivers/Button \
+source/Drivers/Card_reader \
+source/Drivers/Display_7 \
+source/Drivers/Encoder \
+source/Drivers/GPIO \
+source/Drivers/SysTick \
+source/Drivers/Timer \
 source/StateMachine \
+source/Testers \
 

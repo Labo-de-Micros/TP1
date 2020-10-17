@@ -30,9 +30,9 @@
 #define REFRESH_FREQUENCY_HZ 	60
 #define DIGITS 					4
 #define MUX_PINS 				2
-#define ROTATION_TIME_S 		1
+#define ROTATION_TIME_S 		0.5
 #define TEMP_TIME_S 			1
-#define IDLE_TIMEOUT_S 			10
+#define IDLE_TIMEOUT_S 			1
 #define DIM_TIMEOUT_S 			10
 #define EXT_BUF_LEN 			15
 
