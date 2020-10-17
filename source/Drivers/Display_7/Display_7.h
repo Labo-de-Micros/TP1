@@ -31,6 +31,9 @@
 #define DIGITS 					4
 #define MUX_PINS 				2
 #define ROTATION_TIME_S 		1
+#define TEMP_TIME_S 			1
+#define IDLE_TIMEOUT_S 			10
+#define DIM_TIMEOUT_S 			10
 #define EXT_BUF_LEN 			15
 
 //////////////////////////////////////////////////////////////////
@@ -40,11 +43,7 @@
 //////////////////////////////////////////////////////////////////
 
 typedef uint8_t display_id_t;
-typedef enum {
-	DISPLAY_MODE_TEMPORARY,
-	DISPLAY_MODE_PERSISTANT,
-	DISPLAY_MODE_BLINK
-} display_mode_t;
+
 
 typedef enum{
 	BRIGHT_MIN,
@@ -64,7 +63,7 @@ void display_init(void);
  * @brief: Initialize the Seven segment display driver
  * **************************************************************/
 
-void display_set_mode(display_mode_t mode);
+
 
 void display_configure_pins(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_t g);
 /*****************************************************************
@@ -106,7 +105,6 @@ void display_off();
  * @brief: Stops updating display.
  * **************************************************************/
 
-void display_temp_message(char * message, uint8_t seconds);
 
 void display_set_brightness_level(display_brightness_level_t level);
 

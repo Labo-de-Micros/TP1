@@ -14,7 +14,7 @@
 
 #include "./Display_7.h"
 #include "../Timer/timer.h"
-
+#include "../../StateMachine/State_machine.h"
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 		 	//
@@ -100,32 +100,27 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-
 typedef struct{
 	uint8_t digits;
 	pin_t pins[7];
 	pin_t mux_control_pins[2];
+
 	tim_id_t timer;
-	tim_id_t temp_timer;
 	tim_id_t pwm_timer;
 	tim_id_t rotation_timer;
+	tim_id_t idle_timer;
+
 	uint8_t buf[EXT_BUF_LEN];
-	uint8_t aux_buf[EXT_BUF_LEN];
 	uint8_t ext_index;
+
 	display_brightness_level_t brightness[EXT_BUF_LEN];	
 	display_brightness_level_t brightness_level;
-	display_mode_t mode;
+	display_brightness_level_t brightness_dim_level;
+
 	bool auto_rotation;
-	bool queued_return;
+
+	SM_StateMachine* state_machine_ptr;
 }display_t;
-
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-//						STATIC VARIABLES						//
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-
-static display_t display;
 
 
 ////////////////////////////////////////////////////////////////
@@ -147,6 +142,125 @@ void set_blank();
 void set_brightness_level(display_brightness_level_t level);
 void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit);
 void rotate_callback();
+
+
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+//								FSM							  //
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+// STATE MACHINE EVENT ENUMERATION
+enum States
+{
+    ST_IDLE,
+    ST_IDLE_DIM,
+    ST_IDLE_OFF,
+    ST_ROTATING
+};
+
+// STATE FUNCTION PROTOTYPES
+STATE_DECLARE(idle, NoEventData)
+STATE_DECLARE(idle_dim, NoEventData)
+STATE_DECLARE(idle_off, NoEventData)
+STATE_DECLARE(rotating, NoEventData)
+
+// STATE MAP DEFINITION
+BEGIN_STATE_MAP(Display)
+    STATE_MAP_ENTRY(ST_idle)
+    STATE_MAP_ENTRY(ST_idle_dim)
+    STATE_MAP_ENTRY(ST_idle_off)
+    STATE_MAP_ENTRY(ST_rotating)
+END_STATE_MAP(Display)
+
+// TRANSITION MAP DEFINITION FOR EVENTS
+EVENT_DEFINE(ev_buffer_update, NoEventData)
+{
+    BEGIN_TRANSITION_MAP                                            // - Current State -
+        TRANSITION_MAP_ENTRY(ST_ROTATING)                         // ST_IDLE
+        TRANSITION_MAP_ENTRY(ST_ROTATING)     					        // ST_IDLE_DIM
+        TRANSITION_MAP_ENTRY(ST_ROTATING)                       		// ST_IDLE_OFF
+        TRANSITION_MAP_ENTRY(ST_ROTATING)                         // ST_ROTATING
+	END_TRANSITION_MAP(Display, pEventData)
+}
+
+EVENT_DEFINE(ev_idle_timeout, NoEventData)
+{
+    BEGIN_TRANSITION_MAP                                            // - Current State -
+        TRANSITION_MAP_ENTRY(ST_IDLE_DIM)                   	    // ST_IDLE
+        TRANSITION_MAP_ENTRY(ST_IDLE_OFF)  				        	// ST_IDLE_DIM
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_IDLE_OFF
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_ROTATING
+	END_TRANSITION_MAP(Display, pEventData)
+}
+
+EVENT_DEFINE(rotation_done, NoEventData)
+{
+    BEGIN_TRANSITION_MAP                                            // - Current State -
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_IDLE
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)             			// ST_IDLE_DIM
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         // ST_IDLE_OFF
+        TRANSITION_MAP_ENTRY(ST_IDLE)                       		// ST_ROTATING
+	END_TRANSITION_MAP(Display, pEventData)
+}
+
+// STATE DEFINITIONS
+STATE_DEFINE(idle, NoEventData)
+{
+	display.state_machine_ptr=self;
+	timerStop(display.rotation_timer);
+	display.ext_index=0;
+    display_on();
+	display_set_brightness_level(display.brightness_level);
+	timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
+}
+
+STATE_DEFINE(idle_dim, NoEventData)
+{
+	display_set_brightness_level(display.brightness_dim_level);
+	timerStart(display.idle_timer, TIMER_MS2TICKS(IDLE_TIMEOUT_S*1000),TIM_MODE_SINGLESHOT,idle_timeout_callback);
+}
+
+STATE_DEFINE(idle_off, NoEventData)
+{
+	display_off();
+}
+
+STATE_DEFINE(rotating, NoEventData)
+{
+    display_on();
+	display_set_brightness_level(display.brightness_level);
+	if(display.auto_rotation) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
+	else SM_InternalEvent(ST_idle,NULL);
+}
+
+// FSM TIMER CALLBACKS
+void idle_timeout_callback(){
+	SM_StateMachine * self=display.state_machine_ptr;
+	SM_InternalEvent(ev_idle_timeout, NULL);
+}
+
+void rotate_callback(){
+/*****************************************************************
+ * @brief: Callback for auto rotation.
+ * **************************************************************/
+	SM_StateMachine * self=display.state_machine_ptr;
+	display.ext_index++;
+	if(display.ext_index>EXT_BUF_LEN-DIGITS || display.buf[display.ext_index+3]==DISP_END) 
+		SM_InternalEvent(ST_idle,NULL);
+}
+
+
+
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//						STATIC VARIABLES						//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+static display_t display;
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
@@ -159,12 +273,10 @@ void display_init(void){
  * **************************************************************/
 	timerInit();
 	display.timer=timerGetId();
-	display.temp_timer=timerGetId();
 	display.pwm_timer=timerGetId();
 	display.brightness_level= BRIGHT_HIGH;
 	display.ext_index=0;
 	display.auto_rotation=true;
-	display.queued_return=false;
 	set_brightness_level(display.brightness_level);
 	return;
 }
@@ -196,7 +308,7 @@ void display_configure_pins(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_
 }
 
 void display_configure_mux(pin_t pin0, pin_t pin1){
-	/*****************************************************************
+/*****************************************************************
  * @brief: Initialize the pins of the seven segment display multiplexor.
  * **************************************************************/
 	uint8_t index;
@@ -268,8 +380,13 @@ void display_set_brightness_level(display_brightness_level_t level){
 			checked_level=BRIGHT_HIGH;
 			break;
 	}
+	
 	display.brightness_level = checked_level;
-	set_brightness_level(display.brightness_level);
+	
+	uint8_t index;
+	for(index=0; index<EXT_BUF_LEN; index++)
+		display.brightness[index]=display.brightness_level;
+
 }
 
 void display_enable_soft_highlight(uint8_t digit){
@@ -300,8 +417,10 @@ void display_on(){
 /*****************************************************************
  * @brief: Turns display refresh on
  * **************************************************************/
-	uint16_t ticks=(uint16_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS));
-	timerStart(display.timer, ticks, TIM_MODE_PERIODIC, refresh_callback);
+	if(!timerRunning(display.timer)){
+		uint16_t ticks=(uint16_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS));
+		timerStart(display.timer, ticks, TIM_MODE_PERIODIC, refresh_callback);
+	}
 	return;
 }
 
@@ -309,21 +428,9 @@ void display_off(){
 /*****************************************************************
  * @brief: Turns display refresh off
  * **************************************************************/
+	
 	timerStop(display.timer);
 	return;
-}
-
-void display_temp_message(char * message, uint8_t seconds){
-/*****************************************************************
- * @brief: Displays a string on the display for a number of seconds.
- * If message length exceeds that of the display, the delay starts 
- * after the message completes a rotation.
- * **************************************************************/
-	uint8_t i;
-	for(i = 0; i < EXT_BUF_LEN; i++)
-		display.aux_buf[i]=display.buf[i];
-	display_set_string(message);
-	timerStart(display.temp_timer, 1000*seconds, TIM_MODE_SINGLESHOT, return_from_temp);
 }
 
 void display_clear_buffer(void){
@@ -352,22 +459,14 @@ void display_disable_auto_rotation(){
 }
 
 void display_stop_rotation(){
-/*****************************************************************
- * @brief: Stops current rotation (if happening)
- * **************************************************************/
-	if(timerRunning(display.rotation_timer)) 
-	{
-		timerStop(display.rotation_timer);
-		if(display.queued_return) timerStart(display.temp_timer, 1000, TIM_MODE_SINGLESHOT, return_from_temp);
-		display.ext_index=0;
-	}
+	SM_StateMachine * self=display.state_machine_ptr;
+	SM_InternalEvent(ST_idle,NULL);
 }
 
 void display_rotate_left(){
 /*****************************************************************
  * @brief: Shifts digits on the display to the left.
  * **************************************************************/
-	display_stop_rotation();
 	if(display.ext_index!=0) 
 		display.ext_index--;
 }
@@ -376,7 +475,6 @@ void display_rotate_right(){
 /*****************************************************************
  * @brief: Shifts digits on the display to the right.
  * **************************************************************/
-	display_stop_rotation();
 	rotate_callback();
 }
 
@@ -390,21 +488,6 @@ uint8_t display_get_brightness(void){
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void return_from_temp(void){
-/*****************************************************************
- * @brief: If the display is not rotating, transfers contents back
- * from aux to main buffer, returning from a temp message. If it is,
- * queue the transfer for when its done.
- * **************************************************************/
-	uint8_t i;
-	if(!timerRunning(display.rotation_timer)){	
-		for(i = 0; i < EXT_BUF_LEN; i++)
-			display.buf[i]=display.aux_buf[i];
-		display.queued_return=false;
-	}
-	else display.queued_return=true;
-	return;
-}
 
 static void set_pins(uint8_t pins){
 /*****************************************************************
@@ -448,15 +531,11 @@ static void load_buffer(uint8_t pins, uint8_t digit){
  * 							a -> HIGH	1
  *  @param digit: buffer digit to be modified
  * **************************************************************/
-	bool extended=false;
-	display_stop_rotation();
+	
 	if(digit<EXT_BUF_LEN){
-		if(digit>3)
-			extended=true;
+		if(digit>3)	
 		display.buf[digit]=pins;
 	}
-	
-	if(extended && display.auto_rotation && !timerRunning(display.rotation_timer)) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
 
 	return;
 }
@@ -725,7 +804,7 @@ void refresh_callback(){
 	digit_select(digit);
 	uint8_t pwm_ticks=(uint8_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(BRIGHTNESS_LEVELS-display.brightness[display.ext_index+digit])));
 	timerStart(display.pwm_timer, pwm_ticks, TIM_MODE_SINGLESHOT, set_blank);
-	set_pins(display.buf[display.ext_index+(digit++)]);
+	set_pins(display.current_buf[display.ext_index+(digit++)]);
 	return;
 }
 
@@ -761,31 +840,9 @@ void split_number(uint16_t num, uint8_t * buffers){
 	return;
 }
 
-void set_brightness_level(display_brightness_level_t level){
-/*****************************************************************
- * @brief: Sets the brightness level for the entire display.
- * **************************************************************/
-	uint8_t index;
-	for(index=0; index<EXT_BUF_LEN; index++)
-		display.brightness[index]=level;
-}
-
 void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit){
 /*****************************************************************
  * @brief: Sets the brightness level for a digit.
  * **************************************************************/
 	if (digit<EXT_BUF_LEN) display.brightness[digit]=level;
-}
-
-void rotate_callback(){
-/*****************************************************************
- * @brief: Callback for auto rotation.
- * **************************************************************/
-	display.ext_index++;
-	if(display.ext_index>EXT_BUF_LEN-DIGITS || display.buf[display.ext_index+3]==DISP_END) 
-	{
-		display.ext_index=0;
-		if(timerRunning(display.rotation_timer)) timerStop(display.rotation_timer);
-		if(display.queued_return) timerStart(display.temp_timer, 1000, TIM_MODE_SINGLESHOT, return_from_temp);
-	}
 }
