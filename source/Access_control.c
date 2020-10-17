@@ -168,13 +168,12 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_ENCODER,  
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_CARD,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_ENCODER,
-
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ID_NON_EXISTENT,
         TRANSITION_MAP_ENTRY(ST_ENTER_DIGITS_REQUEST)           //ST_PIN_REQUEST,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_PIN,
-        TRANSITION_MAP_ENTRY(ST_ENTER_DIGITS_REQUEST)           //ST_ACCESS_GRANTED,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ACCESS_GRANTED,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_INVALID_PIN,
-        TRANSITION_MAP_ENTRY(ST_ENTER_DIGITS_REQUEST)           //ST_BLOCK_ID,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_BLOCK_ID,
         
         //INGRESO DE PALABRA
         TRANSITION_MAP_ENTRY(ST_NEXT_DIGIT)                     //ST_ENTER_DIGITS_REQUEST,
@@ -186,17 +185,17 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
     
         //VERDE
         TRANSITION_MAP_ENTRY(ST_SET_BRIGHTNESS)                 //ST_CHANGE_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_SET_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS,
 
         //VIOLETA
-        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)           //ST_ADD_ID,
+        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)         //ST_ADD_ID,
         TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_ID_ADDITION,
 
         //NARANJA
-        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)           //ST_ELIMINATE_ID,
+        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)         //ST_ELIMINATE_ID,
         TRANSITION_MAP_ENTRY(ST_ID_ELIMINATION)                 //ST_CONFIRMATION,
         TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_ID_ELIMINATION
 
@@ -208,45 +207,45 @@ EVENT_DEFINE(Encoder_Double_Click, NoEventData)
 {
     //Dado el evento de Encoder_Click, se transiciona a un nuevo estado basado en el estado actual 
 
-    BEGIN_TRANSITION_MAP                                            // - Current State -
+    BEGIN_TRANSITION_MAP                                        // - Current State -
       
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ADMIN,
-        //AZUL
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ACCESS_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ID_ENTERING_BY_CARD,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ID_ENTERING_BY_ENCODER,  
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ADMIN,
+        //AZUL                  
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ACCESS_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_CARD,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_ENCODER,  
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_CARD,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_ENCODER,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ID_NON_EXISTENT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_PIN_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_CHECK_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ACCESS_GRANTED,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_INVALID_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_BLOCK_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_NON_EXISTENT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PIN_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ACCESS_GRANTED,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_INVALID_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_BLOCK_ID,
         
         //INGRESO DE PALABRA
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ENTER_DIGITS_REQUEST,
-        TRANSITION_MAP_ENTRY(ST_PREVIOUS_DIGIT) //ST_ENTER_DIGIT_DISPLAY,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_CHANGE_DIGIT_DISPLAY_A,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_CHANGE_DIGIT_DISPLAY_B,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_NEXT_DIGIT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_PREVIOUS_DIGIT,
-    
-        //VERDE
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_CHANGE_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_SET_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_LOWER_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_HIGHER_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGITS_REQUEST,
+        TRANSITION_MAP_ENTRY(ST_PREVIOUS_DIGIT)                 //ST_ENTER_DIGIT_DISPLAY,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_A,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_B,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_DIGIT,
+
+        //VERDE                 
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS,
 
         //VIOLETA
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ADD_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ALREADY_EXISTS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ADD_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
 
         //NARANJA
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID) //ST_CONFIRMATION,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED) //ST_ID_ELIMINATION
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ELIMINATE_ID,
+        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -256,45 +255,45 @@ EVENT_DEFINE(Encoder_CW, NoEventData)
 {
     //Dado el evento de Encoder_Click, se transiciona a un nuevo estado basado en el estado actual 
 
-    BEGIN_TRANSITION_MAP                                    // - Current State -
-      
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ADMIN,
-        //AZUL
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ACCESS_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ENTERING_BY_CARD,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ENTERING_BY_ENCODER,  
+    BEGIN_TRANSITION_MAP                                        // - Current State -
+
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ADMIN,
+        //AZUL  
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ACCESS_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_CARD,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_ENCODER,  
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_CARD,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_ENCODER,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_NON_EXISTENT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_PIN_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHECK_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ACCESS_GRANTED,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_INVALID_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_BLOCK_ID,
-  
-        //INGRESO DE PALABRA
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ENTER_DIGITS_REQUEST,
-        TRANSITION_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_B)     //ST_ENTER_DIGIT_DISPLAY,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHANGE_DIGIT_DISPLAY_A,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHANGE_DIGIT_DISPLAY_B,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_NEXT_DIGIT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_PREVIOUS_DIGIT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_NON_EXISTENT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PIN_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ACCESS_GRANTED,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_INVALID_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_BLOCK_ID,
     
-        //VERDE
-        TRANSITION_MAP_ENTRY(ST_ADD_ID)                     //ST_CHANGE_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(ST_HIGHER_BRIGHTNESS)          //ST_SET_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_LOWER_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_HIGHER_BRIGHTNESS,
+        //INGRESO DE PALABRA    
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGITS_REQUEST,
+        TRANSITION_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_B)         //ST_ENTER_DIGIT_DISPLAY,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_A,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_B,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_DIGIT,
+
+        //VERDE 
+        TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_CHANGE_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_HIGHER_BRIGHTNESS)              //ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS,
 
         //VIOLETA
-        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)               //ST_ADD_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ALREADY_EXISTS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_ADD_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
 
-        //NARANJA
-        TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)          //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CONFIRMATION,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ELIMINATION
+        //NARANJA   
+        TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_ELIMINATE_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -304,44 +303,44 @@ EVENT_DEFINE(Encoder_CCW, NoEventData)
 {
     //Dado el evento de Encoder_Click, se transiciona a un nuevo estado basado en el estado actual 
 
-    BEGIN_TRANSITION_MAP                                    // - Current State -
-      
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ADMIN,
+    BEGIN_TRANSITION_MAP                                        // - Current State -
 
-        //AZUL              
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ACCESS_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ENTERING_BY_CARD,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ENTERING_BY_ENCODER,  
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ADMIN,
+
+        //AZUL                  
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ACCESS_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_CARD,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_ENCODER,  
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_CARD,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_ENCODER,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_NON_EXISTENT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_PIN_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHECK_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ACCESS_GRANTED,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_INVALID_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_BLOCK_ID,
-        
-        //INGRESO DE PALABRA
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ENTER_DIGITS_REQUEST,
-        TRANSITION_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_A)     //ST_ENTER_DIGIT_DISPLAY,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHANGE_DIGIT_DISPLAY_A,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHANGE_DIGIT_DISPLAY_B,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_NEXT_DIGIT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_PREVIOUS_DIGIT,
-        //VERDE             
-        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                 //ST_CHANGE_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(ST_LOWER_BRIGHTNESS)           //ST_SET_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_LOWER_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_HIGHER_BRIGHTNESS
-        //VIOLETA               
-        TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)          //ST_ADD_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ALREADY_EXISTS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_NON_EXISTENT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PIN_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ACCESS_GRANTED,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_INVALID_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_BLOCK_ID,
+
+        //INGRESO DE PALABRA    
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGITS_REQUEST,
+        TRANSITION_MAP_ENTRY(ST_CHANGE_DIGIT_DISPLAY_A)         //ST_ENTER_DIGIT_DISPLAY,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_A,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_B,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_DIGIT,
+        //VERDE                 
+        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                     //ST_CHANGE_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_LOWER_BRIGHTNESS)               //ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS
+        //VIOLETA                   
+        TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_ADD_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
 
         //NARANJA               
-        TRANSITION_MAP_ENTRY(ST_ADD_ID)                     //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CONFIRMATION,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ELIMINATION
+        TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_ELIMINATE_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -351,44 +350,44 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
 {
     //Dado el evento de Encoder_Click, se transiciona a un nuevo estado basado en el estado actual 
 
-    BEGIN_TRANSITION_MAP                                    // - Current State -
-      
-        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)             //ST_ADMIN,
-        
-        //AZUL              
-        TRANSITION_MAP_ENTRY(ST_ADMIN)                      //ST_ACCESS_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ENTERING_BY_CARD,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ENTERING_BY_ENCODER,  
+    BEGIN_TRANSITION_MAP                                        // - Current State -
+
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ADMIN,
+
+        //AZUL                  
+        TRANSITION_MAP_ENTRY(ST_ADMIN)                          //ST_ACCESS_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_CARD,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_ENCODER,  
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_CARD,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_ENCODER,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_NON_EXISTENT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_PIN_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHECK_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ACCESS_GRANTED,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_INVALID_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_BLOCK_ID,
-        
-        //INGRESO DE PALABRA
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ENTER_DIGITS_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ENTER_DIGIT_DISPLAY,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHANGE_DIGIT_DISPLAY_A,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHANGE_DIGIT_DISPLAY_B,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_NEXT_DIGIT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_PREVIOUS_DIGIT,
-        //VERDE             
-        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)             //ST_CHANGE_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_SET_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_LOWER_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_HIGHER_BRIGHTNESS
-        //VIOLETA               
-        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)             //ST_ADD_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ALREADY_EXISTS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_NON_EXISTENT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PIN_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ACCESS_GRANTED,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_INVALID_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_BLOCK_ID,
 
-        //NARANJA               
-        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)             //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CONFIRMATION,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ELIMINATION
+        //INGRESO DE PALABRA    
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGITS_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGIT_DISPLAY,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_A,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_B,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_DIGIT,
+        //VERDE                 
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_CHANGE_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS
+        //VIOLETA                   
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ADD_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
+
+        //NARANJA                   
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ELIMINATE_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -397,46 +396,46 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
 EVENT_DEFINE(Card_Reader, NoEventData)
 {
     
-    BEGIN_TRANSITION_MAP                                            // - Current State -
+    BEGIN_TRANSITION_MAP                                        // - Current State -
       
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ADMIN,
-        
-        //AZUL              
-        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)        //ST_ACCESS_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ENTERING_BY_CARD,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ENTERING_BY_ENCODER,  
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ADMIN,
+
+        //AZUL                  
+        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)            //ST_ACCESS_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_CARD,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_ENCODER,  
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_CARD,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_ENCODER,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_NON_EXISTENT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_PIN_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHECK_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ACCESS_GRANTED,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_INVALID_PIN,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_BLOCK_ID,
-        
-        //INGRESO DE PALABRA
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ENTER_DIGITS_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ENTER_DIGIT_DISPLAY,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHANGE_DIGIT_DISPLAY_A,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHANGE_DIGIT_DISPLAY_B,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_NEXT_DIGIT,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_PREVIOUS_DIGIT,
-        //VERDE             
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CHANGE_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_SET_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_LOWER_BRIGHTNESS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_HIGHER_BRIGHTNESS
-        //VIOLETA               
-        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)                 //ST_ADD_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ALREADY_EXISTS,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_NON_EXISTENT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PIN_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ACCESS_GRANTED,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_INVALID_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_BLOCK_ID,
 
-        //NARANJA               
-        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)                 //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_CONFIRMATION,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 //ST_ID_ELIMINATION
+        //INGRESO DE PALABRA    
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGITS_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGIT_DISPLAY,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_A,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_B,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_DIGIT,
+        //VERDE                 
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS
+        //VIOLETA                   
+        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)            //ST_ADD_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
 
-    END_TRANSITION_MAP(AccessControl, pEventData)
+        //NARANJA                   
+        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)            //ST_ELIMINATE_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
+
+    END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
 
@@ -457,6 +456,7 @@ STATE_DEFINE(Admin, NoEventData)
 
 STATE_DEFINE(AccessRequest, NoEventData)
 {
+    access_control.current_option = ID;
     char message[]="Access request";
 	display_set_string(message);
 }
@@ -468,12 +468,12 @@ STATE_DEFINE(IdEnteringByCard, NoEventData)
 
 STATE_DEFINE(IdEnteringByEncoder, NoEventData)
 {
-    access_control.current_option = ID;
     SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
 }
 
 STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
 {
+    //Primero se chequea si el numero de la tarjeta coincide con un ID
     // Get pointer to the instance data and update id
     card_t card_data = card_get_data();
     bool id_exists=false;
@@ -486,19 +486,29 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
             break;
         }
 
-    if(id_exists){
-        switch (access_control.current_option)
-        {
-        case DELETE_ID:
-            SM_InternalEvent(ST_CONFIRMATION, NULL); 
-            break;
-        
-        case NEW_ID:
+    //Dependiendo si se quiere eliminar el id, agregar o acceder se hace lo siguiente;
+    switch (access_control.current_option)
+    {
+    case DELETE_ID:
+        if(id_exists) SM_InternalEvent(ST_CONFIRMATION, NULL); 
+        else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
+        break;
+    
+    case NEW_ID:
+        if(id_exists) 
             SM_InternalEvent(ST_ALREADY_EXISTS, NULL); 
-            break;
+        else
+        {   
+            //Se guarda el Id en el usuario nuevo
+            access_control.IDsList[access_control.total_of_IDs+1].card_id==card_data.pan;
+            SM_InternalEvent(ST_PIN_REQUEST, NULL);  
+        }
+        
+        break;
 
-        default:
-            
+    case ID: default:
+        if(id_exists)
+        {
             if(access_control.IDsList[index].blocked_status) 
                 SM_InternalEvent(ST_BLOCK_ID, NULL); 
             else 
@@ -506,18 +516,10 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
                 access_control.IDsList[index].PIN_attempts=0;
                 SM_InternalEvent(ST_PIN_REQUEST, NULL); 
             }
-            break;
         }
-    } 
-    else 
-        if(access_control.current_option == NEW_ID)
-        {
-            access_control.IDsList[access_control.total_of_IDs+1].card_id==card_data.pan;
-            SM_InternalEvent(ST_PIN_REQUEST, NULL);     
-        }          
-        else
-            SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);   
-        
+        else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);    
+        break;
+    }  
 }
 
 STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
@@ -534,46 +536,47 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
             access_control.current_ID_index=index;
             break;
         }
-
-    if(id_exists){
+    //Dependiendo si se quiere eliminar el id, agregar o acceder se hace lo siguiente;
+    switch (access_control.current_option)
+    {
+    case DELETE_ID:
+        if(id_exists) SM_InternalEvent(ST_CONFIRMATION, NULL); 
+        else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
+        break;
+    
+    case NEW_ID:
+        if(id_exists) 
+            SM_InternalEvent(ST_ALREADY_EXISTS, NULL); 
+        else
+        {   
+            //Se guarda el Id en el usuario nuevo
+            access_control.IDsList[access_control.total_of_IDs+1].number = entered_id;
+            SM_InternalEvent(ST_PIN_REQUEST, NULL);  
+        }
         
-            switch (access_control.current_option)
-            {
-            case DELETE_ID:
-                SM_InternalEvent(ST_CONFIRMATION, NULL); 
-                break;
-            
-            case NEW_ID:
-                SM_InternalEvent(ST_ALREADY_EXISTS, NULL); 
-                break;
+        break;
 
-            default:
-                
-                if(access_control.IDsList[index].blocked_status) 
-                    SM_InternalEvent(ST_BLOCK_ID, NULL); 
-                else 
-                {
-                    access_control.IDsList[index].PIN_attempts=0;
-                    SM_InternalEvent(ST_PIN_REQUEST, NULL); 
-                }
-                break;
-            }
-        } 
-        else 
-            if(access_control.current_option == NEW_ID)
+    case ID: default:
+        if(id_exists)
+        {
+            if(access_control.IDsList[index].blocked_status) 
+                SM_InternalEvent(ST_BLOCK_ID, NULL); 
+            else 
             {
-                uint32_t entered_id = array_to_int(access_control.word_introduced,ID_LENGTH);
-                access_control.IDsList[access_control.total_of_IDs+1].number = entered_id;
-                SM_InternalEvent(ST_PIN_REQUEST, NULL);     
-            }          
-            else
-                SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);  
+                access_control.IDsList[index].PIN_attempts=0;
+                SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+            }
+        }
+        else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);    
+        break;
+    }  
+           
 }
 
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
     display_set_string("Id NO EXISTS");
-    SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
+    //SM_InternalEvent(ST_ACCESS_REQUEST, NULL); 
 }
 
 STATE_DEFINE(PinRequest, NoEventData)
@@ -581,31 +584,33 @@ STATE_DEFINE(PinRequest, NoEventData)
     display_set_string("enter PIN");
     //veo el largo del pin segun el ID
 
-    if(access_control.current_option == ID)
+    switch (access_control.current_option)
     {
-        switch(access_control.IDsList[access_control.current_ID_index].PIN_length){
-            case 4 :
-                access_control.current_option = PIN4;
-                break;
-            case 5 :
-                access_control.current_option = PIN5;
-                break;
-            default :
-                //error
-                break;
-        }
-    }
-    else
-        access_control.current_option = PIN5;    
+        case NEW_ID:
+            access_control.current_option = ADMIN_PIN;
+            break;
 
-    SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
+        case ID: default:
+            switch(access_control.IDsList[access_control.current_ID_index].PIN_length){
+                case 4 :
+                    access_control.current_option = PIN4;
+                    break;
+                case 5 :
+                    access_control.current_option = PIN5;
+                    break;
+                default :
+                
+                    break;
+            }   
+    }   
+
+    //SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
 }
 
 STATE_DEFINE(CheckPin, NoEventData)
 {
     //PIN es correcto segun el ID ?
     uint32_t pin = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.current_ID_index].PIN_length);
-
 
     switch (access_control.current_option)
     {
@@ -623,7 +628,7 @@ STATE_DEFINE(CheckPin, NoEventData)
             SM_InternalEvent(ST_ID_ADDITION, NULL);
             break;
 
-    default:
+    case PIN4: case PIN5: default:
 
         if(access_control.IDsList[access_control.current_ID_index].PIN==pin) 
             SM_InternalEvent(ST_ACCESS_GRANTED, NULL);
@@ -641,7 +646,7 @@ STATE_DEFINE(AccessGranted, NoEventData)
     //Prendo LED 
     //Espero 5 seg
     //Apago LED
-    SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
+    //SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
 }
 
 STATE_DEFINE(InvalidPin, NoEventData)
@@ -652,19 +657,21 @@ STATE_DEFINE(InvalidPin, NoEventData)
 
     //Retardo de unos segundos
 
-    if(access_control.current_option == ADMIN_PIN)
-        SM_InternalEvent(ST_ADMIN, NULL);   
-
-    else
+    switch (access_control.current_option)
     {
+    case ADMIN_PIN:
+        //Si se introduce mal el PIn del administrador se vuelve al menu del ADMIN
+        SM_InternalEvent(ST_ADMIN, NULL); 
+        break;
+    
+    case PIN4: case PIN5: default:
+
         if((access_control.IDsList[access_control.current_ID_index].PIN_attempts++) == MAX_NUM_ATTEMPTS)
-        SM_InternalEvent(ST_BLOCK_ID, NULL);
+            SM_InternalEvent(ST_BLOCK_ID, NULL);
         else
-        SM_InternalEvent(ST_PIN_REQUEST, NULL); 
-    }
-    
-    
-    
+            SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+        break;
+    }  
 }
 
 STATE_DEFINE(BlockId, NoEventData)
@@ -672,11 +679,14 @@ STATE_DEFINE(BlockId, NoEventData)
     //Muestro ID BLOCKED
 	display_set_string("Id Ban");
     access_control.IDsList[access_control.current_ID_index].blocked_status=true;
-    SM_InternalEvent(ST_ACCESS_REQUEST, NULL);  
+    
+    //PONER UN TIMEOUT
+    //SM_InternalEvent(ST_ACCESS_REQUEST, NULL);  
 }
 
 
 //INGRESO DE PALABRA
+
 STATE_DEFINE(EnterDigitsRequest, NoEventData)
 {
     access_control.index = 0;
@@ -689,7 +699,6 @@ STATE_DEFINE(EnterDigitsRequest, NoEventData)
     display_clear_buffer();
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
-
 
 STATE_DEFINE(EnterDigitDisplay, NoEventData)
 {
@@ -708,6 +717,7 @@ STATE_DEFINE(ChangeDigitDisplayA, NoEventData)
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
+
 STATE_DEFINE(ChangeDigitDisplayB, NoEventData)
 {
     if(access_control.word_introduced[index] == MAX_DIGIT_DISPLAY)
@@ -745,13 +755,11 @@ STATE_DEFINE(NextDigit, NoEventData)
     }
 }
 
-
 STATE_DEFINE(PreviousDigit, NoEventData)
 {
     if(!access_control.index == 0) access_control.index --;
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
-
 
 
 //VERDE
@@ -786,6 +794,10 @@ STATE_DEFINE(AddID, NoEventData)
 	display_set_string("Add Id");
     access_control.current_option = NEW_ID;
 
+    //Si no hay mas lugar para agregar IDs genero un evento interno para que nunca llegue este menu
+    if(access_control.total_of_IDs == MAX_IDS)
+        SM_InternalEvent(ST_CHANGE_BRIGHTNESS, NULL); 
+
 }
 
 STATE_DEFINE(AlreadyExists, NoEventData)
@@ -817,14 +829,13 @@ STATE_DEFINE(Confirmation, NoEventData)
 }
 
 
-
-
 STATE_DEFINE(IDElimination, NoEventData)
 {
     int ID_index = access_control.current_ID_index;
     access_control.IDsList[ID_index].valid = false;
 
 	display_set_string("Id deleted");
+   
 
 }
 
@@ -860,28 +871,6 @@ uint64_t array_to_int(uint8_t* array, uint8_t length){
     }
     return return_value;
 }
-
-
-
-void error_msg(){
-    char message[4];
-    message[0]='E';
-    message[1]='r';
-    message[2]='r';
-    message[3]='\0';
-    //display_temp_message(message, ERR_MSG_TIME);
-}
-
-void done_msg(){
-    char message[4];
-    message[0]='D';
-    message[1]='o';
-    message[2]='n';
-    message[3]='e';
-    //message[4]='\0';
-    //display_temp_message(message, ERR_MSG_TIME);
-}
-
 
 void hide_digit(uint8_t digit){
     display_set_single_char('-', digit);
