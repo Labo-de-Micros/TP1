@@ -25,8 +25,11 @@
 typedef enum{ 
 	NEW_ID,
 	ID,
+    DELETE_ID,
 	PIN4,
-    PIN5
+    PIN5,
+    ADMIN_PIN,
+    NEW_ID_PIN
 } word_option_t;
 
 typedef struct{
@@ -45,7 +48,7 @@ typedef struct{
     uint16_t total_of_IDs; //Cantidad de ids en la lista de IDS 
     //Manejo de introduccion de palabra
     uint8_t word_introduced[8]; //Palabra de 4,5 o 8 digitos
-    uint8_t current_num; //Numero que se esta mostrando en el display
+    uint8_t index; 
     uint8_t digits_introduced; //Cantidad de numeros introducidos 
     word_option_t current_option;
 
