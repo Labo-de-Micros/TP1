@@ -741,7 +741,7 @@ STATE_DEFINE(NextDigit, NoEventData)
        (access_control.current_option == ADMIN_PIN && (access_control.digits_introduced == 5 ||      
         access_control.digits_introduced == 5)))
     {
-        hide_digit(0);
+        hide_digit(access_control.index);
         SM_InternalEvent(ST_CHECK_PIN, NULL); 
     }
     else if((access_control.current_option == ID || access_control.current_option == NEW_ID || access_control.current_option == DELETE_ID) &&
