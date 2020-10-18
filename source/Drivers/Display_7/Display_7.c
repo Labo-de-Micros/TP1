@@ -222,6 +222,7 @@ void display_set_string(char * string){
 		else 
 			load_buffer(get_7_segments_char(string[index]), index);
 	}
+	if(display.auto_rotation && !timerRunning(display.rotation_timer)) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
 	return;
 }
 
@@ -240,6 +241,7 @@ void display_set_number(uint16_t number){
 			index_2++;
 		}
 	}
+	if(display.auto_rotation && !timerRunning(display.rotation_timer)) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
 	return;
 }
 
@@ -459,15 +461,13 @@ static void load_buffer(uint8_t pins, uint8_t digit){
  * 							a -> HIGH	1
  *  @param digit: buffer digit to be modified
  * **************************************************************/
-	bool extended=false;
+
 	display_stop_rotation();
 	if(digit<EXT_BUF_LEN){
-		if(digit>3)
-			extended=true;
 		display.buf[digit]=pins;
 	}
 	
-	if(extended && display.auto_rotation && !timerRunning(display.rotation_timer)) timerStart(display.rotation_timer, ROTATION_TIME_S*1000, TIM_MODE_PERIODIC, rotate_callback);
+	
 
 	return;
 }
