@@ -734,7 +734,6 @@ STATE_DEFINE(ChangeDigitDisplayB, NoEventData)
 STATE_DEFINE(NextDigit, NoEventData)
 {
     display_disable_highlight();
-    if(access_control.current_option == PIN5||access_control.current_option == PIN4) hide_digit(access_control.digits_introduced);
     access_control.digits_introduced++;
     
     if((access_control.current_option == PIN5 && access_control.digits_introduced == 5) ||
@@ -752,6 +751,7 @@ STATE_DEFINE(NextDigit, NoEventData)
 	else
 	{
 		// Entra aca si todavia no se terminaron de ingresar los digitos necesarios.
+        if(access_control.current_option == PIN5||access_control.current_option == PIN4) hide_digit(access_control.index);
 		access_control.index++;
 		if(access_control.index-display_get_index()>3) 
 			display_rotate_right();
@@ -765,7 +765,8 @@ STATE_DEFINE(PreviousDigit, NoEventData)
     if(access_control.index != 0){
 		if(access_control.index-display_get_index()==0) 
 			display_rotate_left();
-		access_control.index --;
+		if(access_control.current_option == PIN5||access_control.current_option == PIN4) hide_digit(access_control.index);
+        access_control.index --;
 	}
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
