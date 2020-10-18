@@ -217,8 +217,10 @@ void display_set_string(char * string){
 	display_clear_buffer();
 	uint8_t index;
 	for(index=0; index<EXT_BUF_LEN; index++){
-		if(string[index]=='\0') load_buffer(DISP_END, index);
-		else load_buffer(get_7_segments_char(string[index]), index);
+		if(string[index]=='\0') 
+			load_buffer(DISP_END, index);
+		else 
+			load_buffer(get_7_segments_char(string[index]), index);
 	}
 	return;
 }
