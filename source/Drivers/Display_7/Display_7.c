@@ -361,8 +361,9 @@ void display_stop_rotation(){
  * **************************************************************/
 	if(timerRunning(display.rotation_timer)) 
 	{
+		display.ext_index=0;
 		timerStop(display.rotation_timer);
-		if(display.queued_return) timerStart(display.temp_timer, 1000, TIM_MODE_SINGLESHOT, return_from_temp);
+		if(display.queued_return) return_from_temp();
 	}
 }
 
