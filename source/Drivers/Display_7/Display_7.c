@@ -84,7 +84,7 @@
 #define DISP_x		0x76
 #define DISP_y		0x6E
 #define DISP_z		0x5B
-#define DISP_bar	0x80
+#define DISP_bar	0x40
 #define DISP_END	0xFF
 
 
