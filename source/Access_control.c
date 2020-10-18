@@ -734,6 +734,7 @@ STATE_DEFINE(ChangeDigitDisplayB, NoEventData)
 STATE_DEFINE(NextDigit, NoEventData)
 {
     display_disable_highlight();
+    hide_digit(access_control.digits_introduced);
     access_control.digits_introduced++;
     
     if((access_control.current_option == PIN5 && access_control.digits_introduced == 5) ||
@@ -741,7 +742,6 @@ STATE_DEFINE(NextDigit, NoEventData)
        (access_control.current_option == ADMIN_PIN && (access_control.digits_introduced == 5 ||      
         access_control.digits_introduced == 5)))
     {
-        hide_digit(access_control.index);
         SM_InternalEvent(ST_CHECK_PIN, NULL); 
     }
     else if((access_control.current_option == ID || access_control.current_option == NEW_ID || access_control.current_option == DELETE_ID) &&
