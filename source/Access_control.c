@@ -763,8 +763,8 @@ STATE_DEFINE(PreviousDigit, NoEventData)
 {
 	display_disable_highlight();
     if(access_control.index != 0){
-		//if(access_control.index-display_get_index()==0) 
-		//	display_rotate_left();
+		if(access_control.index-display_get_index()==0) 
+			display_rotate_left();
 		access_control.index --;
 	}
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
