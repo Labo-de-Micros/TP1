@@ -449,7 +449,7 @@ EVENT_DEFINE(Card_Reader, NoEventData)
 
 STATE_DEFINE(Admin, NoEventData)
 {
-    char message[]="Admin";
+    char message[]=" Admin ";
 	display_set_string(message);
     access_control.current_option = ADMIN_PIN;
 
@@ -576,13 +576,13 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
 
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
-    display_set_string("Id NO EXISTS");
+    display_set_string(" Id NO EXISTS ");
     //SM_InternalEvent(ST_ACCESS_REQUEST, NULL); 
 }
 
 STATE_DEFINE(PinRequest, NoEventData)
 {
-    display_set_string("enter PIN");
+    display_set_string(" enter PIN ");
     //veo el largo del pin segun el ID
 
     switch (access_control.current_option)
@@ -641,7 +641,7 @@ STATE_DEFINE(CheckPin, NoEventData)
 
 STATE_DEFINE(AccessGranted, NoEventData)
 {
-    display_set_string("access granted");
+    display_set_string(" access granted ");
     // TODO
     //Muestro ACCESS GRANTED
     //Prendo LED 
@@ -654,7 +654,7 @@ STATE_DEFINE(InvalidPin, NoEventData)
 {
     //Muestro INCORRECT PIN
     
-	display_set_string("incorrect PIN");
+	display_set_string(" incorrect PIN ");
 
     //Retardo de unos segundos
 
@@ -678,7 +678,7 @@ STATE_DEFINE(InvalidPin, NoEventData)
 STATE_DEFINE(BlockId, NoEventData)
 {
     //Muestro ID BLOCKED
-	display_set_string("Id Ban");
+	display_set_string(" Id Ban ");
     access_control.IDsList[access_control.current_ID_index].blocked_status=true;
     
     //PONER UN TIMEOUT
@@ -779,7 +779,7 @@ STATE_DEFINE(PreviousDigit, NoEventData)
     
 STATE_DEFINE(ChangeBrightness, NoEventData)
 {
-	display_set_string("Brightness");
+	display_set_string(" Brightness ");
 }
 
 STATE_DEFINE(SetBrightness, NoEventData)
@@ -808,7 +808,7 @@ STATE_DEFINE(HigherBrightness, NoEventData)
 
 STATE_DEFINE(AddID, NoEventData)
 {
-	display_set_string("Add Id");
+	display_set_string(" Add Id ");
     access_control.current_option = NEW_ID;
 
     //Si no hay mas lugar para agregar IDs genero un evento interno para que nunca llegue este menu
@@ -819,12 +819,12 @@ STATE_DEFINE(AddID, NoEventData)
 
 STATE_DEFINE(AlreadyExists, NoEventData)
 {
-    display_set_string("Already exists");
+    display_set_string(" Already exists ");
 }
 
 STATE_DEFINE(IDAddition, NoEventData)
 {
-    display_set_string("Id added");
+    display_set_string(" Id added ");
     access_control.total_of_IDs++;
     access_control.IDsList[access_control.current_ID_index].blocked_status = false; //Si el ID esta bloquedo es TRUE
     access_control.IDsList[access_control.current_ID_index].valid = true;
@@ -839,13 +839,13 @@ STATE_DEFINE(IDAddition, NoEventData)
 
 STATE_DEFINE(EliminateID, NoEventData)
 {
-	display_set_string("Delete Id");
+	display_set_string(" Delete Id ");
     access_control.current_option = DELETE_ID;
 }
 
 STATE_DEFINE(Confirmation, NoEventData)
 {
-    display_set_string("Confirm ?");
+    display_set_string(" Confirm ? ");
      
 }
 
@@ -854,7 +854,7 @@ STATE_DEFINE(IDElimination, NoEventData)
     int ID_index = access_control.current_ID_index;
     access_control.IDsList[ID_index].valid = false;
 
-	display_set_string("Id deleted");
+	display_set_string(" Id deleted ");
    
 
 }
