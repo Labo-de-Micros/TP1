@@ -242,8 +242,6 @@ card_t card_get_data(void){
  * @return: A struct card_t containing the information read in the card.
  ****************************************************************/
 	clear_card();
-	if(!card_read)
-		return card;
 	uint8_t ind = get_pan_number();
 	ind = get_exp_date(ind);
 	ind = get_service_code(ind);

@@ -202,6 +202,7 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
 
+
 // Encoder doble click external event
 EVENT_DEFINE(Encoder_Double_Click, NoEventData)
 {
@@ -476,49 +477,49 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
     //Primero se chequea si el numero de la tarjeta coincide con un ID
     // Get pointer to the instance data and update id
     card_t card_data = card_get_data();
-    bool id_exists=false;
+    bool id_exists = false;
     
     uint16_t index;
-    for(index=0; index<access_control.total_of_IDs; index++)
-        if(access_control.IDsList[index].card_id==card_data.pan){
-            id_exists=true;
+    for(index=0; index<access_control.total_of_IDs; index++){
+        if(access_control.IDsList[index].card_id == card_data.pan){
+            id_exists = true;
             access_control.current_ID_index=index;
             break;
         }
+	}
 
     //Dependiendo si se quiere eliminar el id, agregar o acceder se hace lo siguiente;
-    switch (access_control.current_option)
-    {
-    case DELETE_ID:
-        if(id_exists) SM_InternalEvent(ST_CONFIRMATION, NULL); 
-        else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
-        break;
-    
-    case NEW_ID:
-        if(id_exists) 
-            SM_InternalEvent(ST_ALREADY_EXISTS, NULL); 
-        else
-        {   
-            //Se guarda el Id en el usuario nuevo
-            access_control.IDsList[access_control.total_of_IDs+1].card_id=card_data.pan;
-            SM_InternalEvent(ST_PIN_REQUEST, NULL);  
-        }
-        
-        break;
+    switch (access_control.current_option){
+		case DELETE_ID:
+			if(id_exists) 
+				SM_InternalEvent(ST_CONFIRMATION, NULL); 
+			else 
+				SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
+			break;
 
-    case ID: default:
-        if(id_exists)
-        {
-            if(access_control.IDsList[index].blocked_status) 
-                SM_InternalEvent(ST_BLOCK_ID, NULL); 
-            else 
-            {
-                access_control.IDsList[index].PIN_attempts=0;
-                SM_InternalEvent(ST_PIN_REQUEST, NULL); 
-            }
-        }
-        else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);    
-        break;
+		case NEW_ID:
+			if(id_exists) 
+				SM_InternalEvent(ST_ALREADY_EXISTS, NULL); 
+			else{   
+				//Se guarda el Id en el usuario nuevo
+				access_control.IDsList[access_control.total_of_IDs+1].card_id=card_data.pan;
+				SM_InternalEvent(ST_PIN_REQUEST, NULL);  
+			}
+			
+			break;
+
+		case ID: default:
+			if(id_exists){
+				if(access_control.IDsList[index].blocked_status) 
+					SM_InternalEvent(ST_BLOCK_ID, NULL); 
+				else 
+				{
+					access_control.IDsList[index].PIN_attempts=0;
+					SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+				}
+			}
+			else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);    
+			break;
     }  
 }
 
@@ -685,7 +686,11 @@ STATE_DEFINE(BlockId, NoEventData)
 }
 
 
-//INGRESO DE PALABRA
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			    	 Ingreso de palabras	 		   	        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 STATE_DEFINE(EnterDigitsRequest, NoEventData)
 {
@@ -701,8 +706,6 @@ STATE_DEFINE(EnterDigitsRequest, NoEventData)
 
 STATE_DEFINE(EnterDigitDisplay, NoEventData)
 {
-   //AYUDOASDADSADS
-
    display_enable_hard_highlight(access_control.index);
    display_set_single_number(access_control.word_introduced[access_control.index], access_control.index);
    
@@ -731,7 +734,6 @@ STATE_DEFINE(ChangeDigitDisplayB, NoEventData)
 STATE_DEFINE(NextDigit, NoEventData)
 {
     display_disable_highlight();
-	//access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
     access_control.digits_introduced++;
     
     if((access_control.current_option == PIN5 && access_control.digits_introduced == 5) ||
@@ -742,33 +744,38 @@ STATE_DEFINE(NextDigit, NoEventData)
         //hide_digit(0);
         SM_InternalEvent(ST_CHECK_PIN, NULL); 
     }
-    else
-    {
-        if((access_control.current_option == ID || access_control.current_option == NEW_ID || access_control.current_option == DELETE_ID) &&
-        access_control.digits_introduced == 8)
-            SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL);   
-
-        else
-        {
-            access_control.index++;
-			if(access_control.index-display_get_index()>3) display_rotate_right();
-            SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);  
-        }     
-    }
+    else if((access_control.current_option == ID || access_control.current_option == NEW_ID || access_control.current_option == DELETE_ID) &&
+        access_control.digits_introduced == 8){
+        
+		SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL);
+	}
+	else
+	{
+		// Entra aca si todavia no se terminaron de ingresar los digitos necesarios.
+		access_control.index++;
+		if(access_control.index-display_get_index()>3) 
+			display_rotate_right();
+		SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);  
+	}     
 }
 
 STATE_DEFINE(PreviousDigit, NoEventData)
 {
 	display_disable_highlight();
     if(access_control.index != 0){
-		if(access_control.index-display_get_index()==0) display_rotate_left();
+		//if(access_control.index-display_get_index()==0) 
+		//	display_rotate_left();
 		access_control.index --;
 	}
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
 
 
-//VERDE
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			    			 VERDE   				 	        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
     
 STATE_DEFINE(ChangeBrightness, NoEventData)
 {
@@ -793,7 +800,11 @@ STATE_DEFINE(HigherBrightness, NoEventData)
     SM_InternalEvent(ST_SET_BRIGHTNESS, NULL); 
 }
 
-//VIOLETA
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			    			VIOLETA				    	        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 STATE_DEFINE(AddID, NoEventData)
 {
@@ -820,7 +831,11 @@ STATE_DEFINE(IDAddition, NoEventData)
 
 }
 
-//NARANJA
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			    			 NARANJA    				        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 STATE_DEFINE(EliminateID, NoEventData)
 {
@@ -834,7 +849,6 @@ STATE_DEFINE(Confirmation, NoEventData)
      
 }
 
-
 STATE_DEFINE(IDElimination, NoEventData)
 {
     int ID_index = access_control.current_ID_index;
@@ -845,7 +859,11 @@ STATE_DEFINE(IDElimination, NoEventData)
 
 }
 
-
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			     			FUNCIONES 				   	        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 // init function
 
 void access_control_init(){
@@ -864,7 +882,6 @@ void access_control_init(){
     access_control.total_of_IDs=1;
     access_control.digits_introduced=0;
 }
-
 
 // auxiliary functions
 
