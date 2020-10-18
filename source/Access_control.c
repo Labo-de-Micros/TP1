@@ -734,7 +734,7 @@ STATE_DEFINE(ChangeDigitDisplayB, NoEventData)
 STATE_DEFINE(NextDigit, NoEventData)
 {
     display_disable_highlight();
-    hide_digit(access_control.digits_introduced);
+    if(access_control.current_option == PIN5||access_control.current_option == PIN4) hide_digit(access_control.digits_introduced);
     access_control.digits_introduced++;
     
     if((access_control.current_option == PIN5 && access_control.digits_introduced == 5) ||
