@@ -176,8 +176,8 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_BLOCK_ID,
         
         //INGRESO DE PALABRA
-        TRANSITION_MAP_ENTRY(ST_NEXT_DIGIT)                     //ST_ENTER_DIGITS_REQUEST,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGIT_DISPLAY,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGITS_REQUEST,
+        TRANSITION_MAP_ENTRY(ST_NEXT_DIGIT)                     //ST_ENTER_DIGIT_DISPLAY,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_A,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_B,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
@@ -448,7 +448,7 @@ EVENT_DEFINE(Card_Reader, NoEventData)
 
 STATE_DEFINE(Admin, NoEventData)
 {
-    char message[]="Admin   EntEr  PIN";
+    char message[]="Admin";
 	display_set_string(message);
     access_control.current_option = ADMIN_PIN;
 
@@ -463,7 +463,7 @@ STATE_DEFINE(AccessRequest, NoEventData)
 
 STATE_DEFINE(IdEnteringByCard, NoEventData)
 {
-    SM_InternalEvent(ST_CHECK_ID, NULL);
+    SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_CARD, NULL);
 }
 
 STATE_DEFINE(IdEnteringByEncoder, NoEventData)
@@ -500,7 +500,7 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
         else
         {   
             //Se guarda el Id en el usuario nuevo
-            access_control.IDsList[access_control.total_of_IDs+1].card_id==card_data.pan;
+            access_control.IDsList[access_control.total_of_IDs+1].card_id=card_data.pan;
             SM_InternalEvent(ST_PIN_REQUEST, NULL);  
         }
         
@@ -611,7 +611,7 @@ STATE_DEFINE(CheckPin, NoEventData)
 {
     //PIN es correcto segun el ID ?
     uint32_t pin = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.current_ID_index].PIN_length);
-
+    uint32_t new_pin;
     switch (access_control.current_option)
     {
     case ADMIN_PIN:
@@ -623,8 +623,8 @@ STATE_DEFINE(CheckPin, NoEventData)
     
     case NEW_ID_PIN:
             //VER ESTP PORQUE SOLO PUEDO PONER UN PIN DE 4 CUANDO AGRAGO UN ID
-            uint32_t entered_pin = array_to_int(access_control.word_introduced,4);
-            access_control.IDsList[access_control.total_of_IDs+1].pin = entered_pin;
+    		new_pin = array_to_int(access_control.word_introduced,4);
+            access_control.IDsList[access_control.total_of_IDs+1].PIN = new_pin;
             SM_InternalEvent(ST_ID_ADDITION, NULL);
             break;
 
@@ -653,7 +653,7 @@ STATE_DEFINE(InvalidPin, NoEventData)
 {
     //Muestro INCORRECT PIN
     
-	display_set_string(incorrect PIN);
+	display_set_string("incorrect PIN");
 
     //Retardo de unos segundos
 
@@ -691,7 +691,6 @@ STATE_DEFINE(EnterDigitsRequest, NoEventData)
 {
     access_control.index = 0;
     access_control.digits_introduced = 0;
-
     int count;
     for(count = 0; count < 9; count ++)
         access_control.word_introduced[count] = 0;    
@@ -703,34 +702,36 @@ STATE_DEFINE(EnterDigitsRequest, NoEventData)
 STATE_DEFINE(EnterDigitDisplay, NoEventData)
 {
    //AYUDOASDADSADS
-   display_enable_hard_highlight(0);
-   display_set_single_number(access_control.word_introduced[index], 0);
-   display_desenable_hard_highlight(0);
+
+   display_enable_hard_highlight(access_control.index);
+   display_set_single_number(access_control.word_introduced[access_control.index], access_control.index);
+   
 }
 
 STATE_DEFINE(ChangeDigitDisplayA, NoEventData)
 {
-    if(access_control.word_introduced[index] == MIN_DIGIT_DISPLAY)
-       access_control.word_introduced[index] = MAX_DIGIT_DISPLAY; 
+    if(access_control.word_introduced[access_control.index] == MIN_DIGIT_DISPLAY)
+       access_control.word_introduced[access_control.index] = MAX_DIGIT_DISPLAY; 
     else
-       access_control.word_introduced[index]--; 
+       access_control.word_introduced[access_control.index]--; 
 
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
 
 STATE_DEFINE(ChangeDigitDisplayB, NoEventData)
 {
-    if(access_control.word_introduced[index] == MAX_DIGIT_DISPLAY)
-       access_control.word_introduced[index] = MIN_DIGIT_DISPLAY; 
+    if(access_control.word_introduced[access_control.index] == MAX_DIGIT_DISPLAY)
+       access_control.word_introduced[access_control.index] = MIN_DIGIT_DISPLAY; 
     else
-       access_control.word_introduced[index]++; 
+       access_control.word_introduced[access_control.index]++; 
 
-    SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY_1, NULL); 
+    SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
 
 STATE_DEFINE(NextDigit, NoEventData)
 {
-    access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
+    display_disable_highlight();
+	//access_control.word_introduced[access_control.digits_introduced] = access_control.current_num;
     access_control.digits_introduced++;
     
     if((access_control.current_option == PIN5 && access_control.digits_introduced == 5) ||
@@ -738,7 +739,7 @@ STATE_DEFINE(NextDigit, NoEventData)
        (access_control.current_option == ADMIN_PIN && (access_control.digits_introduced == 5 ||      
         access_control.digits_introduced == 5)))
     {
-        hide_digit(0);
+        //hide_digit(0);
         SM_InternalEvent(ST_CHECK_PIN, NULL); 
     }
     else
@@ -749,7 +750,8 @@ STATE_DEFINE(NextDigit, NoEventData)
 
         else
         {
-            access_control.index ++;
+            access_control.index++;
+			if(access_control.index-display_get_index()>3) display_rotate_right();
             SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);  
         }     
     }
@@ -757,7 +759,11 @@ STATE_DEFINE(NextDigit, NoEventData)
 
 STATE_DEFINE(PreviousDigit, NoEventData)
 {
-    if(!access_control.index == 0) access_control.index --;
+	display_disable_highlight();
+    if(access_control.index != 0){
+		if(access_control.index-display_get_index()==0) display_rotate_left();
+		access_control.index --;
+	}
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
 
@@ -809,8 +815,8 @@ STATE_DEFINE(IDAddition, NoEventData)
 {
     display_set_string("Id added");
     access_control.total_of_IDs++;
-    access_control.blocked_status = false; //Si el ID esta bloquedo es TRUE
-    access_control.valid = true;
+    access_control.IDsList[access_control.current_ID_index].blocked_status = false; //Si el ID esta bloquedo es TRUE
+    access_control.IDsList[access_control.current_ID_index].valid = true;
 
 }
 
@@ -819,7 +825,7 @@ STATE_DEFINE(IDAddition, NoEventData)
 STATE_DEFINE(EliminateID, NoEventData)
 {
 	display_set_string("Delete Id");
-    access_control.word_introduced = DELETE_ID;
+    access_control.current_option = DELETE_ID;
 }
 
 STATE_DEFINE(Confirmation, NoEventData)
@@ -852,7 +858,7 @@ void access_control_init(){
     sample_id.PIN_attempts=0;
     sample_id.PIN_length=4;
 
-    access_control.current_num=0;
+    //access_control.current_num=0;
     access_control.current_ID_index=0;
     access_control.IDsList[0]=sample_id;
     access_control.total_of_IDs=1;

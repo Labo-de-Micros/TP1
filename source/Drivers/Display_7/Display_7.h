@@ -132,6 +132,10 @@ void display_rotate_left();
 
 void display_rotate_right();
 
+void display_set_index(uint8_t index);
+
+uint8_t display_get_index();
+
 uint8_t display_get_brightness(void);
 
 #endif

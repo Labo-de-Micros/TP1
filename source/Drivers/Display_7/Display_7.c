@@ -377,7 +377,17 @@ void display_rotate_right(){
  * @brief: Shifts digits on the display to the right.
  * **************************************************************/
 	display_stop_rotation();
-	rotate_callback();
+	if(!(display.ext_index>EXT_BUF_LEN-DIGITS || display.buf[display.ext_index+DIGITS-1]==DISP_END)) 
+		display.ext_index++;
+}
+
+void display_set_index(uint8_t index){
+	if(!(index>EXT_BUF_LEN-DIGITS || display.buf[index+DIGITS-1]==DISP_END || index<0))
+		display.ext_index=index;
+}
+
+uint8_t display_get_index(){
+	return display.ext_index;
 }
 
 uint8_t display_get_brightness(void){

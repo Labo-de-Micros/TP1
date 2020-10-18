@@ -9,6 +9,14 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include source/StateMachine/subdir.mk
+-include source/Drivers/Timer/subdir.mk
+-include source/Drivers/SysTick/subdir.mk
+-include source/Drivers/PWM/subdir.mk
+-include source/Drivers/GPIO/subdir.mk
+-include source/Drivers/Encoder/subdir.mk
+-include source/Drivers/Display_7/subdir.mk
+-include source/Drivers/Card_reader/subdir.mk
+-include source/Drivers/Button/subdir.mk
 -include source/subdir.mk
 -include SDK/startup/subdir.mk
 -include SDK/CMSIS/subdir.mk
