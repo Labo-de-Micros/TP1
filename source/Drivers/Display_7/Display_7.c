@@ -797,7 +797,7 @@ void rotate_callback(){
 	if(display.ext_index>EXT_BUF_LEN-DIGITS || display.buf[display.ext_index+3]==DISP_END) 
 	{
 		display.ext_index=0;
-		if(timerRunning(display.rotation_timer)) timerStop(display.rotation_timer);
+		//if(timerRunning(display.rotation_timer)) timerStop(display.rotation_timer);
 		if(display.queued_return) timerStart(display.temp_timer, 1000, TIM_MODE_SINGLESHOT, return_from_temp);
 	}
 }
