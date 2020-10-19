@@ -1,18 +1,83 @@
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//	@file		Access_control.h							    //
+//	@brief		Acces Control application						//
+//	@author		Grupo	4										//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//							Headers								//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
 #include "Access_control.h"
 #include "StateMachine/State_machine.h"
 #include <stdio.h>
-
 #include "./Drivers/Display_7/Display_7.h"
 #include "./Drivers/Encoder/encoder.h"
 #include "./Drivers/Card_reader/Card_reader.h"
 
-uint64_t array_to_int(uint8_t* array, uint8_t length);
-void error_msg();
-void done_msg();
-void hide_digit(uint8_t digit);
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 			//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
+// Phrases
+#define ACCESS_REQUEST_PH   "    Access Request    "
+#define ADMIN_PH            "Admin    "
+#define ID_NO_EXISTS_PH     "Id NO EXISTS    "
+#define ENTER_PIN_PH        "Enter PIN    "
+#define ACCESS_GRANTED_PH	"Access granted    "
+#define INCORRECT_PIN_PH	"Incorrect PIN    "
+#define ID_BAN_PH			"Id Ban    "
+#define BRIGHTNESS_PH		"Brightness    "
+#define ADD_ID_PH			"Add Id    "
+#define ALREADY_EXISTS_PH	"Already Exists    "
+#define ID_ADDED_PH			"Id Added    "
+#define DELETE_ID_PH		"Delete Id    "
+#define CONFIRM_PH			"Confirm ?    "
+#define ID_DELETED_PH		"Id deleted    "
 
-static access_control_t access_control;
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+typedef enum{ 
+	NEW_ID,
+	ID,
+    DELETE_ID,
+	PIN4,
+    PIN5,
+    ADMIN_PIN,
+    NEW_ID_PIN
+}word_option_t;
+
+typedef struct{
+    uint64_t card_id;
+    uint32_t number; 			//Numero de ID (8 digitos)
+    uint32_t PIN; 				//Contraseña del ID (4 o 5 digitos)
+    uint8_t PIN_length;
+    bool blocked_status; 		//Si el ID esta bloquedo es TRUE
+    uint8_t PIN_attempts;
+    bool valid;
+}ID_data_t;
+
+typedef struct{
+    uint16_t current_ID_index; 	// index ID actual 0,1,2,3 
+    uint16_t total_of_IDs; 		//Cantidad de ids en la lista de IDS 
+    							//Manejo de introduccion de palabra
+    uint8_t word_introduced[8]; //Palabra de 4,5 o 8 digitos
+    uint8_t index; 
+    uint8_t digits_introduced; 	//Cantidad de numeros introducidos 
+    word_option_t current_option;
+    ID_data_t IDsList[MAX_IDS]; 
+}access_control_t;
 
 enum States
 {   
@@ -57,9 +122,76 @@ enum States
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
+//						STATIC VARIABLES						//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+static access_control_t access_control;
+
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+//FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS W FILE LEVEL SCOPE//
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+static uint64_t array_to_int(uint8_t* array, uint8_t length);
+/*****************************************************************
+ * @brief: It converts the digits from an array into an uint64_t 
+ * 			number
+ * @param array: The array containing the number.
+ * @param length: Lenght of the array sent so that the array goes from
+ * 					array[0] to array[lenght-1].
+ * @example: If the input array is array = [1,2,3,4,5], then
+ * 				lenght = 5
+ * 				answer = (uint64_t) 12345
+ * **************************************************************/
+static void hide_digit(uint8_t digit);
+/*****************************************************************
+ * @brief: It hides a digit from the display in the index = digit
+ * @param digit: index of the display to be hidden.
+ * **************************************************************/
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//					FUNCTION DEFINITIONS						//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+void access_control_init(){
+/*****************************************************************
+ * @brief: Initialization function for the Access control application
+ *          It initializes the internal variables and the State machine
+ *          in the corresponding state.
+ * **************************************************************/
+    ID_data_t sample_id;
+    sample_id.blocked_status=false;
+    sample_id.valid=true;
+    sample_id.number=0;
+    sample_id.card_id=6391300355831573;
+    sample_id.PIN=1234;
+    sample_id.PIN_attempts=0;
+    sample_id.PIN_length=4;
+    //access_control.current_num=0;
+    access_control.current_ID_index=0;
+    access_control.IDsList[0]=sample_id;
+    access_control.total_of_IDs=1;
+    access_control.digits_introduced=0;
+}
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//					LOCAL FUNCTION DEFINITIONS					//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 //			     STATE MACHINE FUNCTION PROTOTYPES    	        //
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
+
+/***********************************************************************************************************************/
 
 STATE_DECLARE(Admin, NoEventData)
 //AZUL
@@ -449,7 +581,7 @@ EVENT_DEFINE(Card_Reader, NoEventData)
 
 STATE_DEFINE(Admin, NoEventData)
 {
-    char message[]=" Admin ";
+    char message[]= ADMIN_PH;
 	display_set_string(message);
     access_control.current_option = ADMIN_PIN;
 
@@ -458,7 +590,7 @@ STATE_DEFINE(Admin, NoEventData)
 STATE_DEFINE(AccessRequest, NoEventData)
 {
     access_control.current_option = ID;
-    char message[]="    Access request     ";
+    char message[]= ACCESS_REQUEST_PH;
 	display_set_string(message);
 }
 
@@ -576,13 +708,13 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
 
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
-    display_set_string(" Id NO EXISTS ");
+    display_set_string(ID_NO_EXISTS_PH);
     //SM_InternalEvent(ST_ACCESS_REQUEST, NULL); 
 }
 
 STATE_DEFINE(PinRequest, NoEventData)
 {
-    display_set_string(" enter PIN ");
+    display_set_string(ENTER_PIN_PH);
     //veo el largo del pin segun el ID
 
     switch (access_control.current_option)
@@ -641,7 +773,7 @@ STATE_DEFINE(CheckPin, NoEventData)
 
 STATE_DEFINE(AccessGranted, NoEventData)
 {
-    display_set_string(" access granted ");
+    display_set_string(ACCESS_GRANTED_PH);
     // TODO
     //Muestro ACCESS GRANTED
     //Prendo LED 
@@ -654,7 +786,7 @@ STATE_DEFINE(InvalidPin, NoEventData)
 {
     //Muestro INCORRECT PIN
     
-	display_set_string(" incorrect PIN ");
+	display_set_string(INCORRECT_PIN_PH);
 
     //Retardo de unos segundos
 
@@ -678,7 +810,7 @@ STATE_DEFINE(InvalidPin, NoEventData)
 STATE_DEFINE(BlockId, NoEventData)
 {
     //Muestro ID BLOCKED
-	display_set_string(" Id Ban ");
+	display_set_string(ID_BAN_PH);
     access_control.IDsList[access_control.current_ID_index].blocked_status=true;
     
     //PONER UN TIMEOUT
@@ -786,7 +918,7 @@ STATE_DEFINE(PreviousDigit, NoEventData)
     
 STATE_DEFINE(ChangeBrightness, NoEventData)
 {
-	display_set_string(" Brightness ");
+	display_set_string(BRIGHTNESS_PH);
 }
 
 STATE_DEFINE(SetBrightness, NoEventData)
@@ -815,7 +947,7 @@ STATE_DEFINE(HigherBrightness, NoEventData)
 
 STATE_DEFINE(AddID, NoEventData)
 {
-	display_set_string(" Add Id ");
+	display_set_string(ADD_ID_PH);
     access_control.current_option = NEW_ID;
 
     //Si no hay mas lugar para agregar IDs genero un evento interno para que nunca llegue este menu
@@ -826,12 +958,12 @@ STATE_DEFINE(AddID, NoEventData)
 
 STATE_DEFINE(AlreadyExists, NoEventData)
 {
-    display_set_string(" Already exists ");
+    display_set_string(ALREADY_EXISTS_PH);
 }
 
 STATE_DEFINE(IDAddition, NoEventData)
 {
-    display_set_string(" Id added ");
+    display_set_string(ID_ADDED_PH);
     access_control.IDsList[access_control.total_of_IDs].blocked_status = false; //Si el ID esta bloquedo es TRUE
     access_control.IDsList[access_control.total_of_IDs].valid = true;
 	access_control.total_of_IDs++;
@@ -846,13 +978,13 @@ STATE_DEFINE(IDAddition, NoEventData)
 
 STATE_DEFINE(EliminateID, NoEventData)
 {
-	display_set_string(" Delete Id ");
+	display_set_string(DELETE_ID_PH);
     access_control.current_option = DELETE_ID;
 }
 
 STATE_DEFINE(Confirmation, NoEventData)
 {
-    display_set_string(" Confirm ? ");
+    display_set_string(CONFIRM_PH);
      
 }
 
@@ -861,38 +993,24 @@ STATE_DEFINE(IDElimination, NoEventData)
     int ID_index = access_control.current_ID_index;
     access_control.IDsList[ID_index].valid = false;
 
-	display_set_string(" Id deleted ");
+	display_set_string("Id deleted    ");
    
 
 }
 
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-//			     			FUNCIONES 				   	        //
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-// init function
+/***********************************************************************************************************************/
 
-void access_control_init(){
-    ID_data_t sample_id;
-    sample_id.blocked_status=false;
-    sample_id.valid=true;
-    sample_id.number=12345678;
-    sample_id.card_id=6391300355831573;
-    sample_id.PIN=1234;
-    sample_id.PIN_attempts=0;
-    sample_id.PIN_length=4;
-
-    //access_control.current_num=0;
-    access_control.current_ID_index=0;
-    access_control.IDsList[0]=sample_id;
-    access_control.total_of_IDs=1;
-    access_control.digits_introduced=0;
-}
-
-// auxiliary functions
-
-uint64_t array_to_int(uint8_t* array, uint8_t length){
+static uint64_t array_to_int(uint8_t* array, uint8_t length){
+/*****************************************************************
+ * @brief: It converts the digits from an array into an uint64_t 
+ * 			number
+ * @param array: The array containing the number.
+ * @param length: Lenght of the array sent so that the array goes from
+ * 					array[0] to array[lenght-1].
+ * @example: If the input array is array = [1,2,3,4,5], then
+ * 				lenght = 5
+ * 				answer = (uint64_t) 12345
+ * **************************************************************/
     uint8_t index;
     uint64_t return_value=0;
     for(index=0; index<length; index++){
@@ -902,7 +1020,11 @@ uint64_t array_to_int(uint8_t* array, uint8_t length){
     return return_value;
 }
 
-void hide_digit(uint8_t digit){
+static void hide_digit(uint8_t digit){
+/*****************************************************************
+ * @brief: It hides a digit from the display in the index = digit
+ * @param digit: index of the display to be hidden.
+ * **************************************************************/
     display_set_single_char('-', digit);
 }
 

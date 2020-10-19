@@ -35,13 +35,13 @@ static void reset_buffer(void);
 static void run_state_machine(void);
 
 
-access_control_t hola;
+//access_control_t hola;
 static events_t evs[MAX_EVENTS];
 static uint32_t index_push = 0;
 static uint32_t index_pull = 0;
 
 
-SM_DEFINE(ACC, &hola)
+SM_DEFINE(ACC, NULL)
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
