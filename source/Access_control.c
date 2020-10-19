@@ -48,6 +48,7 @@ enum States
     ST_ADD_ID,
     ST_ALREADY_EXISTS,
     ST_ID_ADDITION,
+    ST_RECOUNT_NEW_ID_PIN,
 
     //NARANJA
     ST_ELIMINATE_ID,
@@ -92,6 +93,9 @@ STATE_DECLARE(HigherBrightness, NoEventData)
 STATE_DECLARE(AddID, NoEventData)
 STATE_DECLARE(AlreadyExists, NoEventData)
 STATE_DECLARE(IDAddition, NoEventData)
+STATE_DECLARE(RecountNewIdPIN, NoEventData)
+
+
 //NARANJA
 STATE_DECLARE(EliminateID, NoEventData)
 STATE_DECLARE(Confirmation, NoEventData)
@@ -139,6 +143,7 @@ BEGIN_STATE_MAP(AccessControl)
     STATE_MAP_ENTRY(ST_AddID)
     STATE_MAP_ENTRY(ST_AlreadyExists)
     STATE_MAP_ENTRY(ST_IDAddition)
+    STATE_MAP_ENTRY(ST_RecountNewIdPIN)
 
     //NARANJA
     STATE_MAP_ENTRY(ST_EliminateID)
@@ -161,7 +166,7 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
 
     BEGIN_TRANSITION_MAP                                        // - Current State -
     
-        TRANSITION_MAP_ENTRY(ST_ENTER_DIGITS_REQUEST)           //ST_ADMIN,
+        TRANSITION_MAP_ENTRY(ST_PIN_REQUEST)                    //ST_ADMIN,
         //AZUL
         TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)         //ST_ACCESS_REQUEST,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_CARD,
@@ -193,6 +198,7 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)         //ST_ADD_ID,
         TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(ST_ENTER_DIGIT_DISPLAY)            //ST_RECOUNT_NEW_ID_PIN
 
         //NARANJA
         TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)         //ST_ELIMINATE_ID,
@@ -242,6 +248,7 @@ EVENT_DEFINE(Encoder_Double_Click, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ADD_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(ST_CHECK_PIN)                      //ST_RECOUNT_NEW_ID_PIN
 
         //NARANJA
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ELIMINATE_ID,
@@ -290,6 +297,7 @@ EVENT_DEFINE(Encoder_CW, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_ADD_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_RECOUNT_NEW_ID_PIN
 
         //NARANJA   
         TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_ELIMINATE_ID,
@@ -337,6 +345,7 @@ EVENT_DEFINE(Encoder_CCW, NoEventData)
         TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_ADD_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_RECOUNT_NEW_ID_PIN
 
         //NARANJA               
         TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_ELIMINATE_ID,
@@ -384,6 +393,7 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ADD_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_RECOUNT_NEW_ID_PIN
 
         //NARANJA                   
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ELIMINATE_ID,
@@ -430,6 +440,7 @@ EVENT_DEFINE(Card_Reader, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)            //ST_ADD_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_RECOUNT_NEW_ID_PIN
 
         //NARANJA                   
         TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)            //ST_ELIMINATE_ID,
@@ -481,7 +492,7 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
     
     uint16_t index;
     for(index=0; index<access_control.total_of_IDs; index++){
-        if(access_control.IDsList[index].card_id == card_data.pan){
+        if(access_control.IDsList[index].card_id == card_data.pan && access_control.IDsList[index].valid==true){
             id_exists = true;
             access_control.current_ID_index=index;
             break;
@@ -527,16 +538,16 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
 {
     
     uint32_t entered_id = array_to_int(access_control.word_introduced,ID_LENGTH);
-
     bool id_exists=false;
-    
     uint16_t index;
+
     for(index=0; index<access_control.total_of_IDs; index++)
-        if(access_control.IDsList[index].number==entered_id){
+        if(access_control.IDsList[index].number==entered_id && access_control.IDsList[index].valid==true){
             id_exists=true;
             access_control.current_ID_index=index;
             break;
         }
+
     //Dependiendo si se quiere eliminar el id, agregar o acceder se hace lo siguiente;
     switch (access_control.current_option)
     {
@@ -587,11 +598,8 @@ STATE_DEFINE(PinRequest, NoEventData)
 
     switch (access_control.current_option)
     {
-        case NEW_ID:
-            access_control.current_option = NEW_ID_PIN;
-            break;
 
-        case ID: default:
+        case ID:  default:
             switch(access_control.IDsList[access_control.current_ID_index].PIN_length){
                 case 4 :
                     access_control.current_option = PIN4;
@@ -603,6 +611,15 @@ STATE_DEFINE(PinRequest, NoEventData)
                 
                     break;
             }
+
+        case NEW_ID:
+            access_control.current_option = NEW_ID_PIN;
+            break;
+
+        case ADMIN_PIN:
+            access_control.current_option = ADMIN_PIN;
+            break;
+        
     }   
 
     //SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
@@ -611,30 +628,34 @@ STATE_DEFINE(PinRequest, NoEventData)
 STATE_DEFINE(CheckPin, NoEventData)
 {
     //PIN es correcto segun el ID ?
-    uint32_t pin = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.current_ID_index].PIN_length);
-    uint32_t new_pin;
+    uint32_t pin_introduced;
+    
     switch (access_control.current_option)
     {
     case ADMIN_PIN:
-        if(access_control.IDsList[0].PIN==pin)
-            SM_InternalEvent(ST_CHANGE_BRIGHTNESS, NULL); 
-        else 
-            SM_InternalEvent(ST_INVALID_PIN, NULL);
+        pin_introduced = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.current_ID_index].PIN_length);
+        if(access_control.IDsList[0].PIN==pin_introduced) SM_InternalEvent(ST_CHANGE_BRIGHTNESS, NULL); 
+        else SM_InternalEvent(ST_INVALID_PIN, NULL);
         break;
     
     case NEW_ID_PIN:
-            //VER ESTP PORQUE SOLO PUEDO PONER UN PIN DE 4 CUANDO AGRAGO UN ID
-    		new_pin = array_to_int(access_control.word_introduced,4);
-            access_control.IDsList[access_control.total_of_IDs].PIN = new_pin;
-            SM_InternalEvent(ST_ID_ADDITION, NULL);
-            break;
+        //VER ESTP PORQUE SOLO PUEDO PONER UN PIN DE 4 CUANDO AGRAGO UN ID
+        pin_introduced = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.total_of_IDs].PIN_length);
+        
+        //Se tiene el id y el pin para crear un nuevo usuario. Se setean el resto de las variables
+        access_control.IDsList[access_control.total_of_IDs].PIN = pin_introduced;
+        access_control.IDsList[access_control.total_of_IDs].blocked_status = false; 
+        access_control.IDsList[access_control.total_of_IDs].valid = true;
+        access_control.IDsList[access_control.total_of_IDs].PIN_attempts=0;
+        
+            
+        SM_InternalEvent(ST_ID_ADDITION, NULL);
+        break;
 
     case PIN4: case PIN5: default:
-
-        if(access_control.IDsList[access_control.current_ID_index].PIN==pin) 
-            SM_InternalEvent(ST_ACCESS_GRANTED, NULL);
-        else 
-            SM_InternalEvent(ST_INVALID_PIN, NULL);
+        pin_introduced = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.current_ID_index].PIN_length);
+        if(access_control.IDsList[access_control.current_ID_index].PIN==pin_introduced) SM_InternalEvent(ST_ACCESS_GRANTED, NULL);
+        else SM_InternalEvent(ST_INVALID_PIN, NULL);
         break;
     }
 }
@@ -666,8 +687,8 @@ STATE_DEFINE(InvalidPin, NoEventData)
         break;
     
     case PIN4: case PIN5: default:
-
-        if((access_control.IDsList[access_control.current_ID_index].PIN_attempts++) == MAX_NUM_ATTEMPTS)
+        access_control.IDsList[access_control.current_ID_index].PIN_attempts++;
+        if((access_control.IDsList[access_control.current_ID_index].PIN_attempts) == MAX_NUM_ATTEMPTS)
             SM_InternalEvent(ST_BLOCK_ID, NULL);
         else
             SM_InternalEvent(ST_PIN_REQUEST, NULL); 
@@ -736,31 +757,43 @@ STATE_DEFINE(NextDigit, NoEventData)
     display_disable_highlight();
     access_control.digits_introduced++;
     
-    if((access_control.current_option == PIN5 && access_control.digits_introduced == 5) ||
-       (access_control.current_option == PIN4 && access_control.digits_introduced == 4) ||
-       (access_control.current_option == ADMIN_PIN && (access_control.digits_introduced == 4 ||
-        access_control.digits_introduced == 5)))
+    switch (access_control.current_option)
     {
-        SM_InternalEvent(ST_CHECK_PIN, NULL); 
+    case ID: case NEW_ID: case  DELETE_ID:
+        if(access_control.digits_introduced == ID_LENGTH) SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL);
+        break;
+
+    case PIN4:
+        if(access_control.digits_introduced == 4) SM_InternalEvent(ST_CHECK_PIN, NULL); 
+        hide_digit(access_control.index);
+        break;
+
+    case  PIN5:      
+        if(access_control.digits_introduced == 5) SM_InternalEvent(ST_CHECK_PIN, NULL); 
+        hide_digit(access_control.index);
+        break;
+  
+    case ADMIN_PIN:
+        if(access_control.digits_introduced == access_control.IDsList[0].PIN_length) SM_InternalEvent(ST_CHECK_PIN, NULL); 
+        hide_digit(access_control.index);
+        break;
+
+    case  NEW_ID_PIN:
+        //Se da la opcion de que el PIN del nuevo ID sea de 4 o 5
+        if(access_control.digits_introduced == 5) {
+            access_control.IDsList[access_control.total_of_IDs].PIN_length = 5;
+            SM_InternalEvent(ST_CHECK_PIN, NULL); 
+        }
+           
+        if(access_control.digits_introduced == 4){
+            access_control.IDsList[access_control.total_of_IDs].PIN_length = 4;
+            SM_InternalEvent(ST_RECOUNT_NEW_ID_PIN, NULL); 
+        }
+        break;
+
+    default:
+        break;
     }
-    else if((access_control.current_option == ID || access_control.current_option == NEW_ID || access_control.current_option == DELETE_ID) &&
-        access_control.digits_introduced == 8){   
-		SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL);
-	}
-    else if(access_control.current_option == NEW_ID_PIN && access_control.digits_introduced == 4){
-		//Para el ADD_ID
-		SM_InternalEvent(ST_CHECK_PIN, NULL);
-    }
-	else
-	{
-		// Entra aca si todavia no se terminaron de ingresar los digitos necesarios.
-        if(access_control.current_option == PIN5||access_control.current_option == PIN4) hide_digit(access_control.index);
-		access_control.index++;
-		if(access_control.index-display_get_index()>3) 
-			display_rotate_right();
-		SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);  
-	}     
-}
 
 STATE_DEFINE(PreviousDigit, NoEventData)
 {
@@ -832,12 +865,14 @@ STATE_DEFINE(AlreadyExists, NoEventData)
 STATE_DEFINE(IDAddition, NoEventData)
 {
     display_set_string(" Id added ");
-    access_control.IDsList[access_control.total_of_IDs].blocked_status = false; //Si el ID esta bloquedo es TRUE
-    access_control.IDsList[access_control.total_of_IDs].valid = true;
 	access_control.total_of_IDs++;
 
 }
 
+STATE_DEFINE(ST_RecountNewIdPIN, NoEventData)
+{
+
+}
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			    			 NARANJA    				        //
@@ -858,12 +893,8 @@ STATE_DEFINE(Confirmation, NoEventData)
 
 STATE_DEFINE(IDElimination, NoEventData)
 {
-    int ID_index = access_control.current_ID_index;
-    access_control.IDsList[ID_index].valid = false;
-
+    access_control.IDsList[access_control.current_ID_index].valid = false;
 	display_set_string(" Id deleted ");
-   
-
 }
 
 //////////////////////////////////////////////////////////////////
@@ -888,6 +919,8 @@ void access_control_init(){
     access_control.IDsList[0]=sample_id;
     access_control.total_of_IDs=1;
     access_control.digits_introduced=0;
+
+    SM_InternalEvent(ST_ACCESS_REQUEST, NULL); 
 }
 
 // auxiliary functions
