@@ -765,8 +765,11 @@ STATE_DEFINE(PreviousDigit, NoEventData)
     if(access_control.index != 0){
 		if(access_control.index-display_get_index()==0) 
 			display_rotate_left();
-		if(access_control.current_option == PIN5||access_control.current_option == PIN4) hide_digit(access_control.index);
-        access_control.index --;
+		if(access_control.current_option == PIN5||access_control.current_option == PIN4)
+			hide_digit(access_control.index);
+        access_control.index--;
+        if(access_control.digits_introduced != 0)
+        	access_control.digits_introduced--;
 	}
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
