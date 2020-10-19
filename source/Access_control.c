@@ -6,7 +6,6 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //							Headers								//
@@ -25,6 +24,8 @@
 //		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 			//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
+
+#define TIMEOUT_TIMER_TICKS		TIMER_MS2TICKS(TIMEOUT_TIMER_MS)
 
 // Phrases
 #define ACCESS_REQUEST_PH   "    Access Request    "
@@ -76,7 +77,8 @@ typedef struct{
     uint8_t index; 
     uint8_t digits_introduced; 	//Cantidad de numeros introducidos 
     word_option_t current_option;
-    ID_data_t IDsList[MAX_IDS]; 
+    ID_data_t IDsList[MAX_IDS];
+	tim_id_t timer;
 }access_control_t;
 
 enum States
@@ -151,13 +153,24 @@ static void hide_digit(uint8_t digit);
  * @param digit: index of the display to be hidden.
  * **************************************************************/
 
+static void start_timeout(void);
+/*****************************************************************
+ * @brief: Function that restart the timeout from the previous action.
+ * **************************************************************/
+
+static void timeout_callback(void);
+/*****************************************************************
+ * @brief: Timeout callback, it raises a TIMEOUT event that returns
+ * 			the state machine to the initial state.
+ * **************************************************************/
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void access_control_init(){
+void access_control_init(void){
 /*****************************************************************
  * @brief: Initialization function for the Access control application
  *          It initializes the internal variables and the State machine
@@ -176,6 +189,12 @@ void access_control_init(){
     access_control.IDsList[0]=sample_id;
     access_control.total_of_IDs=1;
     access_control.digits_introduced=0;
+	timerInit();
+	access_control.timer = timerGetId();
+	char message[]= ADMIN_PH;
+	display_set_string(message);
+    access_control.current_option = ADMIN_PIN;
+	return;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -194,6 +213,7 @@ void access_control_init(){
 /***********************************************************************************************************************/
 
 STATE_DECLARE(Admin, NoEventData)
+
 //AZUL
 STATE_DECLARE(AccessRequest, NoEventData)
 STATE_DECLARE(IdEnteringByCard, NoEventData)
@@ -206,6 +226,7 @@ STATE_DECLARE(CheckPin, NoEventData)
 STATE_DECLARE(AccessGranted, NoEventData)
 STATE_DECLARE(InvalidPin, NoEventData)
 STATE_DECLARE(BlockId, NoEventData)
+
 //INGRESO DE PALABRA
 STATE_DECLARE(EnterDigitsRequest, NoEventData)
 STATE_DECLARE(EnterDigitDisplay, NoEventData)
@@ -214,16 +235,17 @@ STATE_DECLARE(ChangeDigitDisplayB, NoEventData)
 STATE_DECLARE(NextDigit, NoEventData)
 STATE_DECLARE(PreviousDigit, NoEventData)
 
-
 //VERDE
 STATE_DECLARE(ChangeBrightness, NoEventData)
 STATE_DECLARE(SetBrightness, NoEventData)
 STATE_DECLARE(LowerBrightness, NoEventData)
 STATE_DECLARE(HigherBrightness, NoEventData)
+
 //VIOLETA
 STATE_DECLARE(AddID, NoEventData)
 STATE_DECLARE(AlreadyExists, NoEventData)
 STATE_DECLARE(IDAddition, NoEventData)
+
 //NARANJA
 STATE_DECLARE(EliminateID, NoEventData)
 STATE_DECLARE(Confirmation, NoEventData)
@@ -279,7 +301,6 @@ BEGIN_STATE_MAP(AccessControl)
 
 END_STATE_MAP(AccessControl)
 
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			        EXTERNAL EVENTS DEFINITIONS				    //
@@ -333,7 +354,6 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
-
 
 // Encoder doble click external event
 EVENT_DEFINE(Encoder_Double_Click, NoEventData)
@@ -571,8 +591,6 @@ EVENT_DEFINE(Card_Reader, NoEventData)
     END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
-
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			     STATE MACHINE FUNCTION DEFINITIONS    	        //
@@ -592,6 +610,7 @@ STATE_DEFINE(AccessRequest, NoEventData)
     access_control.current_option = ID;
     char message[]= ACCESS_REQUEST_PH;
 	display_set_string(message);
+	return;
 }
 
 STATE_DEFINE(IdEnteringByCard, NoEventData)
@@ -817,7 +836,6 @@ STATE_DEFINE(BlockId, NoEventData)
     //SM_InternalEvent(ST_ACCESS_REQUEST, NULL);  
 }
 
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			    	 Ingreso de palabras	 		   	        //
@@ -908,7 +926,6 @@ STATE_DEFINE(PreviousDigit, NoEventData)
 	}
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
-
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -1028,11 +1045,20 @@ static void hide_digit(uint8_t digit){
     display_set_single_char('-', digit);
 }
 
+static void start_timeout(void){
+/*****************************************************************
+ * @brief: Function that restart the timeout from the previous action.
+ * **************************************************************/
+	timerStart(access_control.timer,TIMEOUT_TIMER_TICKS,TIM_MODE_SINGLESHOT,timeout_callback);
+	return;
+}
 
-
-
-
-
-
-
-
+static void timeout_callback(void){
+/*****************************************************************
+ * @brief: Timeout callback, it raises a TIMEOUT event that returns
+ * 			the state machine to the initial state.
+ * **************************************************************/
+	//Falta raisear un timeout event a la maquina de estados
+	//SM_Event(ACC, Encoder_Long_Click, NULL);
+	return;
+}

@@ -16,9 +16,9 @@
 #define DEBUG_OSCILLOSCOPE
 #define BUTTON_CHECK_MS			10
 #define BLINK_FREQ_HZ 			2U
-#define BUTTON_CHECK_TICKS	TIMER_MS2TICKS(10)
+#define BUTTON_CHECK_TICKS		TIMER_MS2TICKS(10)
 #define BLINK_FREQ_TICKS 		TIMER_MS2TICKS( 1000/BLINK_FREQ_HZ )
-#define MAX_EVENTS 100
+#define MAX_EVENTS				100
 
 #if SYSTICK_ISR_FREQUENCY_HZ % (2*BLINK_FREQ_HZ) != 0
 #warning BLINK cannot implement this exact frequency.
@@ -27,6 +27,7 @@
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
+
 typedef enum {EV_CCW, EV_CW, EV_CLICK, EV_LONG_CLICK, EV_DOUBLE_CLICK, EV_CARD, EV_NO_EV}events_t;
 static void get_new_event(void);
 static void push_event(events_t ev);
@@ -34,23 +35,18 @@ static events_t pull_ev(void);
 static void reset_buffer(void);
 static void run_state_machine(void);
 
-
-//access_control_t hola;
 static events_t evs[MAX_EVENTS];
 static uint32_t index_push = 0;
 static uint32_t index_pull = 0;
-
-
 SM_DEFINE(ACC, NULL)
+
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
 
-
 void App_Init (void) {
-	//ALLOC_Init();
 	timerInit();
     encoder_init();
     card_init();
