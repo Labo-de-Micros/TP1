@@ -458,7 +458,7 @@ STATE_DEFINE(Admin, NoEventData)
 STATE_DEFINE(AccessRequest, NoEventData)
 {
     access_control.current_option = ID;
-    char message[]="Access request";
+    char message[]="    Access request     ";
 	display_set_string(message);
 }
 
@@ -502,7 +502,7 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
 				SM_InternalEvent(ST_ALREADY_EXISTS, NULL); 
 			else{   
 				//Se guarda el Id en el usuario nuevo
-				access_control.IDsList[access_control.total_of_IDs+1].card_id=card_data.pan;
+				access_control.IDsList[access_control.total_of_IDs].card_id=card_data.pan;
 				SM_InternalEvent(ST_PIN_REQUEST, NULL);  
 			}
 			
@@ -551,7 +551,7 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
         else
         {   
             //Se guarda el Id en el usuario nuevo
-            access_control.IDsList[access_control.total_of_IDs+1].number = entered_id;
+            access_control.IDsList[access_control.total_of_IDs].number = entered_id;
             SM_InternalEvent(ST_PIN_REQUEST, NULL);  
         }
         
@@ -588,7 +588,7 @@ STATE_DEFINE(PinRequest, NoEventData)
     switch (access_control.current_option)
     {
         case NEW_ID:
-            access_control.current_option = ADMIN_PIN;
+            access_control.current_option = NEW_ID_PIN;
             break;
 
         case ID: default:
@@ -602,7 +602,7 @@ STATE_DEFINE(PinRequest, NoEventData)
                 default :
                 
                     break;
-            }   
+            }
     }   
 
     //SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
@@ -625,7 +625,7 @@ STATE_DEFINE(CheckPin, NoEventData)
     case NEW_ID_PIN:
             //VER ESTP PORQUE SOLO PUEDO PONER UN PIN DE 4 CUANDO AGRAGO UN ID
     		new_pin = array_to_int(access_control.word_introduced,4);
-            access_control.IDsList[access_control.total_of_IDs+1].PIN = new_pin;
+            access_control.IDsList[access_control.total_of_IDs].PIN = new_pin;
             SM_InternalEvent(ST_ID_ADDITION, NULL);
             break;
 
@@ -738,16 +738,19 @@ STATE_DEFINE(NextDigit, NoEventData)
     
     if((access_control.current_option == PIN5 && access_control.digits_introduced == 5) ||
        (access_control.current_option == PIN4 && access_control.digits_introduced == 4) ||
-       (access_control.current_option == ADMIN_PIN && (access_control.digits_introduced == 5 ||      
+       (access_control.current_option == ADMIN_PIN && (access_control.digits_introduced == 4 ||
         access_control.digits_introduced == 5)))
     {
         SM_InternalEvent(ST_CHECK_PIN, NULL); 
     }
     else if((access_control.current_option == ID || access_control.current_option == NEW_ID || access_control.current_option == DELETE_ID) &&
-        access_control.digits_introduced == 8){
-        
+        access_control.digits_introduced == 8){   
 		SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL);
 	}
+    else if(access_control.current_option == NEW_ID_PIN && access_control.digits_introduced == 4){
+		//Para el ADD_ID
+		SM_InternalEvent(ST_CHECK_PIN, NULL);
+    }
 	else
 	{
 		// Entra aca si todavia no se terminaron de ingresar los digitos necesarios.
@@ -829,9 +832,9 @@ STATE_DEFINE(AlreadyExists, NoEventData)
 STATE_DEFINE(IDAddition, NoEventData)
 {
     display_set_string(" Id added ");
-    access_control.total_of_IDs++;
-    access_control.IDsList[access_control.current_ID_index].blocked_status = false; //Si el ID esta bloquedo es TRUE
-    access_control.IDsList[access_control.current_ID_index].valid = true;
+    access_control.IDsList[access_control.total_of_IDs].blocked_status = false; //Si el ID esta bloquedo es TRUE
+    access_control.IDsList[access_control.total_of_IDs].valid = true;
+	access_control.total_of_IDs++;
 
 }
 
