@@ -64,6 +64,11 @@ typedef enum
 #define FTM_CH_6 6
 #define FTM_CH_7 7
 
+#define PRESCALER 				32
+#define SYS_CLOCK				50000000
+#define PWM_MS_TO_TICKS(ms)		PWM_SEC_TO_TICKS((ms/1000.0))
+#define PWM_SEC_TO_TICKS(s)		(s*SYS_CLOCK/PRESCALER)
+
 typedef void (*FTM_callback_t)(void);
 
 

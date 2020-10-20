@@ -34,10 +34,10 @@ __ISR__ FTM0_IRQHandler(void)
 }
 
 void PWM_ISR (void)
-{
-
+{	
 	callBack();
-	//FTM_ClearOverflowFlag (FTM0);
+	//FTM_StopClock(FTM0);
+	FTM_ClearOverflowFlag (FTM0);
 	//FTM_ClearInterruptFlag(FTM0,FTM_CH_0);
 	//gpioToggle(TEST);
 	//set_DutyPWM(FTM0, 0, percent);
@@ -120,15 +120,15 @@ void PWM_Init (uint16_t modulus, FTM_Prescal_t prescaler, uint16_t duty)
 
 
 // funciones de timer utilizando pwm
-void pwm_start_timer(uint16_t ticks,uint16_t duty_cycle,FTM_callback_t callback) //tener en cuenta que el tiempo se obtiene como ticks*preescaler/Sysclock == T
+void pwm_start_timer(uint16_t ticks,uint16_t duty_cycle,FTM_callback_t call) //tener en cuenta que el tiempo se obtiene como ticks*preescaler/Sysclock == T
 {
 	FTM_StopClock(FTM0);
 	FTM_ClearOverflowFlag(FTM0);
 	FTM_SetModulus(FTM0,ticks);
 	set_DutyPWM(FTM0,0,duty_cycle);
-
+	callBack = call;
 	FTM_StartClock(FTM0);
-
+	return;
 }
 
 
