@@ -26,7 +26,7 @@
 //////////////////////////////////////////////////////////////////
 
 #define TIMEOUT_TIMER_TICKS		TIMER_MS2TICKS(TIMEOUT_TIMER_MS)
-
+#define MAX_WORD_INTRODUCED     8
 // Phrases
 #define ACCESS_REQUEST_PH   "    Access Request    "
 #define ADMIN_PH            "Admin    "
@@ -78,7 +78,7 @@ typedef struct{
     uint16_t current_ID_index; 	// index ID actual 0,1,2,3 
     uint16_t total_of_IDs; 		//Cantidad de ids en la lista de IDS 
     							//Manejo de introduccion de palabra
-    uint8_t word_introduced[8]; //Palabra de 4,5 o 8 digitos
+    uint8_t word_introduced[MAX_WORD_INTRODUCED]; //Palabra de 4,5 o 8 digitos
     uint8_t index; 
     uint8_t digits_introduced; 	//Cantidad de numeros introducidos 
     word_option_t current_option;
@@ -184,7 +184,7 @@ static void timeout_callback(void);
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void access_control_init(){
+void access_control_init(void){
 /*****************************************************************
  * @brief: Initialization function for the Access control application
  *          It initializes the internal variables and the State machine
@@ -529,7 +529,7 @@ EVENT_DEFINE(Encoder_CCW, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_DIGIT,
         //VERDE                 
-        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                     //ST_CHANGE_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_CHANGE_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(ST_LOWER_BRIGHTNESS)               //ST_SET_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS
@@ -938,7 +938,7 @@ STATE_DEFINE(EnterDigitsRequest, NoEventData)
     access_control.index = 0;
     access_control.digits_introduced = 0;
     int count;
-    for(count = 0; count < 9; count ++)
+    for(count = 0; count < MAX_WORD_INTRODUCED; count ++)
         access_control.word_introduced[count] = 0;    
 
     display_clear_buffer();

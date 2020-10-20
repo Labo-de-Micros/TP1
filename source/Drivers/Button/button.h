@@ -17,8 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "../GPIO/gpio.h"	//No se si meter gpio aca esta bien, pero necesitaria
-									//el tipo de dato pin_t, que hacemos?
+#include "../GPIO/gpio.h"
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -28,6 +27,14 @@
 
 #define BUTTONS_MAX_AMOUNT  	16
 #define BUTTON_INVALID_ID		255
+
+#if (BUTTONS_MAX_AMOUNT >= BUTTON_INVALID_ID)
+#error BUTTONS_MAX_AMOUNT must be lower than BUTTON_INVALID_ID! In case you want more buttons than 255, you must change the data types!.
+#endif  // (BUTTONS_MAX_AMOUNT >= BUTTON_INVALID_ID)
+
+#if (BUTTON_INVALID_ID >255)
+#error Change the data types fot the buttons!
+#endif  // (BUTTON_INVALID_ID >255)
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////

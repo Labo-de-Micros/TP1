@@ -33,6 +33,26 @@
 #define ROTATION_TIME_S 		0.4
 #define EXT_BUF_LEN 			30
 
+#if (REFRESH_FREQUENCY_HZ < 30)
+#warning The refresh frequency of the display, is too low and it may be seen by the naked eye!
+#elif (REFRESH_FREQUENCY_HZ > 60)
+#warning The refresh frequency of the display is too high, and might be using unnecesary processor power!
+#endif	// (REFRESH_FREQUENCY_HZ < 30)
+
+#if (MUX_PINS != 2)
+#error	This library only works with 2 MUX pins, in other words, only 4 display are allowed!
+#endif	// (MUX_PINS != 2)
+
+#if (DIGITS != 4)
+#error This library only works with only 4 digits!
+#endif
+
+#if (EXT_BUF_LEN <= 10)
+#error The buffer display is too short! Some messages cant be shown.abort
+#elif (EXT_BUF_LEN >= 70)
+#warning The buffer seems too big and inncesesary memory might be being used!
+#endif	// (EXT_BUF_LEN <= 10)
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS			//
@@ -64,78 +84,123 @@ void display_init(void);
  * @brief: Initialize the Seven segment display driver
  * **************************************************************/
 
-void display_set_mode(display_mode_t mode);
-
-void display_configure_pins(pin_t a,pin_t b,pin_t c,pin_t d,pin_t e,pin_t f,pin_t g);
-/*****************************************************************
- * @brief: Intialize the Pins of the seven segment display.
- * @param a: Is the pin number of the 'a' pin of the display
- * @param b: Is the pin number of the 'b' pin of the display
- * @param c: Is the pin number of the 'c' pin of the display
- * @param d: Is the pin number of the 'd' pin of the display
- * @param e: Is the pin number of the 'e' pin of the display
- * @param f: Is the pin number of the 'f' pin of the display
- * @param g: Is the pin number of the 'g' pin of the display
- * 
- * @brief: gpioMode() will be called with those pins numbers.
- * **************************************************************/
-
-void display_configure_mux(pin_t pin0, pin_t pin1);
-/*****************************************************************
- * @brief: Initialize mux pins for digit select.
- * **************************************************************/
-
 void display_set_string(char * string);
 /*****************************************************************
- * @brief: Set a specified number on the screen of the seven segment display
- * @param character: A character from a-z to be displayed on the screen.
+ * @brief: Writes a string to the main display buffer.
+ * @param string: String of characters to be written.
  * **************************************************************/
 
 void display_set_number(uint16_t number);
 /*****************************************************************
- * @brief: Sets a four digit number into display buffers.
+ * @brief: Writes a number to the main display buffer
+ * @param number: A number of maximum 4 digits to be written in the
+ * 					display.
  * **************************************************************/
 
-void display_on();
+void display_on(void);
 /*****************************************************************
- * @brief: Starts updating display.
+ * @brief: Turns display refresh on
  * **************************************************************/
 
-void display_off();
+void display_off(void);
 /*****************************************************************
- * @brief: Stops updating display.
+ * @brief: Turns display refresh off
  * **************************************************************/
 
 void display_temp_message(char * message, uint8_t seconds);
+/*****************************************************************
+ * @brief: Displays a string on the display for a number of seconds.
+ * If message length exceeds that of the display, the delay starts 
+ * after the message completes a rotation.
+ * @param message: string of character with the message to show
+ * @param seconds amount of seconds to show the message.
+ * **************************************************************/
 
 void display_set_brightness_level(display_brightness_level_t level);
+/*****************************************************************
+ * @brief: Sets a brightness level for the display
+ * @param level: New level of brightness.
+ * **************************************************************/
 
 void display_enable_soft_highlight(uint8_t digit);
+/*****************************************************************
+ * @brief: Sets high brightness for a digit and normal brightness
+ * for the rest of them
+ * @param digit: Index of the digit to enable the soft Highlight.
+ * **************************************************************/
 
 void display_enable_hard_highlight(uint8_t digit);
+/*****************************************************************
+ * @brief: Sets high brightness for a digit and low brightness
+ * for the rest of them
+ * @param digit: Index of the digit to enable the hard Highlight.
+ * **************************************************************/
 
-void display_disable_highlight();
+void display_disable_highlight(void);
+/*****************************************************************
+ * @brief: Sets brightness back to nominal level
+ * **************************************************************/
 
 void display_clear_buffer(void);
+/*****************************************************************
+ * @brief: Clears the screen of the display (nothing will be displayed).
+ * **************************************************************/
 
 void display_set_single_number(uint8_t number, uint8_t index);
+/*****************************************************************
+ * @brief: Writes a number to a single digit of the display
+ * @param number: The digit to be displayed.
+ * @param index: Index in the buffer where the digit will be displayed.
+ * **************************************************************/
 
 void display_set_single_char(char character, uint8_t index);
+/*****************************************************************
+ * @brief: Writes a character to a single digit of the display
+ * @param character: The character to be displayed.
+ * @param index: Index in the buffer where the digit will be displayed. 
+ * **************************************************************/
 
-void display_enable_auto_rotation();
+void display_enable_auto_rotation(void);
+/*****************************************************************
+ * @brief: Turns automatic rotation on. When a string is loaded, 
+ * it will rotate once automatically.
+ * **************************************************************/
 
-void display_disable_auto_rotation();
+void display_disable_auto_rotation(void);
+/*****************************************************************
+ * @brief: Turns automatic rotation off.
+ * **************************************************************/
 
-void display_stop_rotation();
+void display_stop_rotation(void);
+/*****************************************************************
+ * @brief: Stops current rotation (if happening)
+ * **************************************************************/
 
-void display_rotate_left();
+void display_rotate_left(void);
+/*****************************************************************
+ * @brief: Shifts digits on the display to the left.
+ * **************************************************************/
 
-void display_rotate_right();
+void display_rotate_right(void);
+/*****************************************************************
+ * @brief: Shifts digits on the display to the right.
+ * **************************************************************/
 
 void display_set_index(uint8_t index);
+/*****************************************************************
+ * @brief: Sets the current index for the display.
+ * **************************************************************/
 
-uint8_t display_get_index();
+uint8_t display_get_index(void);
+/*****************************************************************
+ * @brief: Returns the current index of the display
+ * @returns: The current index.
+ * **************************************************************/
 
 uint8_t display_get_brightness(void);
+/*****************************************************************
+ * @brief: Gets the current brightness of the whole display.
+ * @returns: Current display brightness.
+ * **************************************************************/
 
 #endif

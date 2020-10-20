@@ -31,6 +31,14 @@
 #define TIMERS_MAX_CANT     16
 #define TIMER_INVALID_ID    255
 
+#if (TIMERS_MAX_CANT >= TIMER_INVALID_ID)
+#error TIMERS_MAX_CANT must be lower than TIMER_INVALID_ID! In case you want TIMER_INVALID_ID > 255 you must change the data types!
+#endif  // (TIMERS_MAX_CANT >= TIMER_INVALID_ID)
+
+#if (TIMER_INVALID_ID > 255)
+#error Change the data types for the Timers!
+#endif  // (TIMER_INVALID_ID > 255)
+
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS			 //

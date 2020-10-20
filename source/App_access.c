@@ -1,7 +1,18 @@
-/*******************************************************************************
- * INCLUDE HEADER FILES
- ******************************************************************************/
-#include "board.h"
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//	@file		App_access.c								    //
+//	@brief		Acces Control main								//
+//	@author		Grupo	4										//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//							Headers								//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
 #include "./Drivers/Timer/timer.h"
 #include "./Drivers/SysTick/Systick.h"
 #include "./Drivers/Display_7/Display_7.h"
@@ -10,49 +21,88 @@
 #include "StateMachine/DataTypes.h"
 #include "StateMachine/State_machine.h"
 #include "Access_control.h"
-/*******************************************************************************
- * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
- ******************************************************************************/
-#define DEBUG_OSCILLOSCOPE
-#define BUTTON_CHECK_MS			10
-#define BLINK_FREQ_HZ 			2U
-#define BUTTON_CHECK_TICKS		TIMER_MS2TICKS(10)
-#define BLINK_FREQ_TICKS 		TIMER_MS2TICKS( 1000/BLINK_FREQ_HZ )
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 		 	//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
 #define MAX_EVENTS				100
 
-#if SYSTICK_ISR_FREQUENCY_HZ % (2*BLINK_FREQ_HZ) != 0
-#warning BLINK cannot implement this exact frequency.
-		Using floor(SYSTICK_ISR_FREQUENCY_HZ/BLINK_FREQ_HZ/2) instead.
+#if (MAX_EVENTS > 100)
+#warning MAX_EVENTS too high! Maybe an unnecesary ammount of memory is used to catch events!
+#elif (MAX_EVENTS <= 5)
+#warning MAX_EVENTS too low! Maybe it is not enough space to store the events!
 #endif
-/*******************************************************************************
- * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
- ******************************************************************************/
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			ENUMERATIONS AND STRUCTURES AND TYPEDEFS			//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 typedef enum {EV_CCW, EV_CW, EV_CLICK, EV_LONG_CLICK, EV_DOUBLE_CLICK, EV_CARD, EV_NO_EV}events_t;
-static void get_new_event(void);
-static void push_event(events_t ev);
-static events_t pull_ev(void);
-static void reset_buffer(void);
-static void run_state_machine(void);
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//						STATIC VARIABLES						//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 static events_t evs[MAX_EVENTS];
 static uint32_t index_push = 0;
 static uint32_t index_pull = 0;
 SM_DEFINE(ACC, NULL)
 
-/*******************************************************************************
- *******************************************************************************
-                        GLOBAL FUNCTION DEFINITIONS
- *******************************************************************************
- ******************************************************************************/
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+//FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS W FILE LEVEL SCOPE//
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+static void get_new_event(void);
+/*****************************************************************
+ * @brief: It runs trough all the event generator modules and gets
+ * 			the event of every module. It appends the events arrived in
+ * 			the variable evs. The evs buffer works as a circular array
+ * 			in the FIFO form.
+ * **************************************************************/
+
+static void push_event(events_t ev);
+/*****************************************************************
+ * @brief: Function to push a new event to the events buffer evs.
+ * @param ev: Event to be appended in the buffer.
+ * **************************************************************/
+
+static events_t pull_ev(void);
+/*****************************************************************
+ * @brief: Function to pull an event from the events buffer evs.
+ * @returns: Event from the events buffer.
+ * **************************************************************/
+
+static void reset_buffer(void);
+/*****************************************************************
+ * @brief: Resets the buffer and sets no events in it.
+ * **************************************************************/
+
+static void run_state_machine(void);
+/*****************************************************************
+ * @brief: Function that gets the events from the events buffer and
+ * 			runs the FSM with the correponding events.
+ * **************************************************************/
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//					FUNCTION DEFINITIONS						//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 void App_Init (void) {
 	timerInit();
     encoder_init();
     card_init();
     display_init();
-    display_configure_pins(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
-    display_configure_mux(DISPLAY_MUX_PIN_0, DISPLAY_MUX_PIN_1);
     display_on();
     access_control_init(ACCObj);
 	reset_buffer();
@@ -66,12 +116,18 @@ void App_Run (void){
 	}
 }
 
-/*******************************************************************************
- *******************************************************************************
-                        LOCAL FUNCTION DEFINITIONS
- *******************************************************************************
- ******************************************************************************/
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//					LOCAL FUNCTION DEFINITIONS					//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
 static void get_new_event(void){
+/*****************************************************************
+ * @brief: It runs trough all the event generator modules and gets
+ * 			the event of every module. It appends the events arrived in
+ * 			the variable evs.
+ * **************************************************************/
 	if(card_was_read())
 		push_event(EV_CARD);
 	switch(encoder_get_event()){
@@ -98,7 +154,8 @@ static void get_new_event(void){
 
 static void push_event(events_t ev){
 /*****************************************************************
- * @brief: Pushes an event to the buffer.
+ * @brief: Function to push a new event to the events buffer evs.
+ * @param ev: Event to be appended in the buffer.
  * **************************************************************/
 	evs[index_push] = ev;	//Pusheo evento
 	index_push++;					//Incremento el indice
@@ -110,7 +167,8 @@ static void push_event(events_t ev){
 
 static events_t pull_ev(void){
 /*****************************************************************
- * @brief: Pulls an event from the buffer, removing it.
+ * @brief: Function to pull an event from the events buffer evs.
+ * @returns: Event from the events buffer.
  * **************************************************************/
 	events_t temp = evs[index_pull];	//Guardo el ultimo evento recibido
 	if(temp == EV_NO_EV)	//Si no hubo evento, salgo de la funcion.
@@ -123,6 +181,9 @@ static events_t pull_ev(void){
 }
 
 static void reset_buffer(void){
+/*****************************************************************
+ * @brief: Resets the buffer and sets no events in it.
+ * **************************************************************/
 	for(uint32_t i = 0 ; i < MAX_EVENTS; i++)
 		evs[i] = EV_NO_EV;
 	index_push = 0;
@@ -131,6 +192,10 @@ static void reset_buffer(void){
 }
 
 static void run_state_machine(void){
+/*****************************************************************
+ * @brief: Function that gets the events from the events buffer and
+ * 			runs the FSM with the correponding events.
+ * **************************************************************/
 	switch(pull_ev()){
 		case EV_CCW:
 			SM_Event(ACC, Encoder_CCW, NULL);
