@@ -313,7 +313,7 @@ BEGIN_STATE_MAP(AccessControl)
     STATE_MAP_ENTRY(ST_AlreadyExists)
     STATE_MAP_ENTRY(ST_IDAddition)
     STATE_MAP_ENTRY(ST_RecountNewIdPIN)
-    STATE_MAP_ENTRY(ST_Confirmation2)
+    STATE_MAP_ENTRY(ST_Confirmation0)
 
     //NARANJA
     STATE_MAP_ENTRY(ST_EliminateID)
