@@ -33,7 +33,8 @@
 #define MAX_IDS 				2000
 #define ERR_MSG_TIME 			2
 #define ID_LENGTH 				8
-#define TIMEOUT_TIMER_MS		(10*1000) //10 segundos
+#define TIMEOUT_TIMER_MS		(10*1000) 	//10 segundos
+#define TIMEOUT_OPEN_DOOR_MS	(5*1000)	//5 segundos
 
 #if (ID_LENGTH != 8)
 #error ID_LENGHT must be 8! If you want to change it, you must consider the data types used to store the IDs!

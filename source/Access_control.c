@@ -18,6 +18,7 @@
 #include "./Drivers/Display_7/Display_7.h"
 #include "./Drivers/Encoder/encoder.h"
 #include "./Drivers/Card_reader/Card_reader.h"
+#include "./board.h"
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -26,6 +27,7 @@
 //////////////////////////////////////////////////////////////////
 
 #define TIMEOUT_TIMER_TICKS		TIMER_MS2TICKS(TIMEOUT_TIMER_MS)
+#define TIMEOUT_OPEN_DOOR_TICKS TIMER_MS2TICKS(TIMEOUT_OPEN_DOOR_MS)
 #define MAX_WORD_INTRODUCED     8
 // Phrases
 #define ACCESS_REQUEST_PH   "    Access Request    "
@@ -44,7 +46,7 @@
 #define ID_DELETED_PH		"Id deleted    "
 #define MODIFY_ID_PH		"Modify Id    "
 #define ID_MODIFIED_PH		"Id modified    "
-
+#define PIN_MODIFIED_PH     "Pin Modified    "
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -142,6 +144,7 @@ enum States
 //////////////////////////////////////////////////////////////////
 
 static access_control_t access_control;
+static tim_id_t door_timer;
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -178,6 +181,11 @@ static void timeout_callback(void);
  * 			the state machine to the initial state.
  * **************************************************************/
 
+static void door_timeout_callback(void);
+/*****************************************************************
+ * @brief: timeout for the door callback.
+ * **************************************************************/
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
@@ -205,6 +213,13 @@ void access_control_init(void){
     access_control.digits_introduced=0;
 	timerInit();
 	access_control.timer = timerGetId();
+	door_timer = timerGetId();
+	gpioMode(PIN_LED_GREEN, OUTPUT);
+	gpioMode(PIN_LED_BLUE, OUTPUT);
+	gpioMode(PIN_LED_RED, OUTPUT);
+	gpioWrite(PIN_LED_GREEN, HIGH);
+	gpioWrite(PIN_LED_BLUE, HIGH);
+	gpioWrite(PIN_LED_RED, LOW);
 	char message[]= ADMIN_PH;
 	display_set_string(message);
     access_control.current_option = ADMIN_PIN;
@@ -577,7 +592,7 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
 
         //INGRESO DE PALABRA    
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGITS_REQUEST,
-        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ENTER_DIGIT_DISPLAY,		//ESTE HAY Q VERLO BIEN
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ENTER_DIGIT_DISPLAY,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_A,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_B,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
@@ -670,6 +685,9 @@ STATE_DEFINE(Admin, NoEventData)
 {
     char message[]= ADMIN_PH;
 	display_set_string(message);
+	gpioWrite(PIN_LED_RED, HIGH);
+	gpioWrite(PIN_LED_GREEN, HIGH);
+	gpioWrite(PIN_LED_BLUE, LOW);
     access_control.current_option = ADMIN_PIN;
 
 }
@@ -680,6 +698,9 @@ STATE_DEFINE(AccessRequest, NoEventData)
     char message[]= ACCESS_REQUEST_PH;
 	display_set_string(message);
 	start_timeout();
+	gpioWrite(PIN_LED_GREEN, HIGH);
+	gpioWrite(PIN_LED_BLUE, HIGH);
+	gpioWrite(PIN_LED_RED, LOW);
 	return;
 }
 
@@ -886,12 +907,10 @@ STATE_DEFINE(CheckPin, NoEventData)
 STATE_DEFINE(AccessGranted, NoEventData)
 {
     display_set_string(ACCESS_GRANTED_PH);
-	// TODO
-	//Muestro ACCESS GRANTED
-	//Prendo LED 
-	//Espero 5 seg
-	//Apago LED
-	//SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
+	timerStart(door_timer,TIMEOUT_OPEN_DOOR_TICKS,TIM_MODE_SINGLESHOT,door_timeout_callback);
+	gpioWrite(PIN_LED_GREEN,LOW);
+	gpioWrite(PIN_LED_RED, HIGH);
+	gpioWrite(PIN_LED_BLUE, HIGH);
 }
 
 STATE_DEFINE(InvalidPin, NoEventData)
@@ -1028,6 +1047,10 @@ STATE_DEFINE(NextDigit, NoEventData)
 			}
 			if(access_control.digits_introduced == 4){
 				access_control.IDsList[access_control.total_of_IDs].PIN_length = 4;
+				hide_digit(access_control.index);
+				access_control.index++;
+				if(access_control.index-display_get_index()>3) 	
+					display_rotate_right();
 				SM_InternalEvent(ST_RECOUNT_NEW_ID_PIN, NULL); 
 			}
 			else if(access_control.digits_introduced < 4){
@@ -1045,6 +1068,10 @@ STATE_DEFINE(NextDigit, NoEventData)
 				SM_InternalEvent(ST_CHECK_PIN, NULL); 
 			}
 			if(access_control.digits_introduced == 4){
+				hide_digit(access_control.index);
+				access_control.index++;
+				if(access_control.index-display_get_index()>3) 	
+					display_rotate_right();
 				SM_InternalEvent(ST_RECOUNT_NEW_ID_PIN, NULL); 
 			}
 			else if(access_control.digits_introduced < 4){
@@ -1202,7 +1229,7 @@ STATE_DEFINE(Confirmation2, NoEventData)
 
 STATE_DEFINE(IDModification, NoEventData)
 {
-    display_set_string(ID_DELETED_PH);
+    display_set_string(PIN_MODIFIED_PH);
 
     uint8_t pin_length = access_control.digits_introduced;
     uint32_t pin_introduced = array_to_int(access_control.word_introduced,pin_length);
@@ -1265,7 +1292,15 @@ static void timeout_callback(void){
  * @brief: Timeout callback, it raises a TIMEOUT event that returns
  * 			the state machine to the initial state.
  * **************************************************************/
-	//Falta raisear un timeout event a la maquina de estados
 	//SM_Event(ACC, Encoder_Click, NULL);
+	return;
+}
+
+static void door_timeout_callback(void){
+/*****************************************************************
+ * @brief: timeout for the door callback.
+ * **************************************************************/
+	gpioWrite(PIN_LED_GREEN, HIGH);
+	gpioWrite(PIN_LED_RED, LOW);
 	return;
 }
