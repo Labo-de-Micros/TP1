@@ -35,6 +35,10 @@
 #define ID_LENGTH 				8
 #define TIMEOUT_TIMER_MS		(10*1000) //10 segundos
 
+#if (ID_LENGTH != 8)
+#error ID_LENGHT must be 8! If you want to change it, you must consider the data types used to store the IDs!
+#endif
+
 SM_DECLARE(ACC)
 
 //////////////////////////////////////////////////////////////////
