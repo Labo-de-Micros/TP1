@@ -34,7 +34,8 @@ __ISR__ FTM0_IRQHandler(void)
 
 void PWM_ISR (void)
 {
-	FTM_ClearOverflowFlag (FTM0);
+	//FTM_ClearOverflowFlag (FTM0);
+	FTM_ClearInterruptFlag(FTMO);
 	gpioToggle(TEST);
 	//set_DutyPWM(FTM0, 0, percent);
 	//percent +=10;
@@ -105,7 +106,8 @@ void PWM_Init (uint16_t modulus, FTM_Prescal_t prescaler, uint16_t duty)
 
 	FTM_SetPrescaler(FTM0, prescaler);
 	FTM_SetModulus(FTM0, PWM_modulus);
-	FTM_SetOverflowMode(FTM0, true);
+	//FTM_SetOverflowMode(FTM0, true);
+	FTM_SetInterruptMode (FTM0,FTM_CH_0, true);
 	FTM_SetWorkingMode(FTM0, 0, FTM_mPulseWidthModulation);			// MSA  / B
 	FTM_SetPulseWidthModulationLogic(FTM0, 0, FTM_lAssertedHigh);   // ELSA / B
 	set_DutyPWM(FTM0, 0, PWM_duty);
