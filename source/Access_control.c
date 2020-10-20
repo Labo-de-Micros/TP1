@@ -675,6 +675,58 @@ EVENT_DEFINE(Card_Reader, NoEventData)
     END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
+EVENT_DEFINE(Time_Out, NoEventData)
+{
+    
+    BEGIN_TRANSITION_MAP                                        // - Current State -
+      
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ADMIN,
+
+        //AZUL                  
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                         //ST_ACCESS_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_CARD,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ENTERING_BY_ENCODER,  
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_CARD,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_ID_ENTERING_BY_ENCODER,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_NON_EXISTENT,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_PIN_REQUEST,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHECK_PIN,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ACCESS_GRANTED,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_INVALID_PIN,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_BLOCK_ID,
+
+        //INGRESO DE PALABRA    
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ENTER_DIGITS_REQUEST,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ENTER_DIGIT_DISPLAY,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_A,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_DIGIT_DISPLAY_B,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_DIGIT,
+        //VERDE                 
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_CHANGE_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_SET_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS
+        //VIOLETA                   
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ADD_ID,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ALREADY_EXISTS,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ID_ADDITION,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_RECOUNT_NEW_ID_PIN
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_CONFIRMATION_2,
+
+        //NARANJA                   
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ELIMINATE_ID,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_CONFIRMATION_1,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ID_ELIMINATION
+
+        //ROJO
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_MODIFY_ID,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_CONFIRMATION_2,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ID_MODIFICATION
+        
+    END_TRANSITION_MAP(AccessControl, pEventData)   
+}
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			     STATE MACHINE FUNCTION DEFINITIONS    	        //
@@ -689,6 +741,7 @@ STATE_DEFINE(Admin, NoEventData)
 	gpioWrite(PIN_LED_GREEN, HIGH);
 	gpioWrite(PIN_LED_BLUE, LOW);
     access_control.current_option = ADMIN_PIN;
+    start_timeout();
 
 }
 
@@ -701,7 +754,7 @@ STATE_DEFINE(AccessRequest, NoEventData)
 	gpioWrite(PIN_LED_GREEN, HIGH);
 	gpioWrite(PIN_LED_BLUE, HIGH);
 	gpioWrite(PIN_LED_RED, LOW);
-	return;
+	
 }
 
 STATE_DEFINE(IdEnteringByCard, NoEventData)
@@ -836,6 +889,7 @@ STATE_DEFINE(IdNonExistent, NoEventData)
 
 STATE_DEFINE(PinRequest, NoEventData)
 {
+    start_timeout();
     display_set_string(ENTER_PIN_PH);
     //veo el largo del pin segun el ID
 
@@ -867,8 +921,8 @@ STATE_DEFINE(PinRequest, NoEventData)
             break;
      
     }   
-	return;
-    //SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
+	
+    
 }
 
 STATE_DEFINE(CheckPin, NoEventData)
@@ -916,10 +970,10 @@ STATE_DEFINE(AccessGranted, NoEventData)
 STATE_DEFINE(InvalidPin, NoEventData)
 {
     //Muestro INCORRECT PIN
-    
+    start_timeout();
 	display_set_string(INCORRECT_PIN_PH);
 
-    timerDelay(5000);	// Esto es bloqueante, OJO
+    //timerDelay(5000);	// Esto es bloqueante, OJO
 
 	switch (access_control.current_option){
 	case ADMIN_PIN:
@@ -939,6 +993,7 @@ STATE_DEFINE(InvalidPin, NoEventData)
 STATE_DEFINE(BlockId, NoEventData)
 {
     //Muestro ID BLOCKED
+    start_timeout();
 	display_set_string(ID_BAN_PH);
     access_control.IDsList[access_control.current_ID_index].blocked_status=true;
     
@@ -966,8 +1021,9 @@ STATE_DEFINE(EnterDigitsRequest, NoEventData)
 
 STATE_DEFINE(EnterDigitDisplay, NoEventData)
 {
-   display_enable_hard_highlight(access_control.index);
-   display_set_single_number(access_control.word_introduced[access_control.index], access_control.index);
+    start_timeout();
+    display_enable_hard_highlight(access_control.index);
+    display_set_single_number(access_control.word_introduced[access_control.index], access_control.index);
    
 }
 
@@ -1112,12 +1168,13 @@ STATE_DEFINE(PreviousDigit, NoEventData)
     
 STATE_DEFINE(ChangeBrightness, NoEventData)
 {
+    start_timeout();
 	display_set_string(BRIGHTNESS_PH);
 }
 
 STATE_DEFINE(SetBrightness, NoEventData)
 {
-    // TODO incorporar el fascinante driver de ftm para que nadie nunca regule el brillo
+    start_timeout();
     display_set_number(display_get_brightness());
 }
 
@@ -1141,6 +1198,7 @@ STATE_DEFINE(HigherBrightness, NoEventData)
 
 STATE_DEFINE(AddID, NoEventData)
 {
+    start_timeout();
 	display_set_string(ADD_ID_PH);
     access_control.current_option = NEW_ID;
 
@@ -1152,11 +1210,13 @@ STATE_DEFINE(AddID, NoEventData)
 
 STATE_DEFINE(AlreadyExists, NoEventData)
 {
+    start_timeout();
     display_set_string(ALREADY_EXISTS_PH);
 }
 
 STATE_DEFINE(IDAddition, NoEventData)
 {
+    start_timeout();
     display_set_string(ID_ADDED_PH);
 	
     uint8_t pin_length = access_control.digits_introduced;
@@ -1174,11 +1234,12 @@ STATE_DEFINE(IDAddition, NoEventData)
 
 STATE_DEFINE(RecountNewIdPIN, NoEventData)
 {
-
+    start_timeout();
 }
 
 STATE_DEFINE(Confirmation0, NoEventData)
 {
+    start_timeout();
     display_set_string(CONFIRM_PH);
 }
  
@@ -1191,18 +1252,21 @@ STATE_DEFINE(Confirmation0, NoEventData)
 
 STATE_DEFINE(EliminateID, NoEventData)
 {
+    start_timeout();
 	display_set_string(DELETE_ID_PH);
     access_control.current_option = DELETE_ID;
 }
 
 STATE_DEFINE(Confirmation1, NoEventData)
 {
+    start_timeout();
     display_set_string(CONFIRM_PH);
      
 }
 
 STATE_DEFINE(IDElimination, NoEventData)
 {
+    start_timeout();
     access_control.IDsList[access_control.current_ID_index].valid = false;
 	display_set_string(ID_DELETED_PH);
 }
@@ -1217,18 +1281,21 @@ STATE_DEFINE(IDElimination, NoEventData)
 
 STATE_DEFINE(ModifyID, NoEventData)
 {
+    start_timeout();
 	display_set_string(MODIFY_ID_PH);
     access_control.current_option = MODIFY_ID;
 }
 
 STATE_DEFINE(Confirmation2, NoEventData)
 {
+    start_timeout();
     display_set_string(CONFIRM_PH);
      
 }
 
 STATE_DEFINE(IDModification, NoEventData)
 {
+    start_timeout();
     display_set_string(PIN_MODIFIED_PH);
 
     uint8_t pin_length = access_control.digits_introduced;
@@ -1292,7 +1359,7 @@ static void timeout_callback(void){
  * @brief: Timeout callback, it raises a TIMEOUT event that returns
  * 			the state machine to the initial state.
  * **************************************************************/
-	//SM_Event(ACC, Encoder_Click, NULL);
+	SM_Event(ACC, Time_Out, NULL);
 	return;
 }
 
