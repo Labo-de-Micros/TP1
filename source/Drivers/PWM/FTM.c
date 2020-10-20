@@ -20,9 +20,6 @@ void PWM_Init(uint16_t modulos, FTM_Prescal_t prescaler,uint16_t duty);
 
 void PWM_ISR(void);
 
-
-
-
 uint16_t PWM_modulus = 1000-1;
 uint16_t PWM_duty    = 300;//5000-1;
 
@@ -35,7 +32,7 @@ __ISR__ FTM0_IRQHandler(void)
 void PWM_ISR (void)
 {
 	//FTM_ClearOverflowFlag (FTM0);
-	FTM_ClearInterruptFlag(FTMO);
+	FTM_ClearInterruptFlag(FTM0,FTM_CH_0);
 	gpioToggle(TEST);
 	//set_DutyPWM(FTM0, 0, percent);
 	//percent +=10;
