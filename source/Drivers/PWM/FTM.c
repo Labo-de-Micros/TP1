@@ -23,6 +23,10 @@ void PWM_ISR(void);
 uint16_t PWM_modulus = 1000-1;
 uint16_t PWM_duty    = 300;//5000-1;
 
+static FTM_callback_t callBack;
+
+
+
 /* FTM0 fault, overflow and channels interrupt handler*/
 __ISR__ FTM0_IRQHandler(void)
 {
@@ -31,9 +35,11 @@ __ISR__ FTM0_IRQHandler(void)
 
 void PWM_ISR (void)
 {
+
+	callBack();
 	//FTM_ClearOverflowFlag (FTM0);
-	FTM_ClearInterruptFlag(FTM0,FTM_CH_0);
-	gpioToggle(TEST);
+	//FTM_ClearInterruptFlag(FTM0,FTM_CH_0);
+	//gpioToggle(TEST);
 	//set_DutyPWM(FTM0, 0, percent);
 	//percent +=10;
 	//percent= percent%100;
@@ -103,13 +109,26 @@ void PWM_Init (uint16_t modulus, FTM_Prescal_t prescaler, uint16_t duty)
 
 	FTM_SetPrescaler(FTM0, prescaler);
 	FTM_SetModulus(FTM0, PWM_modulus);
-	//FTM_SetOverflowMode(FTM0, true);
-	FTM_SetInterruptMode (FTM0,FTM_CH_0, true);
+	FTM_SetOverflowMode(FTM0, true);
+	//FTM_SetInterruptMode (FTM0,FTM_CH_0, true);
 	FTM_SetWorkingMode(FTM0, 0, FTM_mPulseWidthModulation);			// MSA  / B
 	FTM_SetPulseWidthModulationLogic(FTM0, 0, FTM_lAssertedHigh);   // ELSA / B
 	set_DutyPWM(FTM0, 0, PWM_duty);
 	//FTM_SetCounter(FTM0, 0, PWM_duty);
+	//FTM_StartClock(FTM0);
+}
+
+
+// funciones de timer utilizando pwm
+void pwm_start_timer(uint16_t ticks,uint16_t duty_cycle,FTM_callback_t callback) //tener en cuenta que el tiempo se obtiene como ticks*preescaler/Sysclock == T
+{
+	FTM_StopClock(FTM0);
+	FTM_ClearOverflowFlag(FTM0);
+	FTM_SetModulus(FTM0,ticks);
+	set_DutyPWM(FTM0,0,duty_cycle);
+
 	FTM_StartClock(FTM0);
+
 }
 
 

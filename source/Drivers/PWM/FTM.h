@@ -64,7 +64,7 @@ typedef enum
 #define FTM_CH_6 6
 #define FTM_CH_7 7
 
-
+typedef void (*FTM_callback_t)(void);
 
 
 
@@ -110,7 +110,7 @@ void 		FTM_ClearInterruptFlag 			 (FTM_t, FTMChannel_t);
 void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent);
 //set the PWM duty_cicly percentage
 
-
+void pwm_start_timer(uint16_t ticks,uint16_t duty_cycle,FTM_callback_t callback);
 
 
 
