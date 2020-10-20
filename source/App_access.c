@@ -104,7 +104,7 @@ void App_Init (void) {
     card_init();
     display_init();
     display_on();
-    access_control_init(ACCObj);
+    access_control_init();
 	reset_buffer();
 	return;
 }
