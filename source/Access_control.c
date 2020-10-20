@@ -148,6 +148,7 @@ static uint64_t array_to_int(uint8_t* array, uint8_t length);
  * 				lenght = 5
  * 				answer = (uint64_t) 12345
  * **************************************************************/
+
 static void hide_digit(uint8_t digit);
 /*****************************************************************
  * @brief: It hides a digit from the display in the index = digit
@@ -171,7 +172,7 @@ static void timeout_callback(void);
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void access_control_init(void){
+void access_control_init(){
 /*****************************************************************
  * @brief: Initialization function for the Access control application
  *          It initializes the internal variables and the State machine
@@ -618,6 +619,7 @@ STATE_DEFINE(AccessRequest, NoEventData)
     access_control.current_option = ID;
     char message[]= ACCESS_REQUEST_PH;
 	display_set_string(message);
+	start_timeout();
 	return;
 }
 
@@ -727,14 +729,12 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
         else 
 			SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);    
         break;
-    }  
-           
+    }      
 }
 
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
     display_set_string(ID_NO_EXISTS_PH);
-    //SM_InternalEvent(ST_ACCESS_REQUEST, NULL); 
 }
 
 STATE_DEFINE(PinRequest, NoEventData)
@@ -821,21 +821,21 @@ STATE_DEFINE(InvalidPin, NoEventData)
     
 	display_set_string(INCORRECT_PIN_PH);
 
-    //Retardo de unos segundos
+    timerDelay(5000);	// Esto es bloqueante, OJO
 
-    switch (access_control.current_option){
-    case ADMIN_PIN:
-        //Si se introduce mal el Pin del administrador se vuelve al menu del ADMIN
-        SM_InternalEvent(ST_ADMIN, NULL); 
-        break;
-    case PIN4: case PIN5: default:
-        access_control.IDsList[access_control.current_ID_index].PIN_attempts++;
-        if((access_control.IDsList[access_control.current_ID_index].PIN_attempts) == MAX_NUM_ATTEMPTS)
-            SM_InternalEvent(ST_BLOCK_ID, NULL);
-        else
-            SM_InternalEvent(ST_PIN_REQUEST, NULL); 
-        break;
-    }  
+	switch (access_control.current_option){
+	case ADMIN_PIN:
+		//Si se introduce mal el Pin del administrador se vuelve al menu del ADMIN
+		SM_InternalEvent(ST_ADMIN, NULL); 
+		break;
+	case PIN4: case PIN5: default:
+		access_control.IDsList[access_control.current_ID_index].PIN_attempts++;
+		if((access_control.IDsList[access_control.current_ID_index].PIN_attempts) == MAX_NUM_ATTEMPTS)
+			SM_InternalEvent(ST_BLOCK_ID, NULL);
+		else
+			SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+		break;
+	}
 }
 
 STATE_DEFINE(BlockId, NoEventData)
@@ -1114,6 +1114,6 @@ static void timeout_callback(void){
  * 			the state machine to the initial state.
  * **************************************************************/
 	//Falta raisear un timeout event a la maquina de estados
-	//SM_Event(ACC, Encoder_Long_Click, NULL);
+	//SM_Event(ACC, Encoder_Click, NULL);
 	return;
 }

@@ -33,7 +33,9 @@
 #define MAX_IDS 				2000
 #define ERR_MSG_TIME 			2
 #define ID_LENGTH 				8
-#define TIMEOUT_TIMER_MS		10*1000 //10 segundos
+#define TIMEOUT_TIMER_MS		(10*1000) //10 segundos
+
+SM_DECLARE(ACC)
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -47,7 +49,7 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void access_control_init(void);
+void access_control_init();
 /*****************************************************************
  * @brief: Initialization function for the Access control application
  *          It initializes the internal variables and the State machine

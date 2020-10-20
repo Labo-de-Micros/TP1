@@ -54,7 +54,7 @@ void App_Init (void) {
     display_configure_pins(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
     display_configure_mux(DISPLAY_MUX_PIN_0, DISPLAY_MUX_PIN_1);
     display_on();
-    access_control_init();
+    access_control_init(ACCObj);
 	reset_buffer();
 	return;
 }
