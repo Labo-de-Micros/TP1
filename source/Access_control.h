@@ -53,7 +53,7 @@ SM_DECLARE(ACC)
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-void access_control_init();
+void access_control_init(void);
 /*****************************************************************
  * @brief: Initialization function for the Access control application
  *          It initializes the internal variables and the State machine

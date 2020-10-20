@@ -160,13 +160,13 @@ void display_set_single_char(char character, uint8_t index);
  * @param index: Index in the buffer where the digit will be displayed. 
  * **************************************************************/
 
-void display_enable_auto_rotation();
+void display_enable_auto_rotation(void);
 /*****************************************************************
  * @brief: Turns automatic rotation on. When a string is loaded, 
  * it will rotate once automatically.
  * **************************************************************/
 
-void display_disable_auto_rotation();
+void display_disable_auto_rotation(void);
 /*****************************************************************
  * @brief: Turns automatic rotation off.
  * **************************************************************/
