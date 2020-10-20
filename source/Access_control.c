@@ -42,6 +42,9 @@
 #define DELETE_ID_PH		"Delete Id    "
 #define CONFIRM_PH			"Confirm ?    "
 #define ID_DELETED_PH		"Id deleted    "
+#define MODIFY_ID_PH		"Modify Id    "
+#define ID_MODIFIED_PH		"Id modified    "
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -53,10 +56,12 @@ typedef enum{
 	NEW_ID,
 	ID,
     DELETE_ID,
+    MODIFY_ID,
 	PIN4,
     PIN5,
     ADMIN_PIN,
-    NEW_ID_PIN
+    NEW_ID_PIN,
+    MODIFY_PIN
 }word_option_t;
 
 typedef struct{
@@ -116,11 +121,18 @@ enum States
     ST_ALREADY_EXISTS,
     ST_ID_ADDITION,
     ST_RECOUNT_NEW_ID_PIN,
+    ST_CONFIRMATION_0,
 
     //NARANJA
     ST_ELIMINATE_ID,
-    ST_CONFIRMATION,
-    ST_ID_ELIMINATION
+    ST_CONFIRMATION_1,
+    ST_ID_ELIMINATION,
+
+    //ROJO
+    ST_MODIFY_ID,
+    ST_CONFIRMATION_2,
+    ST_ID_MODIFICATION
+
 };
 
 //////////////////////////////////////////////////////////////////
@@ -248,14 +260,19 @@ STATE_DECLARE(AddID, NoEventData)
 STATE_DECLARE(AlreadyExists, NoEventData)
 STATE_DECLARE(IDAddition, NoEventData)
 STATE_DECLARE(RecountNewIdPIN, NoEventData)
-
+STATE_DECLARE(Confirmation0, NoEventData)
 
 //NARANJA
 STATE_DECLARE(EliminateID, NoEventData)
-STATE_DECLARE(Confirmation, NoEventData)
+STATE_DECLARE(Confirmation1, NoEventData)
 STATE_DECLARE(IDElimination, NoEventData)
 
+//ROJO
+STATE_DECLARE(ModifyID, NoEventData)
+STATE_DECLARE(Confirmation2, NoEventData)
+STATE_DECLARE(IDModification, NoEventData)
 
+ 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			                STATE MAP                   	    //
@@ -296,11 +313,17 @@ BEGIN_STATE_MAP(AccessControl)
     STATE_MAP_ENTRY(ST_AlreadyExists)
     STATE_MAP_ENTRY(ST_IDAddition)
     STATE_MAP_ENTRY(ST_RecountNewIdPIN)
+    STATE_MAP_ENTRY(ST_Confirmation2)
 
     //NARANJA
     STATE_MAP_ENTRY(ST_EliminateID)
-    STATE_MAP_ENTRY(ST_Confirmation)
+    STATE_MAP_ENTRY(ST_Confirmation1)
     STATE_MAP_ENTRY(ST_IDElimination)
+
+    //ROJO
+    STATE_MAP_ENTRY(ST_ModifyID)
+    STATE_MAP_ENTRY(ST_Confirmation2)
+    STATE_MAP_ENTRY(ST_IDModification)
 
 END_STATE_MAP(AccessControl)
 
@@ -350,11 +373,18 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_ID_ADDITION,
         TRANSITION_MAP_ENTRY(ST_ENTER_DIGIT_DISPLAY)            //ST_RECOUNT_NEW_ID_PIN
+        TRANSITION_MAP_ENTRY(ST_ID_ADDITION)                     //ST_CONFIRMATION_0,
 
         //NARANJA
         TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)         //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(ST_ID_ELIMINATION)                 //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(ST_ID_ELIMINATION)                 //ST_CONFIRMATION_1,
         TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_ID_ELIMINATION
+
+        //ROJO
+        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_ENCODER)         //ST_MODIFY_ID,
+        TRANSITION_MAP_ENTRY(ST_ID_MODIFICATION)                //ST_CONFIRMATION_2,
+        TRANSITION_MAP_ENTRY(ST_MODIFY_ID)                      //ST_ID_MODIFICATION
+
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -399,11 +429,17 @@ EVENT_DEFINE(Encoder_Double_Click, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
         TRANSITION_MAP_ENTRY(ST_CHECK_PIN)                      //ST_RECOUNT_NEW_ID_PIN
+        TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_CONFIRMATION_2,
 
         //NARANJA
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_CONFIRMATION_1,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
+
+        //ROJO
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_MODIFY_ID,
+        TRANSITION_MAP_ENTRY(ST_MODIFY_ID)                      //ST_CONFIRMATION_2,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -448,11 +484,17 @@ EVENT_DEFINE(Encoder_CW, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_RECOUNT_NEW_ID_PIN
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
 
         //NARANJA   
         TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_1,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
+
+        //ROJO
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_MODIFY_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -496,11 +538,17 @@ EVENT_DEFINE(Encoder_CCW, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_RECOUNT_NEW_ID_PIN
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
 
         //NARANJA               
         TRANSITION_MAP_ENTRY(ST_ADD_ID)                         //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_1,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
+
+        //ROJO
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_MODIFY_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -544,11 +592,17 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                    	//ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                 	//ST_ID_ADDITION,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_RECOUNT_NEW_ID_PIN
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
 
         //NARANJA                   
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                   	//ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                   	//ST_CONFIRMATION_1,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                   	//ST_ID_ELIMINATION
+
+        //ROJO
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_MODIFY_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -591,12 +645,18 @@ EVENT_DEFINE(Card_Reader, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ALREADY_EXISTS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ADDITION,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_RECOUNT_NEW_ID_PIN
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
 
         //NARANJA                   
         TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)            //ST_ELIMINATE_ID,
-        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_1,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
 
+        //ROJO
+        TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)            //ST_MODIFY_ID,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
+        
     END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
@@ -653,7 +713,7 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
     switch (access_control.current_option){
 		case DELETE_ID:
 			if(id_exists) 
-				SM_InternalEvent(ST_CONFIRMATION, NULL); 
+				SM_InternalEvent(ST_CONFIRMATION_1, NULL); 
 			else 
 				SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
 			break;
@@ -666,7 +726,14 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
 				access_control.IDsList[access_control.total_of_IDs].card_id=card_data.pan;
 				SM_InternalEvent(ST_PIN_REQUEST, NULL);  
 			}
-			
+			break;
+
+		case MODIFY_ID:
+			if(id_exists) 
+				SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+			else{   
+				SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
+			}
 			break;
 
 		case ID: default:
@@ -702,7 +769,7 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
     switch (access_control.current_option)
     {
     case DELETE_ID:
-        if(id_exists) SM_InternalEvent(ST_CONFIRMATION, NULL); 
+        if(id_exists) SM_InternalEvent(ST_CONFIRMATION_1, NULL); 
         else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
         break;
     
@@ -716,6 +783,15 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
             SM_InternalEvent(ST_PIN_REQUEST, NULL);  
         }
         break;
+
+    case MODIFY_ID:
+        if(id_exists) 
+            SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+        else{   
+            SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
+        }
+        break;
+
     case ID: default:
         if(id_exists)
         {
@@ -760,9 +836,15 @@ STATE_DEFINE(PinRequest, NoEventData)
         case NEW_ID:
             access_control.current_option = NEW_ID_PIN;
             break;
+
+        case MODIFY_ID:
+            access_control.current_option = MODIFY_PIN;
+            break;
+
         case ADMIN_PIN:
             access_control.current_option = ADMIN_PIN;
             break;
+     
     }   
 	return;
     //SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
@@ -784,14 +866,11 @@ STATE_DEFINE(CheckPin, NoEventData)
         break;
     
     case NEW_ID_PIN:
-        //VER ESTP PORQUE SOLO PUEDO PONER UN PIN DE 4 CUANDO AGRAGO UN ID
-        pin_introduced = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.total_of_IDs].PIN_length);
-        //Se tiene el id y el pin para crear un nuevo usuario. Se setean el resto de las variables
-        access_control.IDsList[access_control.total_of_IDs].PIN = pin_introduced;
-        access_control.IDsList[access_control.total_of_IDs].blocked_status = false; 
-        access_control.IDsList[access_control.total_of_IDs].valid = true;
-        access_control.IDsList[access_control.total_of_IDs].PIN_attempts=0;  
-        SM_InternalEvent(ST_ID_ADDITION, NULL);
+        SM_InternalEvent(ST_CONFIRMATION_0, NULL);
+        break;
+
+   case MODIFY_PIN: 
+        SM_InternalEvent(ST_CONFIRMATION_2, NULL);
         break;
 
     case PIN4: case PIN5: default:
@@ -898,7 +977,7 @@ STATE_DEFINE(NextDigit, NoEventData)
     display_disable_highlight();
     access_control.digits_introduced++;
     switch (access_control.current_option){
-		case ID: case NEW_ID: case  DELETE_ID:
+		case ID: case NEW_ID: case  DELETE_ID: case MODIFY_ID:
 			if(access_control.digits_introduced == ID_LENGTH) 
 				SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL);
 			else{
@@ -959,6 +1038,24 @@ STATE_DEFINE(NextDigit, NoEventData)
 				SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);
 			}
 			break;
+
+		case  MODIFY_PIN:
+			//Se da la opcion de que el PIN del nuevo ID sea de 4 o 5
+			if(access_control.digits_introduced == 5) {
+				SM_InternalEvent(ST_CHECK_PIN, NULL); 
+			}
+			if(access_control.digits_introduced == 4){
+				SM_InternalEvent(ST_RECOUNT_NEW_ID_PIN, NULL); 
+			}
+			else if(access_control.digits_introduced < 4){
+				hide_digit(access_control.index);
+				access_control.index++;
+				if(access_control.index-display_get_index()>3) 	
+					display_rotate_right();
+				SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);
+			}
+			break;
+
 		default:
 			break;
     }
@@ -1034,7 +1131,17 @@ STATE_DEFINE(AlreadyExists, NoEventData)
 STATE_DEFINE(IDAddition, NoEventData)
 {
     display_set_string(ID_ADDED_PH);
-	access_control.total_of_IDs++;
+	
+    uint8_t pin_length = access_control.digits_introduced;
+    uint32_t pin_introduced = array_to_int(access_control.word_introduced,pin_length);
+    
+    //El Id ya se guardo en Check ID. Ahora se guarda el PIN y el resto de las variable del nuevo Id
+    access_control.IDsList[access_control.total_of_IDs].PIN = pin_introduced;
+    access_control.IDsList[access_control.total_of_IDs].blocked_status = false; 
+    access_control.IDsList[access_control.total_of_IDs].valid = true;
+    access_control.IDsList[access_control.total_of_IDs].PIN_attempts=0; 
+    
+    access_control.total_of_IDs++;
 
 }
 
@@ -1042,6 +1149,13 @@ STATE_DEFINE(RecountNewIdPIN, NoEventData)
 {
 
 }
+
+STATE_DEFINE(Confirmation0, NoEventData)
+{
+    display_set_string(CONFIRM_PH);
+}
+ 
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			    			 NARANJA    				        //
@@ -1054,7 +1168,7 @@ STATE_DEFINE(EliminateID, NoEventData)
     access_control.current_option = DELETE_ID;
 }
 
-STATE_DEFINE(Confirmation, NoEventData)
+STATE_DEFINE(Confirmation1, NoEventData)
 {
     display_set_string(CONFIRM_PH);
      
@@ -1065,6 +1179,44 @@ STATE_DEFINE(IDElimination, NoEventData)
     access_control.IDsList[access_control.current_ID_index].valid = false;
 	display_set_string(ID_DELETED_PH);
 }
+
+
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			    			 NARANJA    				        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+STATE_DEFINE(ModifyID, NoEventData)
+{
+	display_set_string(MODIFY_ID_PH);
+    access_control.current_option = MODIFY_ID;
+}
+
+STATE_DEFINE(Confirmation2, NoEventData)
+{
+    display_set_string(CONFIRM_PH);
+     
+}
+
+STATE_DEFINE(IDModification, NoEventData)
+{
+    display_set_string(ID_DELETED_PH);
+
+    uint8_t pin_length = access_control.digits_introduced;
+    uint32_t pin_introduced = array_to_int(access_control.word_introduced,pin_length);
+
+    //Se modifica el PIN
+    access_control.IDsList[access_control.current_ID_index].PIN_length = pin_length;
+    access_control.IDsList[access_control.current_ID_index].PIN = pin_introduced;
+    access_control.IDsList[access_control.current_ID_index].blocked_status = false;
+    //access_control.IDsList[access_control.current_ID_index].PIN_attempts = 0;
+	
+}
+
+
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
