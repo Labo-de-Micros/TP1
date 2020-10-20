@@ -227,11 +227,7 @@ static void set_blank(void);
  * @brief: Sets selected digit to blank.
  * **************************************************************/
 
-static void set_brightness_level(display_brightness_level_t level);
-/*****************************************************************
- * @brief: Sets the brightness level for the entire display.
- * @param level: Level to set.
- * **************************************************************/
+
 
 static void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit);
 /*****************************************************************
@@ -250,13 +246,17 @@ static void rotate_callback(void);
  * @brief: Callback for auto rotation.
  * **************************************************************/
 
+static void set_brightness_level(display_brightness_level_t level);
+/*****************************************************************
+ * @brief: Sets the brightness level for the entire display.
+ * @param level: Level to set.
+ * **************************************************************/
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
-
 
 void display_init(void){
 /*****************************************************************

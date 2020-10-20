@@ -33,7 +33,7 @@
 #define MAX_IDS 				2000
 #define ERR_MSG_TIME 			2
 #define ID_LENGTH 				8
-#define TIMEOUT_TIMER_MS		(10*1000) 	//10 segundos
+#define TIMEOUT_TIMER_MS		(30*1000) 	//10 segundos
 #define TIMEOUT_OPEN_DOOR_MS	(5*1000)	//5 segundos
 
 #if (ID_LENGTH != 8)

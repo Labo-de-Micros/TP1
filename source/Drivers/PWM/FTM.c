@@ -1,5 +1,6 @@
 #include "./FTM.h"
 #include "../GPIO/gpio.h"
+#include "../../board.h"
 
 //enum { PA, PB, PC, PD, PE };
 // Convert port and number into pin ID
@@ -34,11 +35,10 @@ __ISR__ FTM0_IRQHandler(void)
 void PWM_ISR (void)
 {
 	FTM_ClearOverflowFlag (FTM0);
+	gpioToggle(TEST);
 	//set_DutyPWM(FTM0, 0, percent);
 	//percent +=10;
 	//percent= percent%100;
-
-
 	//FTM_SetCounter(FTM0, 0, PWM_duty++);  //change DC
 	//GPIO_Toggle(PTC, 1 << 8);			  //GPIO pin PTC8
 	//PWM_duty %= PWM_modulus;

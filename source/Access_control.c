@@ -88,6 +88,8 @@ typedef struct{
 	tim_id_t timer;
 }access_control_t;
 
+typedef enum {DOOR_LOCKED, DOOR_OPEN, DOOR_ADMIN, DOOR_ERROR} door_modes_t;
+
 enum States
 {   
     ST_ADMIN,
@@ -184,6 +186,11 @@ static void timeout_callback(void);
 static void door_timeout_callback(void);
 /*****************************************************************
  * @brief: timeout for the door callback.
+ * **************************************************************/
+
+static void set_door_led_mode(door_modes_t);
+/*****************************************************************
+ * @brief: 
  * **************************************************************/
 
 //////////////////////////////////////////////////////////////////
