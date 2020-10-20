@@ -30,8 +30,8 @@
 #define REFRESH_FREQUENCY_HZ 	60
 #define DIGITS 					4
 #define MUX_PINS 				2
-#define ROTATION_TIME_S 		1
-#define EXT_BUF_LEN 			15
+#define ROTATION_TIME_S 		0.4
+#define EXT_BUF_LEN 			30
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////

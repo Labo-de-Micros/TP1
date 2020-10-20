@@ -679,7 +679,7 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
 			}
 			else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);    
 			break;
-    }  
+    }
 }
 
 STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
@@ -713,21 +713,19 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
             access_control.IDsList[access_control.total_of_IDs].number = entered_id;
             SM_InternalEvent(ST_PIN_REQUEST, NULL);  
         }
-        
         break;
-
     case ID: default:
         if(id_exists)
         {
             if(access_control.IDsList[index].blocked_status) 
                 SM_InternalEvent(ST_BLOCK_ID, NULL); 
-            else 
-            {
+            else {
                 access_control.IDsList[index].PIN_attempts=0;
                 SM_InternalEvent(ST_PIN_REQUEST, NULL); 
             }
         }
-        else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);    
+        else 
+			SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);    
         break;
     }  
            
@@ -746,7 +744,6 @@ STATE_DEFINE(PinRequest, NoEventData)
 
     switch (access_control.current_option)
     {
-
         case ID:  default:
             switch(access_control.IDsList[access_control.current_ID_index].PIN_length){
                 case 4 :
@@ -759,17 +756,15 @@ STATE_DEFINE(PinRequest, NoEventData)
                 
                     break;
             }
-
+			break;
         case NEW_ID:
             access_control.current_option = NEW_ID_PIN;
             break;
-
         case ADMIN_PIN:
             access_control.current_option = ADMIN_PIN;
             break;
-        
     }   
-
+	return;
     //SM_InternalEvent(ST_ENTER_DIGITS_REQUEST, NULL);
 }
 
@@ -782,28 +777,29 @@ STATE_DEFINE(CheckPin, NoEventData)
     {
     case ADMIN_PIN:
         pin_introduced = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.current_ID_index].PIN_length);
-        if(access_control.IDsList[0].PIN==pin_introduced) SM_InternalEvent(ST_CHANGE_BRIGHTNESS, NULL); 
-        else SM_InternalEvent(ST_INVALID_PIN, NULL);
+        if(access_control.IDsList[0].PIN==pin_introduced) 
+			SM_InternalEvent(ST_CHANGE_BRIGHTNESS, NULL); 
+        else 
+			SM_InternalEvent(ST_INVALID_PIN, NULL);
         break;
     
     case NEW_ID_PIN:
         //VER ESTP PORQUE SOLO PUEDO PONER UN PIN DE 4 CUANDO AGRAGO UN ID
         pin_introduced = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.total_of_IDs].PIN_length);
-        
         //Se tiene el id y el pin para crear un nuevo usuario. Se setean el resto de las variables
         access_control.IDsList[access_control.total_of_IDs].PIN = pin_introduced;
         access_control.IDsList[access_control.total_of_IDs].blocked_status = false; 
         access_control.IDsList[access_control.total_of_IDs].valid = true;
-        access_control.IDsList[access_control.total_of_IDs].PIN_attempts=0;
-        
-            
+        access_control.IDsList[access_control.total_of_IDs].PIN_attempts=0;  
         SM_InternalEvent(ST_ID_ADDITION, NULL);
         break;
 
     case PIN4: case PIN5: default:
         pin_introduced = array_to_int(access_control.word_introduced,access_control.IDsList[access_control.current_ID_index].PIN_length);
-        if(access_control.IDsList[access_control.current_ID_index].PIN==pin_introduced) SM_InternalEvent(ST_ACCESS_GRANTED, NULL);
-        else SM_InternalEvent(ST_INVALID_PIN, NULL);
+        if(access_control.IDsList[access_control.current_ID_index].PIN==pin_introduced) 
+			SM_InternalEvent(ST_ACCESS_GRANTED, NULL);
+        else 
+			SM_InternalEvent(ST_INVALID_PIN, NULL);
         break;
     }
 }
@@ -811,12 +807,12 @@ STATE_DEFINE(CheckPin, NoEventData)
 STATE_DEFINE(AccessGranted, NoEventData)
 {
     display_set_string(ACCESS_GRANTED_PH);
-    // TODO
-    //Muestro ACCESS GRANTED
-    //Prendo LED 
-    //Espero 5 seg
-    //Apago LED
-    //SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
+	// TODO
+	//Muestro ACCESS GRANTED
+	//Prendo LED 
+	//Espero 5 seg
+	//Apago LED
+	//SM_InternalEvent(ST_ACCESS_REQUEST, NULL);
 }
 
 STATE_DEFINE(InvalidPin, NoEventData)
@@ -827,13 +823,11 @@ STATE_DEFINE(InvalidPin, NoEventData)
 
     //Retardo de unos segundos
 
-    switch (access_control.current_option)
-    {
+    switch (access_control.current_option){
     case ADMIN_PIN:
-        //Si se introduce mal el PIn del administrador se vuelve al menu del ADMIN
+        //Si se introduce mal el Pin del administrador se vuelve al menu del ADMIN
         SM_InternalEvent(ST_ADMIN, NULL); 
         break;
-    
     case PIN4: case PIN5: default:
         access_control.IDsList[access_control.current_ID_index].PIN_attempts++;
         if((access_control.IDsList[access_control.current_ID_index].PIN_attempts) == MAX_NUM_ATTEMPTS)
@@ -903,44 +897,72 @@ STATE_DEFINE(NextDigit, NoEventData)
 {
     display_disable_highlight();
     access_control.digits_introduced++;
-    
-    switch (access_control.current_option)
-    {
-    case ID: case NEW_ID: case  DELETE_ID:
-        if(access_control.digits_introduced == ID_LENGTH) SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL);
-        break;
-
-    case PIN4:
-        if(access_control.digits_introduced == 4) SM_InternalEvent(ST_CHECK_PIN, NULL); 
-        hide_digit(access_control.index);
-        break;
-
-    case  PIN5:      
-        if(access_control.digits_introduced == 5) SM_InternalEvent(ST_CHECK_PIN, NULL); 
-        hide_digit(access_control.index);
-        break;
-  
-    case ADMIN_PIN:
-        if(access_control.digits_introduced == access_control.IDsList[0].PIN_length) SM_InternalEvent(ST_CHECK_PIN, NULL); 
-        hide_digit(access_control.index);
-        break;
-
-    case  NEW_ID_PIN:
-        //Se da la opcion de que el PIN del nuevo ID sea de 4 o 5
-        if(access_control.digits_introduced == 5) {
-            access_control.IDsList[access_control.total_of_IDs].PIN_length = 5;
-            SM_InternalEvent(ST_CHECK_PIN, NULL); 
-        }
-           
-        if(access_control.digits_introduced == 4){
-            access_control.IDsList[access_control.total_of_IDs].PIN_length = 4;
-            SM_InternalEvent(ST_RECOUNT_NEW_ID_PIN, NULL); 
-        }
-        break;
-
-    default:
-        break;
+    switch (access_control.current_option){
+		case ID: case NEW_ID: case  DELETE_ID:
+			if(access_control.digits_introduced == ID_LENGTH) 
+				SM_InternalEvent(ST_CHECK_ID_ENTERING_BY_ENCODER, NULL);
+			else{
+				access_control.index++;
+				if(access_control.index-display_get_index()>3) 	
+					display_rotate_right();
+				SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);
+			}
+			break;
+		case PIN4:
+			if(access_control.digits_introduced == 4) 
+				SM_InternalEvent(ST_CHECK_PIN, NULL);
+			else{
+				hide_digit(access_control.index);
+				access_control.index++;
+				if(access_control.index-display_get_index()>3) 	
+					display_rotate_right();
+				SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);
+			}
+			break;
+		case  PIN5:      
+			if(access_control.digits_introduced == 5) 
+				SM_InternalEvent(ST_CHECK_PIN, NULL);
+			else{
+				hide_digit(access_control.index);
+				access_control.index++;
+				if(access_control.index-display_get_index()>3) 	
+					display_rotate_right();
+				SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);
+			}
+			break;
+		case ADMIN_PIN:
+			if(access_control.digits_introduced == access_control.IDsList[0].PIN_length) 
+				SM_InternalEvent(ST_CHECK_PIN, NULL);
+			else{
+				hide_digit(access_control.index);
+				access_control.index++;
+				if(access_control.index-display_get_index()>3) 	
+					display_rotate_right();
+				SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);
+			}
+			break;
+		case  NEW_ID_PIN:
+			//Se da la opcion de que el PIN del nuevo ID sea de 4 o 5
+			if(access_control.digits_introduced == 5) {
+				access_control.IDsList[access_control.total_of_IDs].PIN_length = 5;
+				SM_InternalEvent(ST_CHECK_PIN, NULL); 
+			}
+			if(access_control.digits_introduced == 4){
+				access_control.IDsList[access_control.total_of_IDs].PIN_length = 4;
+				SM_InternalEvent(ST_RECOUNT_NEW_ID_PIN, NULL); 
+			}
+			else if(access_control.digits_introduced < 4){
+				hide_digit(access_control.index);
+				access_control.index++;
+				if(access_control.index-display_get_index()>3) 	
+					display_rotate_right();
+				SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL);
+			}
+			break;
+		default:
+			break;
     }
+	return;
 }
 
 STATE_DEFINE(PreviousDigit, NoEventData)
