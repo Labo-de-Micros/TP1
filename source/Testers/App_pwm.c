@@ -4,6 +4,7 @@
 #include "./board.h"
 #include "hardware.h"
 #include "./Drivers/PWM/FTM.h"
+#include "./Drivers/GPIO/gpio.h"
 
 /*******************************************************************************
  * CONSTANT AND MACRO DEFINITIONS USING #DEFINE
@@ -21,7 +22,7 @@
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
-
+void callback(void);
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -30,15 +31,21 @@
 
 void App_Init (void) {
 
- 	 	 	 	hw_Init ();
- 	 	 		FTM_Init(FTM0);
+	hw_Init ();
+	gpioMode(TEST,OUTPUT);
+	FTM_Init(FTM0);
+	pwm_start_timer(PWM_MS_TO_TICKS(0.001),99,callback);
+	gpioMode(TEST,OUTPUT);
 	return;
 }
 
 void App_Run (void){
-    while (true)
-    {
+    while (true);
+	return;
+}
 
-	}
+void callback(void){
+	gpioToggle(TEST);
+	pwm_start_timer(PWM_MS_TO_TICKS(0.001),99,callback);
 	return;
 }

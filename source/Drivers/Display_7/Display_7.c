@@ -227,8 +227,6 @@ static void set_blank(void);
  * @brief: Sets selected digit to blank.
  * **************************************************************/
 
-
-
 static void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit);
 /*****************************************************************
  * @brief: Sets the brightness level for a digit.

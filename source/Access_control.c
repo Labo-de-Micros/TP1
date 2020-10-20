@@ -146,6 +146,7 @@ enum States
 //////////////////////////////////////////////////////////////////
 
 static access_control_t access_control;
+
 static tim_id_t door_timer;
 
 ////////////////////////////////////////////////////////////////
@@ -188,9 +189,10 @@ static void door_timeout_callback(void);
  * @brief: timeout for the door callback.
  * **************************************************************/
 
-static void set_door_led_mode(door_modes_t);
+static void set_door_led_mode(door_modes_t mode);
 /*****************************************************************
- * @brief: 
+ * @brief: set the door pins corresponding to an input mode
+ * @param mode: Mode of the current door.
  * **************************************************************/
 
 //////////////////////////////////////////////////////////////////
@@ -629,7 +631,7 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
 
-//Lector de tarjetas external event
+// Lector de tarjetas external event
 EVENT_DEFINE(Card_Reader, NoEventData)
 {
     
@@ -682,6 +684,7 @@ EVENT_DEFINE(Card_Reader, NoEventData)
     END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
+// Timeout internal event
 EVENT_DEFINE(Time_Out, NoEventData)
 {
     
@@ -744,9 +747,7 @@ STATE_DEFINE(Admin, NoEventData)
 {
     char message[]= ADMIN_PH;
 	display_set_string(message);
-	gpioWrite(PIN_LED_RED, HIGH);
-	gpioWrite(PIN_LED_GREEN, HIGH);
-	gpioWrite(PIN_LED_BLUE, LOW);
+	set_door_led_mode(DOOR_ADMIN);
     access_control.current_option = ADMIN_PIN;
     start_timeout();
 
@@ -758,9 +759,7 @@ STATE_DEFINE(AccessRequest, NoEventData)
     char message[]= ACCESS_REQUEST_PH;
 	display_set_string(message);
 	start_timeout();
-	gpioWrite(PIN_LED_GREEN, HIGH);
-	gpioWrite(PIN_LED_BLUE, HIGH);
-	gpioWrite(PIN_LED_RED, LOW);
+	set_door_led_mode(DOOR_LOCKED);
 	
 }
 
@@ -969,9 +968,7 @@ STATE_DEFINE(AccessGranted, NoEventData)
 {
     display_set_string(ACCESS_GRANTED_PH);
 	timerStart(door_timer,TIMEOUT_OPEN_DOOR_TICKS,TIM_MODE_SINGLESHOT,door_timeout_callback);
-	gpioWrite(PIN_LED_GREEN,LOW);
-	gpioWrite(PIN_LED_RED, HIGH);
-	gpioWrite(PIN_LED_BLUE, HIGH);
+	set_door_led_mode(DOOR_OPEN);
 }
 
 STATE_DEFINE(InvalidPin, NoEventData)
@@ -979,8 +976,6 @@ STATE_DEFINE(InvalidPin, NoEventData)
     //Muestro INCORRECT PIN
     start_timeout();
 	display_set_string(INCORRECT_PIN_PH);
-
-    //timerDelay(5000);	// Esto es bloqueante, OJO
 
 	switch (access_control.current_option){
 	case ADMIN_PIN:
@@ -1007,6 +1002,7 @@ STATE_DEFINE(BlockId, NoEventData)
     //PONER UN TIMEOUT
     //SM_InternalEvent(ST_ACCESS_REQUEST, NULL);  
 }
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -1167,6 +1163,9 @@ STATE_DEFINE(PreviousDigit, NoEventData)
     SM_InternalEvent(ST_ENTER_DIGIT_DISPLAY, NULL); 
 }
 
+
+
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			    			 VERDE   				 	        //
@@ -1196,6 +1195,8 @@ STATE_DEFINE(HigherBrightness, NoEventData)
     display_set_brightness_level(display_get_brightness()+1);
     SM_InternalEvent(ST_SET_BRIGHTNESS, NULL); 
 }
+
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -1250,6 +1251,7 @@ STATE_DEFINE(Confirmation0, NoEventData)
     display_set_string(CONFIRM_PH);
 }
  
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -1318,7 +1320,6 @@ STATE_DEFINE(IDModification, NoEventData)
 
 
 
-
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			     			FUNCIONES 				   	        //
@@ -1374,7 +1375,38 @@ static void door_timeout_callback(void){
 /*****************************************************************
  * @brief: timeout for the door callback.
  * **************************************************************/
-	gpioWrite(PIN_LED_GREEN, HIGH);
-	gpioWrite(PIN_LED_RED, LOW);
+	set_door_led_mode(DOOR_LOCKED);
+	return;
+}
+
+static void set_door_led_mode(door_modes_t mode){
+/*****************************************************************
+ * @brief: set the door pins corresponding to an input mode
+ * @param mode: Mode of the current door.
+ * **************************************************************/
+    switch(mode){
+        case DOOR_LOCKED:
+            gpioWrite(PIN_LED_GREEN, HIGH);
+			gpioWrite(PIN_LED_BLUE, HIGH);
+			gpioWrite(PIN_LED_RED, LOW);
+			break;
+		case DOOR_ADMIN:
+			gpioWrite(PIN_LED_GREEN, HIGH);
+			gpioWrite(PIN_LED_BLUE, LOW);
+			gpioWrite(PIN_LED_RED, HIGH);
+			break;
+		case DOOR_OPEN:
+			gpioWrite(PIN_LED_GREEN, LOW);
+			gpioWrite(PIN_LED_BLUE, HIGH);
+			gpioWrite(PIN_LED_RED, HIGH);
+			break;
+		case DOOR_ERROR:
+			gpioWrite(PIN_LED_GREEN, HIGH);
+			gpioWrite(PIN_LED_BLUE, HIGH);
+			gpioWrite(PIN_LED_RED, HIGH);
+			break;
+		default:
+			break;
+    }
 	return;
 }

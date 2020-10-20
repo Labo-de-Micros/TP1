@@ -68,10 +68,15 @@ void access_control_init(void);
 //////////////////////////////////////////////////////////////////
 
 EVENT_DECLARE(Encoder_Click, NoEventData);
+
 EVENT_DECLARE(Encoder_Double_Click, NoEventData);
+
 EVENT_DECLARE(Encoder_CW, NoEventData);
+
 EVENT_DECLARE(Encoder_CCW, NoEventData);
+
 EVENT_DECLARE(Encoder_Long_Click, NoEventData);
+
 EVENT_DECLARE(Card_Reader, NoEventData);
 
 #endif // _ACCESSCONTROL_H

@@ -26,6 +26,8 @@
 static void click(void);
 static void ccw(void);
 static void cw(void);
+
+uint8_t level = 0;
 /*******************************************************************************
  *******************************************************************************
                         GLOBAL FUNCTION DEFINITIONS
@@ -35,8 +37,6 @@ static void cw(void);
 void App_Init (void) {
 	encoder_init();
     display_init();
-    display_configure_pins(DISPLAY_PIN_A, DISPLAY_PIN_B, DISPLAY_PIN_C, DISPLAY_PIN_D, DISPLAY_PIN_E, DISPLAY_PIN_F, DISPLAY_PIN_G);
-    display_configure_mux(DISPLAY_MUX_PIN_0, DISPLAY_MUX_PIN_1);
     char text[]="alto display";
 	
 
@@ -79,11 +79,15 @@ static void click(void){
 }
 
 static void ccw(void){
-	display_rotate_left();
+	//display_rotate_left();
+	level--;
+	set_brightness_level(level);
 	return;
 }
 
 static void cw(void){
-	display_rotate_right();
+	//display_rotate_right();
+	level++;
+	set_brightness_level(level);
 	return;
 }
