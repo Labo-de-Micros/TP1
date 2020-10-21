@@ -15,6 +15,7 @@
 #include "./Display_7.h"
 #include "../Timer/timer.h"
 #include "../../board.h"
+#include "../PWM/PWM.h"
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -110,8 +111,8 @@ typedef struct{
 	uint8_t buf[EXT_BUF_LEN];
 	uint8_t aux_buf[EXT_BUF_LEN];
 	uint8_t ext_index;
-	display_brightness_level_t brightness[EXT_BUF_LEN];	
-	display_brightness_level_t brightness_level;
+	uint8_t brightness[EXT_BUF_LEN];	
+	uint8_t brightness_level;
 	display_mode_t mode;
 	bool auto_rotation;
 	bool queued_return;
@@ -264,7 +265,7 @@ void display_init(void){
 	display.timer=timerGetId();
 	display.temp_timer=timerGetId();
 	display.pwm_timer=timerGetId();
-	display.brightness_level= BRIGHT_HIGH;
+	display.brightness_level= 50;
 	display.ext_index=0;
 	display.auto_rotation=true;
 	display.queued_return=false;
@@ -347,22 +348,13 @@ void display_set_single_char(char character, uint8_t index){
 	load_buffer(get_7_segments_char(character), index);
 }
 
-void display_set_brightness_level(display_brightness_level_t level){
+void display_set_brightness_level(uint8_t level){
 /*****************************************************************
  * @brief: Sets a brightness level for the display
  * @param level: New level of brightness.
  * **************************************************************/
-	display_brightness_level_t checked_level;
-	switch(level){
-		case BRIGHT_MIN: case BRIGHT_LOW:
-			checked_level=BRIGHT_LOW;
-			break;
-		case BRIGHT_HIGH: case BRIGHT_MAX:
-			checked_level=BRIGHT_HIGH;
-			break;
-	}
-	display.brightness_level = checked_level;
-	set_brightness_level(display.brightness_level);
+	if(level>=10 && level<=90)
+		set_brightness_level(display.brightness_level);
 }
 
 void display_enable_soft_highlight(uint8_t digit){
@@ -371,7 +363,7 @@ void display_enable_soft_highlight(uint8_t digit){
  * for the rest of them
  * @param digit: Index of the digit to enable the soft Highlight.
  * **************************************************************/
-	set_digit_brightness_level(BRIGHT_MAX, digit);
+	set_digit_brightness_level(100, digit);
 }
 
 void display_enable_hard_highlight(uint8_t digit){
@@ -380,8 +372,8 @@ void display_enable_hard_highlight(uint8_t digit){
  * for the rest of them
  * @param digit: Index of the digit to enable the hard Highlight.
  * **************************************************************/
-	set_brightness_level(BRIGHT_MIN);
-	set_digit_brightness_level(BRIGHT_MAX, digit);
+	set_brightness_level(10);
+	set_digit_brightness_level(100, digit);
 }
 
 void display_disable_highlight(void){
@@ -865,8 +857,8 @@ static void refresh_callback(void){
 	static uint8_t digit = 0;
 	if (digit>=DIGITS) digit=0;
 	digit_select(digit);
-	uint8_t pwm_ticks=(uint8_t)(1000/(REFRESH_FREQUENCY_HZ*DIGITS*(BRIGHTNESS_LEVELS-display.brightness[display.ext_index+digit])));
-	timerStart(display.pwm_timer, pwm_ticks, TIM_MODE_SINGLESHOT, set_blank);
+	uint8_t pwm_ticks=(uint8_t)(PWM_MS_TO_TICKS(display.brightness[display.ext_index+digit]*1000/(REFRESH_FREQUENCY_HZ*DIGITS*100)));
+	pwm_start_timer(pwm_ticks,set_blank);
 	set_pins(display.buf[display.ext_index+(digit++)]);
 	return;
 }
@@ -905,7 +897,7 @@ static void split_number(uint16_t num, uint8_t * buffers){
 	return;
 }
 
-static void set_brightness_level(display_brightness_level_t level){
+static void set_brightness_level(uint8_t level){
 /*****************************************************************
  * @brief: Sets the brightness level for the entire display.
  * @param level: Level to set.
@@ -915,7 +907,7 @@ static void set_brightness_level(display_brightness_level_t level){
 		display.brightness[index]=level;
 }
 
-static void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit){
+static void set_digit_brightness_level(uint8_t level, uint8_t digit){
 /*****************************************************************
  * @brief: Sets the brightness level for a digit.
  * @param level: level to be set.
