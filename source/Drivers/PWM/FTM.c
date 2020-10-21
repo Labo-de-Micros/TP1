@@ -2,23 +2,10 @@
 #include "../GPIO/gpio.h"
 #include "../../board.h"
 
-//enum { PA, PB, PC, PD, PE };
-// Convert port and number into pin ID
-// Ex: PTB5  -> PORTNUM2PIN(PB,5)  -> 0x25
-//     PTC22 -> PORTNUM2PIN(PC,22) -> 0x56
-//#define PORTNUM2PIN(p,n)    (((p)<<5) + (n))
-//#define PIN2PORT(p)         (((p)>>5) & 0x07)
-//#define PIN2NUM(p)          ((p) & 0x1F)
+#include "./Drivers/PWM/PWM.h"
 
 
 
-
-void PWM_Init(uint16_t modulos, FTM_Prescal_t prescaler,uint16_t duty);
-//modulus en cantidad de tick totales para obtener el periodo
-//prescaler en el enum definifo como FTM_PSC_XX
-
-
-void PWM_ISR(void);
 
 uint16_t PWM_modulus = 1000-1;
 uint16_t PWM_duty    = 300;//5000-1;
@@ -33,20 +20,20 @@ __ISR__ FTM0_IRQHandler(void)
 	PWM_ISR();
 }
 
-void PWM_ISR (void)
-{	
-	callBack();
-	//FTM_StopClock(FTM0);
-	FTM_ClearOverflowFlag (FTM0);
-	//FTM_ClearInterruptFlag(FTM0,FTM_CH_0);
-	//gpioToggle(TEST);
-	//set_DutyPWM(FTM0, 0, percent);
-	//percent +=10;
-	//percent= percent%100;
-	//FTM_SetCounter(FTM0, 0, PWM_duty++);  //change DC
-	//GPIO_Toggle(PTC, 1 << 8);			  //GPIO pin PTC8
-	//PWM_duty %= PWM_modulus;
-}
+// void PWM_ISR (void)
+// {
+
+// 	callBack();
+// 	//FTM_ClearOverflowFlag (FTM0);
+// 	//FTM_ClearInterruptFlag(FTM0,FTM_CH_0);
+// 	//gpioToggle(TEST);
+// 	//set_DutyPWM(FTM0, 0, percent);
+// 	//percent +=10;
+// 	//percent= percent%100;
+// 	//FTM_SetCounter(FTM0, 0, PWM_duty++);  //change DC
+// 	//GPIO_Toggle(PTC, 1 << 8);			  //GPIO pin PTC8
+// 	//PWM_duty %= PWM_modulus;
+// }
 
 
 void FTM_Init (FTM_t ftm)
@@ -79,57 +66,53 @@ void FTM_Init (FTM_t ftm)
 	}
 
 
-	PWM_Init(10000-1,FTM_PSC_x32,70);
+	//PWM_Init(10000-1,FTM_PSC_x32,70);
 }
 
-/// FTM PWM Example
 
-// To Test Connect PC9(IC)-PC8(GPIO)
-// or PC9(IC)-PC1(OC)
+// void PWM_Init (uint16_t modulus, FTM_Prescal_t prescaler, uint16_t duty)
+// {
 
-void PWM_Init (uint16_t modulus, FTM_Prescal_t prescaler, uint16_t duty)
-{
+// 	PWM_modulus=modulus;
+// 	PWM_duty=duty;
+// 	//seteo los contadores
 
-	PWM_modulus=modulus;
-	PWM_duty=duty;
-	//seteo los contadores
+// 	FTM0->CNTIN = 0X00;
+// 	FTM0->MOD = FTM_MOD_MOD(PWM_modulus);
 
-	FTM0->CNTIN = 0X00;
-	FTM0->MOD = FTM_MOD_MOD(PWM_modulus);
+// 	PORTC->PCR[PIN2NUM(PORTNUM2PIN(PC,1))]=0x00;
+// 	PORTC->PCR[PIN2NUM(PORTNUM2PIN(PC,1))] |= PORT_PCR_DSE(1);
+// 	PORTC->PCR[PIN2NUM(PORTNUM2PIN(PC,1))] |= PORT_PCR_MUX(4);
+// 	PORTC->PCR[PIN2NUM(PORTNUM2PIN(PC,1))] |= PORT_PCR_IRQC(0);
 
-	PORTC->PCR[PIN2NUM(PORTNUM2PIN(PC,1))]=0x00;
-	PORTC->PCR[PIN2NUM(PORTNUM2PIN(PC,1))] |= PORT_PCR_DSE(1);
-	PORTC->PCR[PIN2NUM(PORTNUM2PIN(PC,1))] |= PORT_PCR_MUX(4);
-	PORTC->PCR[PIN2NUM(PORTNUM2PIN(PC,1))] |= PORT_PCR_IRQC(0);
+// 	//	PORT_Configure2 (PORTC,1,UserPCR);
 
-	//	PORT_Configure2 (PORTC,1,UserPCR);
-
-	FTM0->CNT = 0X00;
+// 	FTM0->CNT = 0X00;
 
 
-	FTM_SetPrescaler(FTM0, prescaler);
-	FTM_SetModulus(FTM0, PWM_modulus);
-	FTM_SetOverflowMode(FTM0, true);
-	//FTM_SetInterruptMode (FTM0,FTM_CH_0, true);
-	FTM_SetWorkingMode(FTM0, 0, FTM_mPulseWidthModulation);			// MSA  / B
-	FTM_SetPulseWidthModulationLogic(FTM0, 0, FTM_lAssertedHigh);   // ELSA / B
-	set_DutyPWM(FTM0, 0, PWM_duty);
-	//FTM_SetCounter(FTM0, 0, PWM_duty);
-	//FTM_StartClock(FTM0);
-}
+// 	FTM_SetPrescaler(FTM0, prescaler);
+// 	FTM_SetModulus(FTM0, PWM_modulus);
+// 	FTM_SetOverflowMode(FTM0, true);
+// 	//FTM_SetInterruptMode (FTM0,FTM_CH_0, true);
+// 	FTM_SetWorkingMode(FTM0, 0, FTM_mPulseWidthModulation);			// MSA  / B
+// 	FTM_SetPulseWidthModulationLogic(FTM0, 0, FTM_lAssertedHigh);   // ELSA / B
+// 	set_DutyPWM(FTM0, 0, PWM_duty);
+// 	//FTM_SetCounter(FTM0, 0, PWM_duty);
+// 	//FTM_StartClock(FTM0);
+// }
 
 
 // funciones de timer utilizando pwm
-void pwm_start_timer(uint16_t ticks,uint16_t duty_cycle,FTM_callback_t call) //tener en cuenta que el tiempo se obtiene como ticks*preescaler/Sysclock == T
-{
-	FTM_StopClock(FTM0);
-	FTM_ClearOverflowFlag(FTM0);
-	FTM_SetModulus(FTM0,ticks);
-	set_DutyPWM(FTM0,0,duty_cycle);
-	callBack = call;
-	FTM_StartClock(FTM0);
-	return;
-}
+// void pwm_start_timer(uint16_t ticks,uint16_t duty_cycle,FTM_callback_t callback) //tener en cuenta que el tiempo se obtiene como ticks*preescaler/Sysclock == T
+// {
+// 	FTM_StopClock(FTM0);
+// 	FTM_ClearOverflowFlag(FTM0);
+// 	FTM_SetModulus(FTM0,ticks);
+// 	set_DutyPWM(FTM0,0,duty_cycle);
+
+// 	FTM_StartClock(FTM0);
+
+// }
 
 
 
@@ -247,12 +230,12 @@ void FTM_ClearInterruptFlag (FTM_t ftm, FTMChannel_t channel)
 	ftm->CONTROLS[channel].CnSC &= ~FTM_CnSC_CHF_MASK;
 }
 
-void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent)
-{
-	//double duty_per=(percent/100.0)*(PWM_modulus+1);
-	PWM_duty=percent*(PWM_modulus+1)/100;
-	FTM_SetCounter(ftm, Chn, PWM_duty);
-}
+// void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent)
+// {
+// 	//double duty_per=(percent/100.0)*(PWM_modulus+1);
+// 	PWM_duty=percent*(PWM_modulus+1)/100;
+// 	FTM_SetCounter(ftm, Chn, PWM_duty);
+// }
 
 
 

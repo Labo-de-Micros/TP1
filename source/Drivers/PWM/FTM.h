@@ -64,10 +64,10 @@ typedef enum
 #define FTM_CH_6 6
 #define FTM_CH_7 7
 
-#define PRESCALER 				32
-#define SYS_CLOCK				50000000
-#define PWM_MS_TO_TICKS(ms)		PWM_SEC_TO_TICKS((ms/1000.0))
-#define PWM_SEC_TO_TICKS(s)		(s*SYS_CLOCK/PRESCALER)
+// #define PRESCALER 				32
+// #define SYS_CLOCK				50000000
+// #define PWM_MS_TO_TICKS(ms)		PWM_SEC_TO_TICKS((ms/1000.0))
+// #define PWM_SEC_TO_TICKS(s)		(s*SYS_CLOCK/PRESCALER)
 
 typedef void (*FTM_callback_t)(void);
 
@@ -112,10 +112,10 @@ void 		FTM_SetInterruptMode   			 (FTM_t, FTMChannel_t, bool);
 bool 		FTM_IsInterruptPending 			 (FTM_t, FTMChannel_t);
 void 		FTM_ClearInterruptFlag 			 (FTM_t, FTMChannel_t);
 
-void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent);
+//void set_DutyPWM(FTM_t ftm,FTMChannel_t Chn, uint16_t  percent);
 //set the PWM duty_cicly percentage
 
-void pwm_start_timer(uint16_t ticks,uint16_t duty_cycle,FTM_callback_t callback);
+//void pwm_start_timer(uint16_t ticks,uint16_t duty_cycle,FTM_callback_t callback);
 
 
 
