@@ -122,7 +122,6 @@ static void pwm_set_duty(FTM_t ftm, FTMChannel_t Chn, uint16_t  percent){
  * @param Chn channel of the FTM module to use
  * @param percent percentage of the Duty Cycle. Values between 1 and 99
  *****************************************************************/
-	//double duty_per=(percent/100.0)*(PWM_modulus+1);
 	uint16_t PWM_duty= INTERNAL_DUTY_CYCLE *(mod+1)/100;
 	FTM_SetCounter(ftm, Chn, PWM_duty);
 	return;
@@ -135,6 +134,5 @@ static void PWM_ISR (void){
 	FTM_ClearOverflowFlag(FTM0);
 	FTM_StopClock(FTM0);
 	callback();
-	//FTM_ClearInterruptFlag(FTM0,FTM_CH_0);
 	return;
 }
