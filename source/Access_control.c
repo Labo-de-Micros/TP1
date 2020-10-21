@@ -32,29 +32,32 @@
 #define TIMEOUT_INCORRECT_PIN_TICKS	TIMER_MS2TICKS(TIMEOUT_INCORRECT_PIN_MS)
 #define MAX_WORD_INTRODUCED     	8
 // Phrases
-#define ACCESS_REQUEST_PH   		"    Access Request    "
-#define ADMIN_PH            		"Admin    "
-#define ID_NO_EXISTS_PH     		"Id NO EXISTS    "
-#define ENTER_PIN_PH        		"Enter PIN    "
-#define ACCESS_GRANTED_PH			"Access granted    "
-#define INCORRECT_PIN_PH			"INC"
-#define ID_BAN_PH					"Id Ban    "
-#define BRIGHTNESS_PH				"Brightness    "
-#define ADD_ID_PH					"Add Id    "
-#define ALREADY_EXISTS_PH			"Already Exists    "
-#define ID_ADDED_PH					"Id Added    "
-#define DELETE_ID_PH				"Delete Id    "
-#define CONFIRM_PH					"Confirm ?    "
-#define ID_DELETED_PH				"Id deleted    "
-#define MODIFY_ID_PH				"Modify Id    "
-#define ID_MODIFIED_PH				"Id modified    "
-#define PIN_MODIFIED_PH     		"Pin Modified    "
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
+typedef enum{
+    ACCESS_REQUEST_PH,  
+    ADMIN_PH,           
+    ID_NO_EXISTS_PH,    
+    ENTER_PIN_PH,       
+    ACCESS_GRANTED_PH,	
+    INCORRECT_PIN_PH,	
+    ID_BAN_PH,			
+    BRIGHTNESS_PH,		
+    ADD_ID_PH,			
+    ALREADY_EXISTS_PH,	
+    ID_ADDED_PH,			
+    DELETE_ID_PH,		
+    CONFIRM_PH,			
+    ID_DELETED_PH,		
+    MODIFY_ID_PH,		
+    ID_MODIFIED_PH,		
+    PIN_MODIFIED_PH    
+}disp_strings_t;
 
 typedef enum{ 
 	NEW_ID,
@@ -154,6 +157,46 @@ static access_control_t access_control;
 
 static tim_id_t door_timer;
 
+static char * EN_strings[17]={
+    "    Access Request     ",         // ACCESS_REQUEST_PH  
+    "Admin    ",                       // ADMIN_PH           
+    "Id NO EXISTS    ",                // ID_NO_EXISTS_PH  
+    "Enter PIN    ",                   // ENTER_PIN_PH       
+    "Access granted     ",             // ACCESS_GRANTED_PH	
+    "INC",                             // INCORRECT_PIN_PH
+    "Id Ban    ",                      // ID_BAN_PH			
+    "Brightness    ",                  // BRIGHTNESS_PH		
+    "Add Id    ",                      // ADD_ID_PH			
+    "Already Exists    ",              // ALREADY_EXISTS_PH
+    "Id Added    ",                    // ID_ADDED_PH		
+    "Delete Id    ",                   // DELETE_ID_PH	
+    "Confirm ?    ",                   // CONFIRM_PH		
+    "Id deleted    ",                  // ID_DELETED_PH		
+    "Modify Id    ",                   // MODIFY_ID_PH	
+    "Id modified    ",                 // ID_MODIFIED_PH	
+    "Pin Modified    "                 // PIN_MODIFIED_PH   
+};
+ 
+static char * ES_strings[17]={
+    "    Pedido de acceso     ",         // ACCESS_REQUEST_PH  
+    "Admin    ",                       // ADMIN_PH           
+    "Id NO EXISTE    ",                // ID_NO_EXISTS_PH  
+    "Ingresar PIN    ",                   // ENTER_PIN_PH       
+    "Acceso correcto     ",             // ACCESS_GRANTED_PH	
+    "INC",                             // INCORRECT_PIN_PH
+    "Id Ban    ",                      // ID_BAN_PH			
+    "Brillo    ",                  // BRIGHTNESS_PH		
+    "Agregar Id    ",                      // ADD_ID_PH			
+    "Ya existe    ",              // ALREADY_EXISTS_PH
+    "Id agregado    ",                    // ID_ADDED_PH		
+    "Borrar Id    ",                   // DELETE_ID_PH	
+    "Confirmar ?    ",                   // CONFIRM_PH		
+    "Id borrado    ",                  // ID_DELETED_PH		
+    "Modificar Id    ",                   // MODIFY_ID_PH	
+    "Id modificado    ",                 // ID_MODIFIED_PH	
+    "Pin Modificado    "                 // PIN_MODIFIED_PH   
+};
+
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 //FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS W FILE LEVEL SCOPE//
@@ -198,6 +241,12 @@ static void set_door_led_mode(door_modes_t mode);
 /*****************************************************************
  * @brief: set the door pins corresponding to an input mode
  * @param mode: Mode of the current door.
+ * **************************************************************/
+
+char * translate(disp_strings_t string);
+/*****************************************************************
+ * @brief: return a string in the current language
+ * @param string: Id of the string to be translated.
  * **************************************************************/
 
 //////////////////////////////////////////////////////////////////
@@ -1442,14 +1491,19 @@ static void set_door_led_mode(door_modes_t mode){
 }
 
 
-void translate(uint8_t string){
-    lang=access_control.language;
-    switch(string){
-        case 
-
-
+char * translate(disp_strings_t string){
+    language_t lang=access_control.language;
+    char * return_string;
+    switch (lang){
+        case ES:
+            return_string=ES_strings[string];
+            break;
+        case EN: default:
+            return_string=EN_strings[string];
+            break;
     }
-
-
-
+    return return_string;
 }
+
+
+    
