@@ -5,7 +5,10 @@ source/Drivers/SysTick/SysTick.o source/Drivers/SysTick/SysTick.d: \
  ../SDK/CMSIS/cmsis_compiler.h ../SDK/CMSIS/cmsis_gcc.h \
  ../SDK/CMSIS/system_MK64F12.h ../SDK/CMSIS/core_cm4.h \
  ../SDK/startup/hardware.h ../SDK/CMSIS/fsl_device_registers.h \
- ../SDK/CMSIS/MK64F12.h ../SDK/CMSIS/MK64F12_features.h
+ ../SDK/CMSIS/MK64F12.h ../SDK/CMSIS/MK64F12_features.h \
+ ../source/Drivers/SysTick/../../board.h \
+ ../source/Drivers/SysTick/../.././Drivers/GPIO/gpio.h \
+ ../source/Drivers/SysTick/../GPIO/gpio.h
 
 ../source/Drivers/SysTick/./SysTick.h:
 
@@ -30,3 +33,9 @@ source/Drivers/SysTick/SysTick.o source/Drivers/SysTick/SysTick.d: \
 ../SDK/CMSIS/MK64F12.h:
 
 ../SDK/CMSIS/MK64F12_features.h:
+
+../source/Drivers/SysTick/../../board.h:
+
+../source/Drivers/SysTick/../.././Drivers/GPIO/gpio.h:
+
+../source/Drivers/SysTick/../GPIO/gpio.h:

@@ -4,13 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../source/Drivers/PWM/FTM.c 
+../source/Drivers/PWM/FTM.c \
+../source/Drivers/PWM/PWM.c 
 
 OBJS += \
-./source/Drivers/PWM/FTM.o 
+./source/Drivers/PWM/FTM.o \
+./source/Drivers/PWM/PWM.o 
 
 C_DEPS += \
-./source/Drivers/PWM/FTM.d 
+./source/Drivers/PWM/FTM.d \
+./source/Drivers/PWM/PWM.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
