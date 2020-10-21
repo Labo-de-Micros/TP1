@@ -24,13 +24,13 @@
 //////////////////////////////////////////////////////////////////
 
 
-#define PRESCALER 				32      //Factor de division del SYS_CLOCK
+#define PRESCALER 				128      //Factor de division del SYS_CLOCK
 #define SYS_CLOCK				50000000
 #define PWM_MS_TO_TICKS(ms)		PWM_SEC_TO_TICKS((ms/1000.0))
 #define PWM_SEC_TO_TICKS(s)		(s*SYS_CLOCK/PRESCALER)
 
 #if ((PRESCALER % 2) != 0) && (PRESCALER > 128)
-#error Cant use this PRESCALER! It must be multiple of 2 and minor to 129.
+#error Cant use this PRESCALER! It must be power of 2 and minor to 129.
 #endif
 
 //////////////////////////////////////////////////////////////////
