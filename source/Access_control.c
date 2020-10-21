@@ -26,29 +26,29 @@
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-#define TIMEOUT_TIMER_TICKS		TIMER_MS2TICKS(TIMEOUT_TIMER_MS)
-#define TIMEOUT_OPEN_DOOR_TICKS TIMER_MS2TICKS(TIMEOUT_OPEN_DOOR_MS)
+#define TIMEOUT_TIMER_TICKS			TIMER_MS2TICKS(TIMEOUT_TIMER_MS)
+#define TIMEOUT_OPEN_DOOR_TICKS 	TIMER_MS2TICKS(TIMEOUT_OPEN_DOOR_MS)
 #define TIMEOUT_INCORRECT_PIN_MS	5000
 #define TIMEOUT_INCORRECT_PIN_TICKS	TIMER_MS2TICKS(TIMEOUT_INCORRECT_PIN_MS)
-#define MAX_WORD_INTRODUCED     8
+#define MAX_WORD_INTRODUCED     	8
 // Phrases
-#define ACCESS_REQUEST_PH   "    Access Request    "
-#define ADMIN_PH            "Admin    "
-#define ID_NO_EXISTS_PH     "Id NO EXISTS    "
-#define ENTER_PIN_PH        "Enter PIN    "
-#define ACCESS_GRANTED_PH	"Access granted    "
-#define INCORRECT_PIN_PH	"INC"
-#define ID_BAN_PH			"Id Ban    "
-#define BRIGHTNESS_PH		"Brightness    "
-#define ADD_ID_PH			"Add Id    "
-#define ALREADY_EXISTS_PH	"Already Exists    "
-#define ID_ADDED_PH			"Id Added    "
-#define DELETE_ID_PH		"Delete Id    "
-#define CONFIRM_PH			"Confirm ?    "
-#define ID_DELETED_PH		"Id deleted    "
-#define MODIFY_ID_PH		"Modify Id    "
-#define ID_MODIFIED_PH		"Id modified    "
-#define PIN_MODIFIED_PH     "Pin Modified    "
+#define ACCESS_REQUEST_PH   		"    Access Request    "
+#define ADMIN_PH            		"Admin    "
+#define ID_NO_EXISTS_PH     		"Id NO EXISTS    "
+#define ENTER_PIN_PH        		"Enter PIN    "
+#define ACCESS_GRANTED_PH			"Access granted    "
+#define INCORRECT_PIN_PH			"INC"
+#define ID_BAN_PH					"Id Ban    "
+#define BRIGHTNESS_PH				"Brightness    "
+#define ADD_ID_PH					"Add Id    "
+#define ALREADY_EXISTS_PH			"Already Exists    "
+#define ID_ADDED_PH					"Id Added    "
+#define DELETE_ID_PH				"Delete Id    "
+#define CONFIRM_PH					"Confirm ?    "
+#define ID_DELETED_PH				"Id deleted    "
+#define MODIFY_ID_PH				"Modify Id    "
+#define ID_MODIFIED_PH				"Id modified    "
+#define PIN_MODIFIED_PH     		"Pin Modified    "
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -739,6 +739,9 @@ EVENT_DEFINE(Time_Out, NoEventData)
     END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
+
+
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			     STATE MACHINE FUNCTION DEFINITIONS    	        //
@@ -977,8 +980,8 @@ STATE_DEFINE(AccessGranted, NoEventData)
 
 STATE_DEFINE(InvalidPin, NoEventData)
 {
-    //Muestro INCORRECT PIN
-    start_timeout();
+	//Muestro INCORRECT PIN
+	start_timeout();
 	display_set_string(INCORRECT_PIN_PH);
 	switch (access_control.current_option){
 	case ADMIN_PIN:
@@ -996,6 +999,7 @@ STATE_DEFINE(InvalidPin, NoEventData)
 		}
 		break;
 	}
+	return;
 }
 
 STATE_DEFINE(BlockId, NoEventData)
@@ -1008,6 +1012,8 @@ STATE_DEFINE(BlockId, NoEventData)
     //PONER UN TIMEOUT
     //SM_InternalEvent(ST_ACCESS_REQUEST, NULL);  
 }
+
+
 
 
 //////////////////////////////////////////////////////////////////
