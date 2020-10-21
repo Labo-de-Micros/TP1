@@ -196,6 +196,45 @@ static char * ES_strings[17]={
     "Id modificado    ",                 // ID_MODIFIED_PH	
     "Pin Modificado    "                 // PIN_MODIFIED_PH   
 };
+static char * PT_strings[17]={
+    "    Pedido de acesso     ",         // ACCESS_REQUEST_PH  
+    "Admin    ",                       // ADMIN_PH           
+    "Id NAO EXISTE    ",                // ID_NO_EXISTS_PH  
+    "Digite o PIN    ",                   // ENTER_PIN_PH       
+    "Acesso correcto     ",             // ACCESS_GRANTED_PH	
+    "INC",                             // INCORRECT_PIN_PH
+    "Id Ban    ",                      // ID_BAN_PH			
+    "Brilho    ",                  // BRIGHTNESS_PH		
+    "Adicionar Id    ",                      // ADD_ID_PH			
+    "ja existe    ",              // ALREADY_EXISTS_PH
+    "Id adicionado    ",                    // ID_ADDED_PH		
+    "deletar Id    ",                   // DELETE_ID_PH	
+    "Confirmar ?    ",                   // CONFIRM_PH		
+    "Id deletado    ",                  // ID_DELETED_PH		
+    "Modificar Id    ",                   // MODIFY_ID_PH	
+    "Id modificado    ",                 // ID_MODIFIED_PH	
+    "Pin Modificado    "                 // PIN_MODIFIED_PH   
+};
+
+static char * FR_strings[17]={
+    "    Demande d acess     ",         // ACCESS_REQUEST_PH  
+    "Admin    ",                       // ADMIN_PH           
+    "Id n existe pas    ",                // ID_NO_EXISTS_PH  
+    "entrer le code PIN    ",                   // ENTER_PIN_PH       
+    "acces autorise     ",             // ACCESS_GRANTED_PH	
+    "INC",                             // INCORRECT_PIN_PH
+    "Id Ban    ",                      // ID_BAN_PH			
+    "luminosite    ",                  // BRIGHTNESS_PH		
+    "ajouter l Id    ",                      // ADD_ID_PH			
+    "existe deja    ",              // ALREADY_EXISTS_PH
+    "Id ajoute    ",                    // ID_ADDED_PH		
+    "supprimer Id    ",                   // DELETE_ID_PH	
+    "Confirmer ?    ",                   // CONFIRM_PH		
+    "Id supprime    ",                  // ID_DELETED_PH		
+    "modifier l Id    ",                   // MODIFY_ID_PH	
+    "Id modifie    ",                 // ID_MODIFIED_PH	
+    "Pin Modifie    "                 // PIN_MODIFIED_PH   
+};
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -283,8 +322,7 @@ void access_control_init(void){
     gpioMode(PCB_LED_STATUS_1, OUTPUT);    
     gpioMode(PCB_LED_STATUS_2, OUTPUT);    
 	set_door_led_mode(DOOR_ADMIN);
-	char message[]= ADMIN_PH;
-	display_set_string(message);
+	display_set_string(translate(ADMIN_PH));
     access_control.current_option = ADMIN_PIN;
 	return;
 }
@@ -802,8 +840,7 @@ EVENT_DEFINE(Time_Out, NoEventData)
 
 STATE_DEFINE(Admin, NoEventData)
 {
-    char message[]= ADMIN_PH;
-	display_set_string(message);
+	display_set_string(translate(ADMIN_PH));
 	set_door_led_mode(DOOR_ADMIN);
     access_control.current_option = ADMIN_PIN;
     start_timeout();
@@ -813,8 +850,7 @@ STATE_DEFINE(Admin, NoEventData)
 STATE_DEFINE(AccessRequest, NoEventData)
 {
     access_control.current_option = ID;
-    char message[]= ACCESS_REQUEST_PH;
-	display_set_string(message);
+	display_set_string(translate(ACCESS_REQUEST_PH));
 	start_timeout();
 	set_door_led_mode(DOOR_LOCKED);
     timerStop(door_timer);
@@ -948,13 +984,13 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
 
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
-    display_set_string(ID_NO_EXISTS_PH);
+    display_set_string(translate(ID_NO_EXISTS_PH));
 }
 
 STATE_DEFINE(PinRequest, NoEventData)
 {
     start_timeout();
-    display_set_string(ENTER_PIN_PH);
+    display_set_string(translate(ENTER_PIN_PH));
     //veo el largo del pin segun el ID
 
     switch (access_control.current_option)
@@ -1024,7 +1060,7 @@ STATE_DEFINE(CheckPin, NoEventData)
 
 STATE_DEFINE(AccessGranted, NoEventData)
 {
-    display_set_string(ACCESS_GRANTED_PH);
+    display_set_string(translate(ACCESS_GRANTED_PH));
 	access_control.IDsList[access_control.current_ID_index].PIN_attempts=0;
 	timerStart(door_timer,TIMEOUT_OPEN_DOOR_TICKS,TIM_MODE_SINGLESHOT,door_timeout_callback);
 	set_door_led_mode(DOOR_OPEN);
@@ -1034,7 +1070,7 @@ STATE_DEFINE(InvalidPin, NoEventData)
 {
 	//Muestro INCORRECT PIN
 	start_timeout();
-	display_set_string(INCORRECT_PIN_PH);
+	display_set_string(translate(INCORRECT_PIN_PH));
 	switch (access_control.current_option){
 	case ADMIN_PIN:
 		//Si se introduce mal el Pin del administrador se vuelve al menu del ADMIN
@@ -1058,7 +1094,7 @@ STATE_DEFINE(BlockId, NoEventData)
 {
     //Muestro ID BLOCKED
     start_timeout();
-	display_set_string(ID_BAN_PH);
+	display_set_string(translate(ID_BAN_PH));
     access_control.IDsList[access_control.current_ID_index].blocked_status=true;
     
     //PONER UN TIMEOUT
@@ -1239,7 +1275,7 @@ STATE_DEFINE(PreviousDigit, NoEventData)
 STATE_DEFINE(ChangeBrightness, NoEventData)
 {
     start_timeout();
-	display_set_string(BRIGHTNESS_PH);
+	display_set_string(translate(BRIGHTNESS_PH));
 }
 
 STATE_DEFINE(SetBrightness, NoEventData)
@@ -1274,7 +1310,7 @@ STATE_DEFINE(HigherBrightness, NoEventData)
 STATE_DEFINE(AddID, NoEventData)
 {
     start_timeout();
-	display_set_string(ADD_ID_PH);
+	display_set_string(translate(ADD_ID_PH));
     access_control.current_option = NEW_ID;
 
     //Si no hay mas lugar para agregar IDs genero un evento interno para que nunca llegue este menu
@@ -1286,13 +1322,13 @@ STATE_DEFINE(AddID, NoEventData)
 STATE_DEFINE(AlreadyExists, NoEventData)
 {
     start_timeout();
-    display_set_string(ALREADY_EXISTS_PH);
+    display_set_string(translate(ALREADY_EXISTS_PH));
 }
 
 STATE_DEFINE(IDAddition, NoEventData)
 {
     start_timeout();
-    display_set_string(ID_ADDED_PH);
+    display_set_string(translate(ID_ADDED_PH));
 	
     uint8_t pin_length = access_control.digits_introduced;
     uint32_t pin_introduced = array_to_int(access_control.word_introduced,pin_length);
@@ -1315,7 +1351,7 @@ STATE_DEFINE(RecountNewIdPIN, NoEventData)
 STATE_DEFINE(Confirmation0, NoEventData)
 {
     start_timeout();
-    display_set_string(CONFIRM_PH);
+    display_set_string(translate(CONFIRM_PH));
 }
 
 
@@ -1330,14 +1366,14 @@ STATE_DEFINE(Confirmation0, NoEventData)
 STATE_DEFINE(EliminateID, NoEventData)
 {
     start_timeout();
-	display_set_string(DELETE_ID_PH);
+	display_set_string(translate(DELETE_ID_PH));
     access_control.current_option = DELETE_ID;
 }
 
 STATE_DEFINE(Confirmation1, NoEventData)
 {
     start_timeout();
-    display_set_string(CONFIRM_PH);
+    display_set_string(translate(CONFIRM_PH));
      
 }
 
@@ -1345,7 +1381,7 @@ STATE_DEFINE(IDElimination, NoEventData)
 {
     start_timeout();
     access_control.IDsList[access_control.current_ID_index].valid = false;
-	display_set_string(ID_DELETED_PH);
+	display_set_string(translate(ID_DELETED_PH));
 }
 
 
@@ -1360,21 +1396,21 @@ STATE_DEFINE(IDElimination, NoEventData)
 STATE_DEFINE(ModifyID, NoEventData)
 {
     start_timeout();
-	display_set_string(MODIFY_ID_PH);
+	display_set_string(translate(MODIFY_ID_PH));
     access_control.current_option = MODIFY_ID;
 }
 
 STATE_DEFINE(Confirmation2, NoEventData)
 {
     start_timeout();
-    display_set_string(CONFIRM_PH);
+    display_set_string(translate(CONFIRM_PH));
      
 }
 
 STATE_DEFINE(IDModification, NoEventData)
 {
     start_timeout();
-    display_set_string(PIN_MODIFIED_PH);
+    display_set_string(translate(PIN_MODIFIED_PH));
 
     uint8_t pin_length = access_control.digits_introduced;
     uint32_t pin_introduced = array_to_int(access_control.word_introduced,pin_length);
@@ -1495,6 +1531,12 @@ char * translate(disp_strings_t string){
     language_t lang=access_control.language;
     char * return_string;
     switch (lang){
+        case PT:
+            return_string=PT_strings[string];
+            break;
+        case FR:
+            return_string=FR_strings[string];
+            break;
         case ES:
             return_string=ES_strings[string];
             break;
