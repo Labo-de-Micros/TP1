@@ -31,7 +31,7 @@
 #define TIMEOUT_INCORRECT_PIN_MS	5000
 #define TIMEOUT_INCORRECT_PIN_TICKS	TIMER_MS2TICKS(TIMEOUT_INCORRECT_PIN_MS)
 #define MAX_WORD_INTRODUCED     	8
-
+#define MAX_LANGUAGES 4
 
 
 //////////////////////////////////////////////////////////////////
@@ -1458,29 +1458,30 @@ STATE_DEFINE(IDModification, NoEventData)
 STATE_DEFINE(ChangeLanguage, NoEventData)
 {
     start_timeout();
-	display_set_string(BRIGHTNESS_PH);
+	display_set_string(LANGUAGE_PH);
 }
 
 STATE_DEFINE(SetLanguage, NoEventData)
 {
     start_timeout();
-    display_set_number(display_get_brightness());
+    //muesto el language
+    display_set_string("mati puto");
 }
 
 STATE_DEFINE(PreviuosLanguage, NoEventData)
 {
-    if(access_control.current_language ==)
-        access_control.current_language
+    if(access_control.language == ES)
+        access_control.language = MAX_LANGUAGES;
     else
-        access_control.current_language--;
+        access_control.language--;
 
     SM_InternalEvent(SetLanguage, NULL); 
 }
 
 STATE_DEFINE(NextLanguage, NoEventData)
 {
-    if(access_control.current_language == TOTAL_LANGUAGES)
-        access_control.current_language =
+    if(access_control.current_language == MAX_LANGUAGES)
+        access_control.current_language = ES;
     else
         access_control.current_language++;
     SM_InternalEvent(SetLanguage, NULL); 
