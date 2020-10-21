@@ -861,7 +861,7 @@ static void refresh_callback(void){
 	static uint8_t digit = 0;
 	if (digit>=DIGITS) digit=0;
 	digit_select(digit);
-	uint8_t pwm_ticks=(uint8_t)(PWM_MS_TO_TICKS(display.brightness[display.ext_index+digit]*1000/(REFRESH_FREQUENCY_HZ*DIGITS*100)));
+	uint16_t pwm_ticks=(uint16_t)(PWM_MS_TO_TICKS(display.brightness[display.ext_index+digit]*1000.0/(REFRESH_FREQUENCY_HZ*DIGITS*100.0)));
 	pwm_start_timer(pwm_ticks,set_blank);
 	set_pins(display.buf[display.ext_index+(digit++)]);
 	return;
