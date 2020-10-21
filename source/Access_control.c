@@ -28,6 +28,8 @@
 
 #define TIMEOUT_TIMER_TICKS		TIMER_MS2TICKS(TIMEOUT_TIMER_MS)
 #define TIMEOUT_OPEN_DOOR_TICKS TIMER_MS2TICKS(TIMEOUT_OPEN_DOOR_MS)
+#define TIMEOUT_INCORRECT_PIN_MS	5000
+#define TIMEOUT_INCORRECT_PIN_TICKS	TIMER_MS2TICKS(TIMEOUT_INCORRECT_PIN_MS)
 #define MAX_WORD_INTRODUCED     8
 // Phrases
 #define ACCESS_REQUEST_PH   "    Access Request    "
@@ -35,7 +37,7 @@
 #define ID_NO_EXISTS_PH     "Id NO EXISTS    "
 #define ENTER_PIN_PH        "Enter PIN    "
 #define ACCESS_GRANTED_PH	"Access granted    "
-#define INCORRECT_PIN_PH	"Incorrect PIN    "
+#define INCORRECT_PIN_PH	"INC"
 #define ID_BAN_PH			"Id Ban    "
 #define BRIGHTNESS_PH		"Brightness    "
 #define ADD_ID_PH			"Add Id    "
@@ -226,9 +228,9 @@ void access_control_init(void){
 	gpioMode(PIN_LED_GREEN, OUTPUT);
 	gpioMode(PIN_LED_BLUE, OUTPUT);
 	gpioMode(PIN_LED_RED, OUTPUT);
-	gpioWrite(PIN_LED_GREEN, HIGH);
-	gpioWrite(PIN_LED_BLUE, HIGH);
-	gpioWrite(PIN_LED_RED, LOW);
+    gpioMode(PCB_LED_STATUS_1, OUTPUT);    
+    gpioMode(PCB_LED_STATUS_2, OUTPUT);    
+	set_door_led_mode(DOOR_ADMIN);
 	char message[]= ADMIN_PH;
 	display_set_string(message);
     access_control.current_option = ADMIN_PIN;
@@ -760,7 +762,8 @@ STATE_DEFINE(AccessRequest, NoEventData)
 	display_set_string(message);
 	start_timeout();
 	set_door_led_mode(DOOR_LOCKED);
-	
+    timerStop(door_timer);
+	return;
 }
 
 STATE_DEFINE(IdEnteringByCard, NoEventData)
@@ -822,7 +825,7 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
 					SM_InternalEvent(ST_BLOCK_ID, NULL); 
 				else 
 				{
-					access_control.IDsList[index].PIN_attempts=0;
+					//access_control.IDsList[index].PIN_attempts=0;
 					SM_InternalEvent(ST_PIN_REQUEST, NULL); 
 				}
 			}
@@ -878,7 +881,7 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
             if(access_control.IDsList[index].blocked_status) 
                 SM_InternalEvent(ST_BLOCK_ID, NULL); 
             else {
-                access_control.IDsList[index].PIN_attempts=0;
+                //access_control.IDsList[index].PIN_attempts=0;
                 SM_InternalEvent(ST_PIN_REQUEST, NULL); 
             }
         }
@@ -967,6 +970,7 @@ STATE_DEFINE(CheckPin, NoEventData)
 STATE_DEFINE(AccessGranted, NoEventData)
 {
     display_set_string(ACCESS_GRANTED_PH);
+	access_control.IDsList[access_control.current_ID_index].PIN_attempts=0;
 	timerStart(door_timer,TIMEOUT_OPEN_DOOR_TICKS,TIM_MODE_SINGLESHOT,door_timeout_callback);
 	set_door_led_mode(DOOR_OPEN);
 }
@@ -976,18 +980,20 @@ STATE_DEFINE(InvalidPin, NoEventData)
     //Muestro INCORRECT PIN
     start_timeout();
 	display_set_string(INCORRECT_PIN_PH);
-
 	switch (access_control.current_option){
 	case ADMIN_PIN:
 		//Si se introduce mal el Pin del administrador se vuelve al menu del ADMIN
+		timerDelay(TIMEOUT_INCORRECT_PIN_TICKS);
 		SM_InternalEvent(ST_ADMIN, NULL); 
 		break;
 	case PIN4: case PIN5: default:
 		access_control.IDsList[access_control.current_ID_index].PIN_attempts++;
 		if((access_control.IDsList[access_control.current_ID_index].PIN_attempts) == MAX_NUM_ATTEMPTS)
 			SM_InternalEvent(ST_BLOCK_ID, NULL);
-		else
-			SM_InternalEvent(ST_PIN_REQUEST, NULL); 
+		else{
+			timerDelay(TIMEOUT_INCORRECT_PIN_TICKS);
+			SM_InternalEvent(ST_PIN_REQUEST, NULL);
+		}
 		break;
 	}
 }
@@ -1376,6 +1382,7 @@ static void door_timeout_callback(void){
  * @brief: timeout for the door callback.
  * **************************************************************/
 	set_door_led_mode(DOOR_LOCKED);
+    SM_Event(ACC, Encoder_Click, NULL);
 	return;
 }
 
@@ -1389,21 +1396,29 @@ static void set_door_led_mode(door_modes_t mode){
             gpioWrite(PIN_LED_GREEN, HIGH);
 			gpioWrite(PIN_LED_BLUE, HIGH);
 			gpioWrite(PIN_LED_RED, LOW);
+			gpioWrite(PCB_LED_STATUS_1, HIGH);
+			gpioWrite(PCB_LED_STATUS_2, LOW);
 			break;
 		case DOOR_ADMIN:
 			gpioWrite(PIN_LED_GREEN, HIGH);
 			gpioWrite(PIN_LED_BLUE, LOW);
 			gpioWrite(PIN_LED_RED, HIGH);
+			gpioWrite(PCB_LED_STATUS_1, LOW);
+			gpioWrite(PCB_LED_STATUS_2, HIGH);
 			break;
 		case DOOR_OPEN:
 			gpioWrite(PIN_LED_GREEN, LOW);
 			gpioWrite(PIN_LED_BLUE, HIGH);
 			gpioWrite(PIN_LED_RED, HIGH);
+			gpioWrite(PCB_LED_STATUS_1, HIGH);
+			gpioWrite(PCB_LED_STATUS_2, HIGH);
 			break;
 		case DOOR_ERROR:
 			gpioWrite(PIN_LED_GREEN, HIGH);
 			gpioWrite(PIN_LED_BLUE, HIGH);
 			gpioWrite(PIN_LED_RED, HIGH);
+			gpioWrite(PCB_LED_STATUS_1, LOW);
+			gpioWrite(PCB_LED_STATUS_2, LOW);
 			break;
 		default:
 			break;

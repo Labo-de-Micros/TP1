@@ -19,6 +19,11 @@
 #include "MK64F12.h"
 #include "core_cm4.h"
 #include "hardware.h"
+#include "../../board.h"
+
+#ifdef	__DEBUG__
+#include "../GPIO/gpio.h"
+#endif	//__DEBUG__
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -66,6 +71,10 @@ bool SysTick_Init (void (*funcallback)(void)){
  * @param funcallback Function to be call every SysTick
  * @return Initialization and registration succeed
  ****************************************************************/
+#ifdef	__DEBUG__
+	gpioMode(DEBUG_PIN, OUTPUT);
+	gpioWrite(DEBUG_PIN, LOW);
+#endif	//__DEBUG__
 	NVIC_EnableIRQ(SysTick_IRQn);
 	if (callback == NULL) {
 		SysTick->CTRL = 0x00; 								// enable systick interrupts
@@ -88,7 +97,13 @@ bool SysTick_Init (void (*funcallback)(void)){
 void SysTick_Handler(void){
 	// for SysTick, clearing the interrupt flag is not necessary
 	// it is not an omission!
+#ifdef	__DEBUG__
+	gpioWrite(DEBUG_PIN, HIGH);
+#endif	//__DEBUG__	
 	callback();
+#ifdef	__DEBUG__
+	gpioWrite(DEBUG_PIN, LOW);
+#endif	//__DEBUG__	
 }
 
 //////////////////////////////////////////////////////////////////
