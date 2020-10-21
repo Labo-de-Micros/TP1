@@ -1544,14 +1544,14 @@ STATE_DEFINE(IDModification, NoEventData)
 STATE_DEFINE(ChangeLanguage, NoEventData)
 {
     start_timeout();
-	display_set_string(SET_LANG_PH);
+	display_set_string(translate(SET_LANG_PH));
 }
 
 STATE_DEFINE(SetLanguage, NoEventData)
 {
     start_timeout();
     //muesto el language
-    display_set_string(LANG_PH);
+    display_set_string(translate(LANG_PH));
 }
 
 STATE_DEFINE(PreviuosLanguage, NoEventData)
