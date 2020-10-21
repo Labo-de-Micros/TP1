@@ -367,6 +367,7 @@ void access_control_init(void){
 	set_door_led_mode(DOOR_ADMIN);
 	display_set_string(translate(ADMIN_PH));
     access_control.current_option = ADMIN_PIN;
+	timerStart(led_refresh_timer,10,TIM_MODE_PERIODIC,led_refresh_callback);
 	return;
 }
 
@@ -1532,34 +1533,34 @@ STATE_DEFINE(IDModification, NoEventData)
     
 STATE_DEFINE(ChangeLanguage, NoEventData)
 {
-    start_timeout();
-	display_set_string(LANGUAGE_PH);
+	start_timeout();
+	display_set_string("mati salame");
 }
 
 STATE_DEFINE(SetLanguage, NoEventData)
 {
-    start_timeout();
-    //muesto el language
-    display_set_string("mati puto");
+	start_timeout();
+	//muesto el language
+	display_set_string("mati puto");
 }
 
 STATE_DEFINE(PreviuosLanguage, NoEventData)
 {
-    if(access_control.language == ES)
-        access_control.language = MAX_LANGUAGES;
-    else
-        access_control.language--;
+	if(access_control.language == ES)
+		access_control.language = MAX_LANGUAGES;
+	else
+		access_control.language--;
 
-    SM_InternalEvent(ST_SET_LANGUAGE, NULL); 
+	SM_InternalEvent(ST_SET_LANGUAGE, NULL); 
 }
 
 STATE_DEFINE(NextLanguage, NoEventData)
 {
-    if(access_control.language == MAX_LANGUAGES)
-        access_control.language = ES;
-    else
-        access_control.language++;
-    SM_InternalEvent(ST_SET_LANGUAGE, NULL); 
+	if(access_control.language == MAX_LANGUAGES)
+		access_control.language = ES;
+	else
+		access_control.language++;
+	SM_InternalEvent(ST_SET_LANGUAGE, NULL); 
 }
 
 
@@ -1671,7 +1672,6 @@ static void led_set_brightness(uint8_t brightness){
  * 						of the brightness.
  * **************************************************************/
 	led_off_timer_ticks = 10-((100-brightness)/10);
-	timerStart(led_refresh_timer,10,TIM_MODE_PERIODIC,led_refresh_callback);
 	return;
 }
 
