@@ -184,7 +184,6 @@ static FTM_Prescal_t pwm_get_prescaler(uint8_t prescaler){
 			_temp_ = FTM_PSC_x128;
 			break;
 		default:
-			_temp_ = FTM_PSC_x1;
 			break;
 	}
 	return _temp_;
