@@ -31,7 +31,7 @@
 #define TIMEOUT_INCORRECT_PIN_MS	5000
 #define TIMEOUT_INCORRECT_PIN_TICKS	TIMER_MS2TICKS(TIMEOUT_INCORRECT_PIN_MS)
 #define MAX_WORD_INTRODUCED     	8
-
+#define MAX_LANGUAGES 4
 
 
 //////////////////////////////////////////////////////////////////
@@ -144,6 +144,12 @@ enum States
     ST_MODIFY_ID,
     ST_CONFIRMATION_2,
     ST_ID_MODIFICATION
+
+    //AMARILLO
+    ST_CHANGE_LANGUAGE,
+    ST_SET_LANGUAGE,
+    ST_PREVIOUS_LANGUAGE,
+    ST_NEXT_LANGUAGE
 
 };
 
@@ -388,7 +394,13 @@ STATE_DECLARE(ModifyID, NoEventData)
 STATE_DECLARE(Confirmation2, NoEventData)
 STATE_DECLARE(IDModification, NoEventData)
 
- 
+//AMARILLO
+STATE_DECLARE(ChangeLanguage, NoEventData)
+STATE_DECLARE(SetLanguage, NoEventData)
+STATE_DECLARE(PreviuosLanguage, NoEventData)
+STATE_DECLARE(NextLanguage, NoEventData)
+
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			                STATE MAP                   	    //
@@ -440,6 +452,13 @@ BEGIN_STATE_MAP(AccessControl)
     STATE_MAP_ENTRY(ST_ModifyID)
     STATE_MAP_ENTRY(ST_Confirmation2)
     STATE_MAP_ENTRY(ST_IDModification)
+
+    //AMARILLO
+    STATE_MAP_ENTRY(ST_ChangeLanguage)
+    STATE_MAP_ENTRY(ST_SetLanguage)
+    STATE_MAP_ENTRY(ST_PreviuosLanguage)
+    STATE_MAP_ENTRY(ST_NextLanguage)
+
 
 END_STATE_MAP(AccessControl)
 
@@ -501,6 +520,12 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ID_MODIFICATION)                //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(ST_MODIFY_ID)                      //ST_ID_MODIFICATION
 
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_SET_LANGUAGE)                   //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_CHANGE_LANGUAGE)                //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -557,6 +582,12 @@ EVENT_DEFINE(Encoder_Double_Click, NoEventData)
         TRANSITION_MAP_ENTRY(ST_MODIFY_ID)                      //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
 
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
 
@@ -608,9 +639,15 @@ EVENT_DEFINE(Encoder_CW, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
 
         //ROJO
-        TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_MODIFY_ID,
+        TRANSITION_MAP_ENTRY(ST_CHANGE_LANGUAGE)                //ST_MODIFY_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
+
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_NEXT_LANGUAGE)                  //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -645,7 +682,7 @@ EVENT_DEFINE(Encoder_CCW, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_DIGIT,
         //VERDE                 
-        TRANSITION_MAP_ENTRY(ST_MODIFY_ID)                      //ST_CHANGE_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_CHANGE_LANGUAGE)                      //ST_CHANGE_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(ST_LOWER_BRIGHTNESS)               //ST_SET_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS
@@ -665,6 +702,12 @@ EVENT_DEFINE(Encoder_CCW, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_MODIFY_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
+
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_PREVIOUS_LANGUAGE)              //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -720,6 +763,12 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
 
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
 
@@ -772,7 +821,13 @@ EVENT_DEFINE(Card_Reader, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)            //ST_MODIFY_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
-        
+
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
     END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
@@ -825,7 +880,13 @@ EVENT_DEFINE(Time_Out, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_MODIFY_ID,
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ID_MODIFICATION
-        
+
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
     END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
@@ -1424,6 +1485,43 @@ STATE_DEFINE(IDModification, NoEventData)
 }
 
 
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			    			AMARILLO   				 	        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+    
+STATE_DEFINE(ChangeLanguage, NoEventData)
+{
+    start_timeout();
+	display_set_string(LANGUAGE_PH);
+}
+
+STATE_DEFINE(SetLanguage, NoEventData)
+{
+    start_timeout();
+    //muesto el language
+    display_set_string("mati puto");
+}
+
+STATE_DEFINE(PreviuosLanguage, NoEventData)
+{
+    if(access_control.language == ES)
+        access_control.language = MAX_LANGUAGES;
+    else
+        access_control.language--;
+
+    SM_InternalEvent(SetLanguage, NULL); 
+}
+
+STATE_DEFINE(NextLanguage, NoEventData)
+{
+    if(access_control.current_language == MAX_LANGUAGES)
+        access_control.current_language = ES;
+    else
+        access_control.current_language++;
+    SM_InternalEvent(SetLanguage, NULL); 
+}
 
 
 //////////////////////////////////////////////////////////////////
