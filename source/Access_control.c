@@ -31,49 +31,33 @@
 #define TIMEOUT_INCORRECT_PIN_MS	5000
 #define TIMEOUT_INCORRECT_PIN_TICKS	TIMER_MS2TICKS(TIMEOUT_INCORRECT_PIN_MS)
 #define MAX_WORD_INTRODUCED     	8
-// Phrases
-#ifndef SPANISH
-#define ACCESS_REQUEST_PH   		"    Access Request    "
-#define ADMIN_PH            		"Admin    "
-#define ID_NO_EXISTS_PH     		"Id NO EXISTS    "
-#define ENTER_PIN_PH        		"Enter PIN    "
-#define ACCESS_GRANTED_PH			"Access granted    "
-#define INCORRECT_PIN_PH			"INC"
-#define ID_BAN_PH					"Id Ban    "
-#define BRIGHTNESS_PH				"Brightness    "
-#define ADD_ID_PH					"Add Id    "
-#define ALREADY_EXISTS_PH			"Already Exists    "
-#define ID_ADDED_PH					"Id Added    "
-#define DELETE_ID_PH				"Delete Id    "
-#define CONFIRM_PH					"Confirm ?    "
-#define ID_DELETED_PH				"Id deleted    "
-#define MODIFY_ID_PH				"Modify Id    "
-#define ID_MODIFIED_PH				"Id modified    "
-#define PIN_MODIFIED_PH     		"Pin Modified    "
-#else
-#define ACCESS_REQUEST_PH   		"    Ingreso   "
-#define ADMIN_PH            		"Admin    "
-#define ID_NO_EXISTS_PH     		"No Existe ID    "
-#define ENTER_PIN_PH        		"Ingrese PIN    "
-#define ACCESS_GRANTED_PH			"Acceso permitido    "
-#define INCORRECT_PIN_PH			"INC"
-#define ID_BAN_PH					"ID Baneado    "
-#define BRIGHTNESS_PH				"Brillo    "
-#define ADD_ID_PH					"Agregar ID    "
-#define ALREADY_EXISTS_PH			"Ya existe!    "
-#define ID_ADDED_PH					"ID Agregado    "
-#define DELETE_ID_PH				"Eliminar ID    "
-#define CONFIRM_PH					"Confirmar ?    "
-#define ID_DELETED_PH				"ID eliminado    "
-#define MODIFY_ID_PH				"Modificar ID    "
-#define ID_MODIFIED_PH				"ID modificado    "
-#define PIN_MODIFIED_PH     		"Pin Modificado    "
-#endif
+#define MAX_LANGUAGES 4
+
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
+typedef enum{
+    ACCESS_REQUEST_PH,  
+    ADMIN_PH,           
+    ID_NO_EXISTS_PH,    
+    ENTER_PIN_PH,       
+    ACCESS_GRANTED_PH,	
+    INCORRECT_PIN_PH,	
+    ID_BAN_PH,			
+    BRIGHTNESS_PH,		
+    ADD_ID_PH,			
+    ALREADY_EXISTS_PH,	
+    ID_ADDED_PH,			
+    DELETE_ID_PH,		
+    CONFIRM_PH,			
+    ID_DELETED_PH,		
+    MODIFY_ID_PH,		
+    ID_MODIFIED_PH,		
+    PIN_MODIFIED_PH    
+}disp_strings_t;
 
 typedef enum{ 
 	NEW_ID,
@@ -97,6 +81,8 @@ typedef struct{
     bool valid;
 }ID_data_t;
 
+typedef enum {ES, EN, PT, FR} language_t;
+
 typedef struct{
     uint16_t current_ID_index; 	// index ID actual 0,1,2,3 
     uint16_t total_of_IDs; 		//Cantidad de ids en la lista de IDS 
@@ -107,6 +93,7 @@ typedef struct{
     word_option_t current_option;
     ID_data_t IDsList[MAX_IDS];
 	tim_id_t timer;
+    language_t language;
 }access_control_t;
 
 typedef struct{
@@ -164,7 +151,13 @@ enum States
     //ROJO
     ST_MODIFY_ID,
     ST_CONFIRMATION_2,
-    ST_ID_MODIFICATION
+    ST_ID_MODIFICATION,
+
+    //AMARILLO
+    ST_CHANGE_LANGUAGE,
+    ST_SET_LANGUAGE,
+    ST_PREVIOUS_LANGUAGE,
+    ST_NEXT_LANGUAGE
 
 };
 
@@ -185,6 +178,46 @@ static tim_id_t led_off_timer;
 static ttick_t led_off_timer_ticks;
 
 static led_status_t leds;
+
+static char * EN_strings[17]={
+    "    Access Request     ",         // ACCESS_REQUEST_PH  
+    "Admin    ",                       // ADMIN_PH           
+    "Id NO EXISTS    ",                // ID_NO_EXISTS_PH  
+    "Enter PIN    ",                   // ENTER_PIN_PH       
+    "Access granted     ",             // ACCESS_GRANTED_PH	
+    "INC",                             // INCORRECT_PIN_PH
+    "Id Ban    ",                      // ID_BAN_PH			
+    "Brightness    ",                  // BRIGHTNESS_PH		
+    "Add Id    ",                      // ADD_ID_PH			
+    "Already Exists    ",              // ALREADY_EXISTS_PH
+    "Id Added    ",                    // ID_ADDED_PH		
+    "Delete Id    ",                   // DELETE_ID_PH	
+    "Confirm ?    ",                   // CONFIRM_PH		
+    "Id deleted    ",                  // ID_DELETED_PH		
+    "Modify Id    ",                   // MODIFY_ID_PH	
+    "Id modified    ",                 // ID_MODIFIED_PH	
+    "Pin Modified    "                 // PIN_MODIFIED_PH   
+};
+ 
+static char * ES_strings[17]={
+    "    Pedido de acceso     ",         // ACCESS_REQUEST_PH  
+    "Admin    ",                       // ADMIN_PH           
+    "Id NO EXISTE    ",                // ID_NO_EXISTS_PH  
+    "Ingresar PIN    ",                   // ENTER_PIN_PH       
+    "Acceso correcto     ",             // ACCESS_GRANTED_PH	
+    "INC",                             // INCORRECT_PIN_PH
+    "Id Ban    ",                      // ID_BAN_PH			
+    "Brillo    ",                  // BRIGHTNESS_PH		
+    "Agregar Id    ",                      // ADD_ID_PH			
+    "Ya existe    ",              // ALREADY_EXISTS_PH
+    "Id agregado    ",                    // ID_ADDED_PH		
+    "Borrar Id    ",                   // DELETE_ID_PH	
+    "Confirmar ?    ",                   // CONFIRM_PH		
+    "Id borrado    ",                  // ID_DELETED_PH		
+    "Modificar Id    ",                   // MODIFY_ID_PH	
+    "Id modificado    ",                 // ID_MODIFIED_PH	
+    "Pin Modificado    "                 // PIN_MODIFIED_PH   
+};
 
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
@@ -248,6 +281,12 @@ static void led_off_callback(void);
 /*****************************************************************
  * @brief: Function called by the timer led_off_timer, that turns the
  * 			leds off controling the duty cycle of the leds.
+ * **************************************************************/
+
+char * translate(disp_strings_t string);
+/*****************************************************************
+ * @brief: return a string in the current language
+ * @param string: Id of the string to be translated.
  * **************************************************************/
 
 //////////////////////////////////////////////////////////////////
@@ -354,7 +393,13 @@ STATE_DECLARE(ModifyID, NoEventData)
 STATE_DECLARE(Confirmation2, NoEventData)
 STATE_DECLARE(IDModification, NoEventData)
 
- 
+//AMARILLO
+STATE_DECLARE(ChangeLanguage, NoEventData)
+STATE_DECLARE(SetLanguage, NoEventData)
+STATE_DECLARE(PreviuosLanguage, NoEventData)
+STATE_DECLARE(NextLanguage, NoEventData)
+
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			                STATE MAP                   	    //
@@ -406,6 +451,13 @@ BEGIN_STATE_MAP(AccessControl)
     STATE_MAP_ENTRY(ST_ModifyID)
     STATE_MAP_ENTRY(ST_Confirmation2)
     STATE_MAP_ENTRY(ST_IDModification)
+
+    //AMARILLO
+    STATE_MAP_ENTRY(ST_ChangeLanguage)
+    STATE_MAP_ENTRY(ST_SetLanguage)
+    STATE_MAP_ENTRY(ST_PreviuosLanguage)
+    STATE_MAP_ENTRY(ST_NextLanguage)
+
 
 END_STATE_MAP(AccessControl)
 
@@ -467,6 +519,12 @@ EVENT_DEFINE(Encoder_Click, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ID_MODIFICATION)                //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(ST_MODIFY_ID)                      //ST_ID_MODIFICATION
 
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_SET_LANGUAGE)                   //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_CHANGE_LANGUAGE)                //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -523,6 +581,12 @@ EVENT_DEFINE(Encoder_Double_Click, NoEventData)
         TRANSITION_MAP_ENTRY(ST_MODIFY_ID)                      //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
 
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
 
@@ -574,9 +638,15 @@ EVENT_DEFINE(Encoder_CW, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_ELIMINATION
 
         //ROJO
-        TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_MODIFY_ID,
+        TRANSITION_MAP_ENTRY(ST_CHANGE_LANGUAGE)                //ST_MODIFY_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
+
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_CHANGE_BRIGHTNESS)              //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_NEXT_LANGUAGE)                  //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -611,7 +681,7 @@ EVENT_DEFINE(Encoder_CCW, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_DIGIT,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_DIGIT,
         //VERDE                 
-        TRANSITION_MAP_ENTRY(ST_MODIFY_ID)                      //ST_CHANGE_BRIGHTNESS,
+        TRANSITION_MAP_ENTRY(ST_CHANGE_LANGUAGE)                      //ST_CHANGE_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(ST_LOWER_BRIGHTNESS)               //ST_SET_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_LOWER_BRIGHTNESS,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_HIGHER_BRIGHTNESS
@@ -631,6 +701,12 @@ EVENT_DEFINE(Encoder_CCW, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_MODIFY_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
+
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_ELIMINATE_ID)                   //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_PREVIOUS_LANGUAGE)              //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
 
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
@@ -686,6 +762,12 @@ EVENT_DEFINE(Encoder_Long_Click, NoEventData)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
 
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                 //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
     END_TRANSITION_MAP(AccessControl, pEventData)
 }
 
@@ -738,7 +820,13 @@ EVENT_DEFINE(Card_Reader, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ID_ENTERING_BY_CARD)            //ST_MODIFY_ID,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_ID_MODIFICATION
-        
+
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
     END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
@@ -791,7 +879,13 @@ EVENT_DEFINE(Time_Out, NoEventData)
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_MODIFY_ID,
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_CONFIRMATION_2,
         TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_ID_MODIFICATION
-        
+
+        //AMARILLO
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_CHANGE_LANGUAGE,
+        TRANSITION_MAP_ENTRY(ST_ACCESS_REQUEST)                     //ST_SET_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_PREVIOUS_LANGUAGE,
+        TRANSITION_MAP_ENTRY(EVENT_IGNORED)                     //ST_NEXT_LANGUAGE
+
     END_TRANSITION_MAP(AccessControl, pEventData)   
 }
 
@@ -1394,6 +1488,43 @@ STATE_DEFINE(IDModification, NoEventData)
 }
 
 
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			    			AMARILLO   				 	        //
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+    
+STATE_DEFINE(ChangeLanguage, NoEventData)
+{
+    start_timeout();
+	display_set_string(LANGUAGE_PH);
+}
+
+STATE_DEFINE(SetLanguage, NoEventData)
+{
+    start_timeout();
+    //muesto el language
+    display_set_string("mati puto");
+}
+
+STATE_DEFINE(PreviuosLanguage, NoEventData)
+{
+    if(access_control.language == ES)
+        access_control.language = MAX_LANGUAGES;
+    else
+        access_control.language--;
+
+    SM_InternalEvent(ST_SET_LANGUAGE, NULL); 
+}
+
+STATE_DEFINE(NextLanguage, NoEventData)
+{
+    if(access_control.language == MAX_LANGUAGES)
+        access_control.language = ES;
+    else
+        access_control.language++;
+    SM_InternalEvent(ST_SET_LANGUAGE, NULL); 
+}
 
 
 //////////////////////////////////////////////////////////////////
@@ -1542,3 +1673,19 @@ static void led_off_callback(void){
 	gpioWrite(PCB_LED_STATUS_2, LOW);
 	return;
 }
+char * translate(disp_strings_t string){
+    language_t lang=access_control.language;
+    char * return_string;
+    switch (lang){
+        case ES:
+            return_string=ES_strings[string];
+            break;
+        case EN: default:
+            return_string=EN_strings[string];
+            break;
+    }
+    return return_string;
+}
+
+
+    
