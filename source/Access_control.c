@@ -31,7 +31,7 @@
 #define TIMEOUT_INCORRECT_PIN_MS	5000
 #define TIMEOUT_INCORRECT_PIN_TICKS	TIMER_MS2TICKS(TIMEOUT_INCORRECT_PIN_MS)
 #define MAX_WORD_INTRODUCED     	8
-// Phrases
+
 
 
 //////////////////////////////////////////////////////////////////
