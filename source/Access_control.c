@@ -78,6 +78,8 @@ typedef struct{
     bool valid;
 }ID_data_t;
 
+typedef enum {ES, EN, PT, FR} language_t;
+
 typedef struct{
     uint16_t current_ID_index; 	// index ID actual 0,1,2,3 
     uint16_t total_of_IDs; 		//Cantidad de ids en la lista de IDS 
@@ -88,6 +90,7 @@ typedef struct{
     word_option_t current_option;
     ID_data_t IDsList[MAX_IDS];
 	tim_id_t timer;
+    language_t language;
 }access_control_t;
 
 typedef enum {DOOR_LOCKED, DOOR_OPEN, DOOR_ADMIN, DOOR_ERROR} door_modes_t;
@@ -1436,4 +1439,17 @@ static void set_door_led_mode(door_modes_t mode){
 			break;
     }
 	return;
+}
+
+
+void translate(uint8_t string){
+    lang=access_control.language;
+    switch(string){
+        case 
+
+
+    }
+
+
+
 }
