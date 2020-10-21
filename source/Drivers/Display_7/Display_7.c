@@ -406,6 +406,7 @@ void display_clear_buffer(void){
  * @brief: Clears the screen of the display (nothing will be displayed).
  * **************************************************************/
 	uint8_t index;
+	display.ext_index=0;
 	display_disable_highlight();
 	for(index=0; index<EXT_BUF_LEN; index++)
 		load_buffer(DISP_END, index);
