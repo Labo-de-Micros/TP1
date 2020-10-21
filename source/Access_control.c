@@ -1198,13 +1198,15 @@ STATE_DEFINE(SetBrightness, NoEventData)
 
 STATE_DEFINE(LowerBrightness, NoEventData)
 {
-    display_set_brightness_level(display_get_brightness()-1);
+    if(display_get_brightness()-10>0)
+        display_set_brightness_level(display_get_brightness()-10);
     SM_InternalEvent(ST_SET_BRIGHTNESS, NULL); 
 }
 
 STATE_DEFINE(HigherBrightness, NoEventData)
 {
-    display_set_brightness_level(display_get_brightness()+1);
+    if(display_get_brightness()+10<100)
+        display_set_brightness_level(display_get_brightness()+10);
     SM_InternalEvent(ST_SET_BRIGHTNESS, NULL); 
 }
 
