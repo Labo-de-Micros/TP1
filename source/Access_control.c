@@ -109,6 +109,14 @@ typedef struct{
 	tim_id_t timer;
 }access_control_t;
 
+typedef struct{
+	uint8_t pin_led_blue	:1;
+	uint8_t pin_led_red		:1;
+	uint8_t pin_led_green	:1;
+	uint8_t pin_led_status_1:1;
+	uint8_t pin_led_status_2:1;
+}led_status_t;
+
 typedef enum {DOOR_LOCKED, DOOR_OPEN, DOOR_ADMIN, DOOR_ERROR} door_modes_t;
 
 enum States
@@ -170,6 +178,14 @@ static access_control_t access_control;
 
 static tim_id_t door_timer;
 
+static tim_id_t led_refresh_timer;
+
+static tim_id_t led_off_timer;
+
+static ttick_t led_off_timer_ticks;
+
+static led_status_t leds;
+
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 //FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS W FILE LEVEL SCOPE//
@@ -216,6 +232,24 @@ static void set_door_led_mode(door_modes_t mode);
  * @param mode: Mode of the current door.
  * **************************************************************/
 
+static void led_set_brightness(uint8_t brightness);
+/*****************************************************************
+ * @brief: Function to set the brightness of the leds.
+ * @param brightness: Number from 0-100 representing the percentage
+ * 						of the brightness.
+ * **************************************************************/
+
+static void led_refresh_callback(void);
+/*****************************************************************
+ * @brief: Function called every 10 ms to refresh the PWM of the leds
+ * **************************************************************/
+
+static void led_off_callback(void);
+/*****************************************************************
+ * @brief: Function called by the timer led_off_timer, that turns the
+ * 			leds off controling the duty cycle of the leds.
+ * **************************************************************/
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
@@ -243,7 +277,10 @@ void access_control_init(void){
     access_control.digits_introduced=0;
 	timerInit();
 	access_control.timer = timerGetId();
+	led_refresh_timer = timerGetId();
+	led_off_timer = timerGetId();
 	door_timer = timerGetId();
+	led_set_brightness(50);
 	gpioMode(PIN_LED_GREEN, OUTPUT);
 	gpioMode(PIN_LED_BLUE, OUTPUT);
 	gpioMode(PIN_LED_RED, OUTPUT);
@@ -1213,6 +1250,8 @@ STATE_DEFINE(SetBrightness, NoEventData)
 {
     start_timeout();
     display_set_number(display_get_brightness());
+	led_set_brightness(display_get_brightness());
+	return;
 }
 
 STATE_DEFINE(LowerBrightness, NoEventData)
@@ -1424,35 +1463,82 @@ static void set_door_led_mode(door_modes_t mode){
  * **************************************************************/
     switch(mode){
         case DOOR_LOCKED:
-            gpioWrite(PIN_LED_GREEN, HIGH);
-			gpioWrite(PIN_LED_BLUE, HIGH);
-			gpioWrite(PIN_LED_RED, LOW);
-			gpioWrite(PCB_LED_STATUS_1, HIGH);
-			gpioWrite(PCB_LED_STATUS_2, LOW);
+			leds.pin_led_green = true;
+			leds.pin_led_blue = true;
+			leds.pin_led_red = false;
+			leds.pin_led_status_1 = true;
+			leds.pin_led_status_2 = false;
 			break;
 		case DOOR_ADMIN:
-			gpioWrite(PIN_LED_GREEN, HIGH);
-			gpioWrite(PIN_LED_BLUE, LOW);
-			gpioWrite(PIN_LED_RED, HIGH);
-			gpioWrite(PCB_LED_STATUS_1, LOW);
-			gpioWrite(PCB_LED_STATUS_2, HIGH);
+			leds.pin_led_green = true;
+			leds.pin_led_blue = false;
+			leds.pin_led_red = true;
+			leds.pin_led_status_1 = false;
+			leds.pin_led_status_2 = true;
 			break;
 		case DOOR_OPEN:
-			gpioWrite(PIN_LED_GREEN, LOW);
-			gpioWrite(PIN_LED_BLUE, HIGH);
-			gpioWrite(PIN_LED_RED, HIGH);
-			gpioWrite(PCB_LED_STATUS_1, HIGH);
-			gpioWrite(PCB_LED_STATUS_2, HIGH);
+			leds.pin_led_green = false;
+			leds.pin_led_blue = true;
+			leds.pin_led_red = true;
+			leds.pin_led_status_1 = true;
+			leds.pin_led_status_2 = true;
 			break;
 		case DOOR_ERROR:
-			gpioWrite(PIN_LED_GREEN, HIGH);
-			gpioWrite(PIN_LED_BLUE, HIGH);
-			gpioWrite(PIN_LED_RED, HIGH);
-			gpioWrite(PCB_LED_STATUS_1, LOW);
-			gpioWrite(PCB_LED_STATUS_2, LOW);
+			leds.pin_led_green = true;
+			leds.pin_led_blue = true;
+			leds.pin_led_red = true;
+			leds.pin_led_status_1 = false;
+			leds.pin_led_status_2 = false;
 			break;
 		default:
 			break;
     }
+	return;
+}
+
+
+static void led_set_brightness(uint8_t brightness){
+/*****************************************************************
+ * @brief: Function to set the brightness of the leds.
+ * @param brightness: Number from 0-100 representing the percentage
+ * 						of the brightness.
+ * **************************************************************/
+	led_off_timer_ticks = 10-((100-brightness)/10);
+	timerStart(led_refresh_timer,10,TIM_MODE_PERIODIC,led_refresh_callback);
+	return;
+}
+
+static void led_refresh_callback(void){
+/*****************************************************************
+ * @brief: Function called every 10 ms to refresh the PWM of the leds
+ * **************************************************************/
+	if(leds.pin_led_blue == false)
+		gpioWrite(PIN_LED_BLUE, LOW);
+	
+	if(leds.pin_led_green == false)
+		gpioWrite(PIN_LED_GREEN, LOW);
+	
+	if(leds.pin_led_red == false)
+		gpioWrite(PIN_LED_RED, LOW);
+
+	if(leds.pin_led_status_1 == true)
+		gpioWrite(PCB_LED_STATUS_1, HIGH);
+	
+	if(leds.pin_led_status_2 == true)
+		gpioWrite(PCB_LED_STATUS_2, HIGH);
+	timerStart(led_off_timer, led_off_timer_ticks, TIM_MODE_SINGLESHOT,led_off_callback);
+	return;
+}
+
+static void led_off_callback(void){
+/*****************************************************************
+ * @brief: Function called by the timer led_off_timer, that turns the
+ * 			leds off controling the duty cycle of the leds.
+ * **************************************************************/
+	gpioWrite(PIN_LED_BLUE, HIGH);
+	gpioWrite(PIN_LED_GREEN, HIGH);
+	gpioWrite(PIN_LED_RED, HIGH);
+	gpioWrite(PCB_LED_STATUS_1, LOW);
+	gpioWrite(PCB_LED_STATUS_2, LOW);
 	return;
 }
