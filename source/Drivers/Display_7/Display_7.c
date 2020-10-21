@@ -354,8 +354,10 @@ void display_set_brightness_level(uint8_t level){
  * @brief: Sets a brightness level for the display
  * @param level: New level of brightness.
  * **************************************************************/
-	if(level>=10 && level<=90)
+	if(level>=10 && level<=90){
+		display.brightness_level=level;
 		set_brightness_level(display.brightness_level);
+	}
 }
 
 void display_enable_soft_highlight(uint8_t digit){
