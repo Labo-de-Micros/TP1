@@ -32,6 +32,7 @@
 #define TIMEOUT_INCORRECT_PIN_TICKS	TIMER_MS2TICKS(TIMEOUT_INCORRECT_PIN_MS)
 #define MAX_WORD_INTRODUCED     	8
 // Phrases
+#ifndef SPANISH
 #define ACCESS_REQUEST_PH   		"    Access Request    "
 #define ADMIN_PH            		"Admin    "
 #define ID_NO_EXISTS_PH     		"Id NO EXISTS    "
@@ -49,7 +50,25 @@
 #define MODIFY_ID_PH				"Modify Id    "
 #define ID_MODIFIED_PH				"Id modified    "
 #define PIN_MODIFIED_PH     		"Pin Modified    "
-
+#else
+#define ACCESS_REQUEST_PH   		"    Ingreso   "
+#define ADMIN_PH            		"Admin    "
+#define ID_NO_EXISTS_PH     		"No Existe ID    "
+#define ENTER_PIN_PH        		"Ingrese PIN    "
+#define ACCESS_GRANTED_PH			"Acceso permitido    "
+#define INCORRECT_PIN_PH			"INC"
+#define ID_BAN_PH					"ID Baneado    "
+#define BRIGHTNESS_PH				"Brillo    "
+#define ADD_ID_PH					"Agregar ID    "
+#define ALREADY_EXISTS_PH			"Ya existe!    "
+#define ID_ADDED_PH					"ID Agregado    "
+#define DELETE_ID_PH				"Eliminar ID    "
+#define CONFIRM_PH					"Confirmar ?    "
+#define ID_DELETED_PH				"ID eliminado    "
+#define MODIFY_ID_PH				"Modificar ID    "
+#define ID_MODIFIED_PH				"ID modificado    "
+#define PIN_MODIFIED_PH     		"Pin Modificado    "
+#endif
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			ENUMERATIONS AND STRUCTURES AND TYPEDEFS	  		//
