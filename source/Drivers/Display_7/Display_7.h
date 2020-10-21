@@ -110,7 +110,7 @@ void display_temp_message(char * message, uint8_t seconds);
  * @param seconds amount of seconds to show the message.
  * **************************************************************/
 
-void display_set_brightness_level(display_brightness_level_t level);
+void display_set_brightness_level(uint8_t level);
 /*****************************************************************
  * @brief: Sets a brightness level for the display
  * @param level: New level of brightness.

@@ -228,7 +228,7 @@ static void set_blank(void);
  * @brief: Sets selected digit to blank.
  * **************************************************************/
 
-static void set_digit_brightness_level(display_brightness_level_t level, uint8_t digit);
+static void set_digit_brightness_level(uint8_t level, uint8_t digit);
 /*****************************************************************
  * @brief: Sets the brightness level for a digit.
  * @param level: level to be set.
@@ -245,7 +245,7 @@ static void rotate_callback(void);
  * @brief: Callback for auto rotation.
  * **************************************************************/
 
-static void set_brightness_level(display_brightness_level_t level);
+static void set_brightness_level(uint8_t level);
 /*****************************************************************
  * @brief: Sets the brightness level for the entire display.
  * @param level: Level to set.
@@ -262,6 +262,7 @@ void display_init(void){
  * @brief: Initialize the Seven segment display driver
  * **************************************************************/
 	timerInit();
+	pwm_init(10000-1);
 	display.timer=timerGetId();
 	display.temp_timer=timerGetId();
 	display.pwm_timer=timerGetId();
