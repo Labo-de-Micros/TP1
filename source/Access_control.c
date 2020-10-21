@@ -56,7 +56,9 @@ typedef enum{
     ID_DELETED_PH,		
     MODIFY_ID_PH,		
     ID_MODIFIED_PH,		
-    PIN_MODIFIED_PH    
+    PIN_MODIFIED_PH,
+    SET_LANG_PH,
+    LANG_PH    
 }disp_strings_t;
 
 typedef enum{ 
@@ -179,7 +181,7 @@ static ttick_t led_off_timer_ticks;
 
 static led_status_t leds;
 
-static char * EN_strings[17]={
+static char * EN_strings[19]={
     "    Access Request     ",         // ACCESS_REQUEST_PH  
     "Admin    ",                       // ADMIN_PH           
     "Id NO EXISTS    ",                // ID_NO_EXISTS_PH  
@@ -196,10 +198,13 @@ static char * EN_strings[17]={
     "Id deleted    ",                  // ID_DELETED_PH		
     "Modify Id    ",                   // MODIFY_ID_PH	
     "Id modified    ",                 // ID_MODIFIED_PH	
-    "Pin Modified    "                 // PIN_MODIFIED_PH   
+    "Pin Modified    ",                 // PIN_MODIFIED_PH
+    "Set language    ",                 // SET_LANG_PH
+    "English    "                       // LANG_PH
+       
 };
  
-static char * ES_strings[17]={
+static char * ES_strings[19]={
     "    Pedido de acceso     ",         // ACCESS_REQUEST_PH  
     "Admin    ",                       // ADMIN_PH           
     "Id NO EXISTE    ",                // ID_NO_EXISTS_PH  
@@ -216,9 +221,11 @@ static char * ES_strings[17]={
     "Id borrado    ",                  // ID_DELETED_PH		
     "Modificar Id    ",                   // MODIFY_ID_PH	
     "Id modificado    ",                 // ID_MODIFIED_PH	
-    "Pin Modificado    "                 // PIN_MODIFIED_PH   
+    "Pin Modificado    " ,                // PIN_MODIFIED_PH
+    "Idioma    ",                 // SET_LANG_PH
+    "Castellano    "                       // LANG_PH   
 };
-static char * PT_strings[17]={
+static char * PT_strings[19]={
     "    Pedido de acesso     ",         // ACCESS_REQUEST_PH  
     "Admin    ",                       // ADMIN_PH           
     "Id NAO EXISTE    ",                // ID_NO_EXISTS_PH  
@@ -235,10 +242,12 @@ static char * PT_strings[17]={
     "Id deletado    ",                  // ID_DELETED_PH		
     "Modificar Id    ",                   // MODIFY_ID_PH	
     "Id modificado    ",                 // ID_MODIFIED_PH	
-    "Pin Modificado    "                 // PIN_MODIFIED_PH   
+    "Pin Modificado    " ,                // PIN_MODIFIED_PH   
+    "Idioma    ",                 // SET_LANG_PH
+    "Portugues   "                       // LANG_PH
 };
 
-static char * FR_strings[17]={
+static char * FR_strings[19]={
     "    Demande d acess     ",         // ACCESS_REQUEST_PH  
     "Admin    ",                       // ADMIN_PH           
     "Id n existe pas    ",                // ID_NO_EXISTS_PH  
@@ -255,9 +264,10 @@ static char * FR_strings[17]={
     "Id supprime    ",                  // ID_DELETED_PH		
     "modifier l Id    ",                   // MODIFY_ID_PH	
     "Id modifie    ",                 // ID_MODIFIED_PH	
-    "Pin Modifie    "                 // PIN_MODIFIED_PH   
+    "Pin Modifie    " ,             // PIN_MODIFIED_PH   
+    "Idiome    ",                 // SET_LANG_PH
+    "Francais    "                       // LANG_PH
 };
-
 ////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 //FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS W FILE LEVEL SCOPE//
@@ -1533,14 +1543,14 @@ STATE_DEFINE(IDModification, NoEventData)
 STATE_DEFINE(ChangeLanguage, NoEventData)
 {
     start_timeout();
-	display_set_string(LANGUAGE_PH);
+	display_set_string(SET_LANG_PH);
 }
 
 STATE_DEFINE(SetLanguage, NoEventData)
 {
     start_timeout();
     //muesto el language
-    display_set_string("mati puto");
+    display_set_string(LANG_PH);
 }
 
 STATE_DEFINE(PreviuosLanguage, NoEventData)
