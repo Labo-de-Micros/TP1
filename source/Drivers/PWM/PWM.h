@@ -29,8 +29,8 @@
 #define PWM_MS_TO_TICKS(ms)		PWM_SEC_TO_TICKS((ms/1000.0))
 #define PWM_SEC_TO_TICKS(s)		(s*SYS_CLOCK/PRESCALER)
 
-#if (PRESCALER != 32)
-#error Beware! Prescaler configured wrong in pwm_init()!
+#if (PRESCALER%2 != 0) && (PRESCALER> 128)
+#error Cant use this PRESCALER! It must be multiple of 2 and minor to 129.
 #endif
 
 //////////////////////////////////////////////////////////////////

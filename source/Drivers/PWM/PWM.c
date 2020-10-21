@@ -58,6 +58,16 @@ static void PWM_ISR(void);
  * @brief: Interruption Function called by the FTM PWM.
  *****************************************************************/
 
+static FTM_Prescal_t pwm_get_prescaler(uint8_t prescaler);
+/*****************************************************************
+ * @brief: Gets the prescaler Define from an uint.
+ * @param prescaler: uint8_t that is the value of the prescaler
+ * 					(1,2,4,8,16,32,64,128).
+ * @returns: FTM_Prescal_t with the correspoding define for the parameter
+ * 				prescaler.
+ * 			Ex: prescaler = 32 -> pwm_get_prescaler()->FTM_PSC_x32
+ *****************************************************************/
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //					FUNCTION DEFINITIONS						//
@@ -80,7 +90,7 @@ void pwm_init(uint16_t modulus){
 	PORTC->PCR[PIN2NUM(PORTNUM2PIN(PC,1))] |= PORT_PCR_IRQC(0);
 
 	FTM0->CNT = 0X00;
-	FTM_SetPrescaler(FTM0, FTM_PSC_x32);	//SI SE CAMBIA EL DEFINE DE PRESCALER HAY QUE CAMBIAR ESTO.
+	FTM_SetPrescaler(FTM0, pwm_get_prescaler(PRESCALER));	//SI SE CAMBIA EL DEFINE DE PRESCALER HAY QUE CAMBIAR ESTO.
 	FTM_SetModulus(FTM0, modulus);
 	FTM_SetOverflowMode(FTM0, true);
 	FTM_SetWorkingMode(FTM0, 0, FTM_mPulseWidthModulation);			// MSA  / B
@@ -135,4 +145,47 @@ static void PWM_ISR (void){
 	FTM_StopClock(FTM0);
 	callback();
 	return;
+}
+
+static FTM_Prescal_t pwm_get_prescaler(uint8_t prescaler){
+/*****************************************************************
+ * @brief: Gets the prescaler Define from an uint.
+ * @param prescaler: uint8_t that is the value of the prescaler
+ * 					(1,2,4,8,16,32,64,128).
+ * @returns: FTM_Prescal_t with the correspoding define for the parameter
+ * 				prescaler.
+ * 			Ex: prescaler = 32 -> pwm_get_prescaler()->FTM_PSC_x32
+ *****************************************************************/
+	FTM_Prescal_t _temp_;
+	switch (prescaler)
+	{
+		case 1:
+			_temp_ = FTM_PSC_x1;
+			break;
+		case 2:
+			_temp_ = FTM_PSC_x2;
+			break;
+		case 4:
+			_temp_ = FTM_PSC_x4;
+			break;
+		case 8:
+			_temp_ = FTM_PSC_x8;
+			break;
+		case 16:
+			_temp_ = FTM_PSC_x16;
+			break;
+		case 32:
+			_temp_ = FTM_PSC_x32;
+			break;
+		case 64:
+			_temp_ = FTM_PSC_x64;
+			break;
+		case 128:
+			_temp_ = FTM_PSC_x128;
+			break;
+		default:
+			_temp_ = FTM_PSC_x1;
+			break;
+	}
+	return _temp_;
 }

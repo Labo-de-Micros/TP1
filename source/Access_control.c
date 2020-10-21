@@ -1204,6 +1204,7 @@ STATE_DEFINE(HigherBrightness, NoEventData)
 
 
 
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 //			    			VIOLETA				    	        //
@@ -1256,7 +1257,8 @@ STATE_DEFINE(Confirmation0, NoEventData)
     start_timeout();
     display_set_string(CONFIRM_PH);
 }
- 
+
+
 
 
 //////////////////////////////////////////////////////////////////
@@ -1285,6 +1287,7 @@ STATE_DEFINE(IDElimination, NoEventData)
     access_control.IDsList[access_control.current_ID_index].valid = false;
 	display_set_string(ID_DELETED_PH);
 }
+
 
 
 
@@ -1323,6 +1326,7 @@ STATE_DEFINE(IDModification, NoEventData)
     //access_control.IDsList[access_control.current_ID_index].PIN_attempts = 0;
 	
 }
+
 
 
 
