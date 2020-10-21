@@ -1,11 +1,51 @@
+/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+//	@file		FTM.h    									   //
+//	@brief		FTM driver. Advance Implementation		       //
+//	@author		Grupo 4 									   //
+/////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
 
-#ifndef SOURCES_FTM_H_
-#define SOURCES_FTM_H_
+#ifndef _SOURCES_FTM_H_
+#define _SOURCES_FTM_H_
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//							Headers								//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 #include "hardware.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-typedef enum
-{
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//		CONSTANT AND MACRO DEFINITIONS USING #DEFINE 		 	//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+#define FTM_CH_0 0
+#define FTM_CH_1 1
+#define FTM_CH_2 2
+#define FTM_CH_3 3
+#define FTM_CH_4 4
+#define FTM_CH_5 5
+#define FTM_CH_6 6
+#define FTM_CH_7 7
+
+// #define PRESCALER 				32
+// #define SYS_CLOCK				50000000
+// #define PWM_MS_TO_TICKS(ms)		PWM_SEC_TO_TICKS((ms/1000.0))
+// #define PWM_SEC_TO_TICKS(s)		(s*SYS_CLOCK/PRESCALER)
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			ENUMERATIONS AND STRUCTURES AND TYPEDEFS			//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+typedef enum{
 	FTM_mInputCapture,
 	FTM_mOutputCompare,
 	FTM_mPulseWidthModulation,
@@ -44,7 +84,6 @@ typedef enum
 
 } FTM_Prescal_t;
 
-
 typedef enum
 {
 	FTM_0,
@@ -53,37 +92,28 @@ typedef enum
 	FTM_3
 } FTMNum_t;
 
-
-
-#define FTM_CH_0 0
-#define FTM_CH_1 1
-#define FTM_CH_2 2
-#define FTM_CH_3 3
-#define FTM_CH_4 4
-#define FTM_CH_5 5
-#define FTM_CH_6 6
-#define FTM_CH_7 7
-
-// #define PRESCALER 				32
-// #define SYS_CLOCK				50000000
-// #define PWM_MS_TO_TICKS(ms)		PWM_SEC_TO_TICKS((ms/1000.0))
-// #define PWM_SEC_TO_TICKS(s)		(s*SYS_CLOCK/PRESCALER)
-
-typedef void (*FTM_callback_t)(void);
-
-
-
+typedef void (*PWM_callback_t)(void);
 
 typedef FTM_Type *FTM_t;
+
 typedef uint16_t FTMData_t;
+
 typedef uint32_t FTMChannel_t; /* FTM0/FTM3: Channel 1-8; FTM1/FTM2: Channel 1-2 */
+
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//			FUNCTION PROTOTYPES WITH GLOBAL SCOPE				//
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
 
 //__ISR__ 	FTM0_IRQHandler					 (void);
 //__ISR__ 	FTM1_IRQHandler					 (void);
 //__ISR__ 	FTM2_IRQHandler					 (void);
 //__ISR__ 	FTM3_IRQHandler					 (void);
 
-void 		FTM_Init 						 (FTM_t);
+void 		FTM_Init 						 (FTM_t, PWM_callback_t);
 
 void        FTM_SetPrescaler 				 (FTM_t, FTM_Prescal_t);
 void     	FTM_SetModulus 					 (FTM_t, FTMData_t);
@@ -117,9 +147,4 @@ void 		FTM_ClearInterruptFlag 			 (FTM_t, FTMChannel_t);
 
 //void pwm_start_timer(uint16_t ticks,uint16_t duty_cycle,FTM_callback_t callback);
 
-
-
-
-
-
-#endif
+#endif	//_SOURCES_FTM_H_
