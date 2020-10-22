@@ -78,13 +78,11 @@ void button_configure(button_id_t button_id, button_callback_t callback_single, 
  * @brief: If you dont want to specify a certain callback, just send NULL.
  * **************************************************************/
 
-
 void button_disable(button_id_t button_id);
 /*****************************************************************
  * @brief: Disable a specific button for not to take into account
  * 			its actions
  * @param button_id: Button id of the button to be disabled.
  * **************************************************************/
-
 
 #endif	// _BUTTON_H_
