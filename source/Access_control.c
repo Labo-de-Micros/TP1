@@ -74,7 +74,7 @@ typedef enum{
 }word_option_t;
 
 typedef struct{
-    uint64_t card_id;
+    //uint64_t card_id;
     uint32_t number; 			//Numero de ID (8 digitos)
     uint32_t PIN; 				//Contraseña del ID (4 o 5 digitos)
     uint8_t PIN_length;
@@ -353,8 +353,8 @@ void access_control_init(void){
     ID_data_t sample_id;
     sample_id.blocked_status=false;
     sample_id.valid=true;
-    sample_id.number=0;
-    sample_id.card_id=6391300355831573;
+    sample_id.number=55831573;
+    //sample_id.card_id=6391300355831573;
     sample_id.PIN=1234;
     sample_id.PIN_attempts=0;
     sample_id.PIN_length=4;
@@ -981,11 +981,13 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
     //Primero se chequea si el numero de la tarjeta coincide con un ID
     // Get pointer to the instance data and update id
     card_t card_data = card_get_data();
+    uint64_t card_number = card_data.pan % 100000000; //Me quedo con los ultimos 8 digitos
+
     bool id_exists = false;
     
     uint16_t index;
     for(index=0; index<access_control.total_of_IDs; index++){
-        if(access_control.IDsList[index].card_id == card_data.pan && access_control.IDsList[index].valid==true){
+        if(access_control.IDsList[index].number == (uint32_t) card_number && access_control.IDsList[index].valid==true){
             id_exists = true;
             access_control.current_ID_index=index;
             break;
@@ -1006,7 +1008,7 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
 				SM_InternalEvent(ST_ALREADY_EXISTS, NULL); 
 			else{   
 				//Se guarda el Id en el usuario nuevo
-				access_control.IDsList[access_control.total_of_IDs].card_id=card_data.pan;
+                access_control.IDsList[access_control.total_of_IDs].number  = (uint32_t) card_number ;
 				SM_InternalEvent(ST_PIN_REQUEST, NULL);  
 			}
 			break;
