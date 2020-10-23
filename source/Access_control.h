@@ -32,7 +32,7 @@
 #define MAX_NUM_ATTEMPTS 		3
 #define MAX_DIGIT_DISPLAY 		9
 #define MIN_DIGIT_DISPLAY 		0
-#define MAX_IDS 				2000
+#define MAX_IDS 				14000
 #define ERR_MSG_TIME 			2
 #define ID_LENGTH 				8
 #define TIMEOUT_TIMER_MS		(30*1000) 	//10 segundos

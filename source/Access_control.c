@@ -77,25 +77,25 @@ typedef struct{
     //uint64_t card_id;
     uint32_t number; 			//Numero de ID (8 digitos)
     uint32_t PIN; 				//Contraseña del ID (4 o 5 digitos)
-    uint8_t PIN_length;
     bool blocked_status; 		//Si el ID esta bloquedo es TRUE
-    uint8_t PIN_attempts;
     bool valid;
+    uint8_t PIN_length;
+    uint8_t PIN_attempts;
 }ID_data_t;
 
 typedef enum {ES, EN, PT, FR} language_t;
 
 typedef struct{
+    ID_data_t IDsList[MAX_IDS];
+    word_option_t current_option;
+    language_t language;
     uint16_t current_ID_index; 	// index ID actual 0,1,2,3 
     uint16_t total_of_IDs; 		//Cantidad de ids en la lista de IDS 
     							//Manejo de introduccion de palabra
     uint8_t word_introduced[MAX_WORD_INTRODUCED]; //Palabra de 4,5 o 8 digitos
     uint8_t index; 
     uint8_t digits_introduced; 	//Cantidad de numeros introducidos 
-    word_option_t current_option;
-    ID_data_t IDsList[MAX_IDS];
 	tim_id_t timer;
-    language_t language;
 }access_control_t;
 
 typedef struct{
