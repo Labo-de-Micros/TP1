@@ -997,7 +997,7 @@ STATE_DEFINE(CheckIdEnteringByCard, NoEventData)
     //Dependiendo si se quiere eliminar el id, agregar o acceder se hace lo siguiente;
     switch (access_control.current_option){
 		case DELETE_ID:
-			if(id_exists) 
+			if(id_exists && index != 0) 
 				SM_InternalEvent(ST_CONFIRMATION_1, NULL); 
 			else 
 				SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
@@ -1054,7 +1054,7 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
     switch (access_control.current_option)
     {
     case DELETE_ID:
-        if(id_exists) SM_InternalEvent(ST_CONFIRMATION_1, NULL); 
+        if(id_exists && index != 0) SM_InternalEvent(ST_CONFIRMATION_1, NULL); 
         else SM_InternalEvent(ST_ID_NON_EXISTENT, NULL);
         break;
     
@@ -1096,6 +1096,9 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
     display_set_string(translate(ID_NO_EXISTS_PH));
+    if(access_control.current_option == DELETE_ID)
+        SM_InternalEvent(ST_ELIMINATE_ID, NULL);       
+
 }
 
 STATE_DEFINE(PinRequest, NoEventData)
