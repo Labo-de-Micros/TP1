@@ -1095,10 +1095,7 @@ STATE_DEFINE(CheckIdEnteringByEncoder, NoEventData)
 
 STATE_DEFINE(IdNonExistent, NoEventData)
 {
-    display_set_string(translate(ID_NO_EXISTS_PH));
-    if(access_control.current_option == DELETE_ID)
-        SM_InternalEvent(ST_ELIMINATE_ID, NULL);       
-
+    display_set_string(translate(ID_NO_EXISTS_PH));      
 }
 
 STATE_DEFINE(PinRequest, NoEventData)
