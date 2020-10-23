@@ -101,21 +101,21 @@
 
 
 typedef struct{
-	uint8_t digits;
+	bool auto_rotation;
+	bool queued_return;
+	display_mode_t mode;
 	pin_t pins[7];
 	pin_t mux_control_pins[2];
 	tim_id_t timer;
 	tim_id_t temp_timer;
 	tim_id_t pwm_timer;
 	tim_id_t rotation_timer;
+	uint8_t digits;
 	uint8_t buf[EXT_BUF_LEN];
 	uint8_t aux_buf[EXT_BUF_LEN];
 	uint8_t ext_index;
 	uint8_t brightness[EXT_BUF_LEN];	
 	uint8_t brightness_level;
-	display_mode_t mode;
-	bool auto_rotation;
-	bool queued_return;
 }display_t;
 
 //////////////////////////////////////////////////////////////////
